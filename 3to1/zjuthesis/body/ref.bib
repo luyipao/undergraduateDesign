@@ -1,25 +1,343 @@
 % use `texdoc biblatex` to get help
 @www{zjuthesisrules,
-    title = {浙江大学本科生毕业论文（设计）编写规则},
-    author = {浙江大学本科生院},
-    year = {2018},
-    url = {http://bksy.zju.edu.cn/attachments/2018-01/01-1517384518-1149149.pdf},
+  title  = {浙江大学本科生毕业论文（设计）编写规则},
+  author = {浙江大学本科生院},
+  year   = {2024},
+  url    = {http://www.math.zju.edu.cn/_upload/article/files/ae/61/a639defe42d0a434381f50a6d44a/60434260-bfb8-4c65-8201-4d869ca8216f.pdf}
 }
 @www{tikz,
-    title = {tikz宏包},
-    author = {Till Tantau},
-    year = {2018},
-    url = {https://sourceforge.net/projects/pgf/},
+  title  = {tikz宏包},
+  author = {Till Tantau},
+  year   = {2018},
+  url    = {https://sourceforge.net/projects/pgf/}
 }
 @www{zjuthesis,
-    title = {浙江大学毕业设计/论文模板},
-    author = {王子轩},
-    year = {2019},
-    url = {https://github.com/TheNetAdmin/zjuthesis},
+  title  = {浙江大学毕业设计/论文模板},
+  author = {王子轩},
+  year   = {2019},
+  url    = {https://github.com/TheNetAdmin/zjuthesis}
 }
 @www{zjugradthesisrules,
-    title = {浙江大学研究生学位论文编写规则},
-    author = {浙江大学研究生院},
-    year = {2008},
-    url = {http://grs.zju.edu.cn/redir.php?catalog_id=10038&object_id=12877},
+  title  = {浙江大学研究生学位论文编写规则},
+  author = {浙江大学研究生院},
+  year   = {2008},
+  url    = {http://grs.zju.edu.cn/redir.php?catalog_id=10038&object_id=12877}
 }
+@techreport{reed1973triangular,
+  title       = {Triangular mesh methods for the neutron transport equation},
+  author      = {Reed, William H and Hill, Thomas R},
+  year        = {1973},
+  institution = {Los Alamos Scientific Lab., N. Mex.(USA)}
+}
+@article{cockburn1991runge,
+  title     = {The Runge-Kutta local projection-discontinuous-Galerkin finite element method for scalar conservation laws},
+  author    = {Cockburn, Bernardo and Shu, Chi-Wang},
+  journal   = {ESAIM: Mathematical Modelling and Numerical Analysis},
+  volume    = {25},
+  number    = {3},
+  pages     = {337--361},
+  year      = {1991},
+  publisher = {EDP Sciences}
+}
+
+@article{cockburn1989tvb2,
+  title   = {TVB Runge-Kutta local projection discontinuous Galerkin finite element method for conservation laws. II. General framework},
+  author  = {Cockburn, Bernardo and Shu, Chi-Wang},
+  journal = {Mathematics of computation},
+  volume  = {52},
+  number  = {186},
+  pages   = {411--435},
+  year    = {1989}
+}
+@article{cockburn1989tvb3,
+  title     = {TVB Runge-Kutta local projection discontinuous Galerkin finite element method for conservation laws III: one-dimensional systems},
+  author    = {Cockburn, Bernardo and Lin, San-Yih and Shu, Chi-Wang},
+  journal   = {Journal of computational Physics},
+  volume    = {84},
+  number    = {1},
+  pages     = {90--113},
+  year      = {1989},
+  publisher = {Elsevier}
+}
+@article{cockburn1990runge,
+  title   = {The Runge-Kutta local projection discontinuous Galerkin finite element method for conservation laws. IV. The multidimensional case},
+  author  = {Cockburn, Bernardo and Hou, Suchung and Shu, Chi-Wang},
+  journal = {Mathematics of Computation},
+  volume  = {54},
+  number  = {190},
+  pages   = {545--581},
+  year    = {1990}
+}
+@article{cockburn1998runge,
+  title     = {The Runge--Kutta discontinuous Galerkin method for conservation laws V: multidimensional systems},
+  author    = {Cockburn, Bernardo and Shu, Chi-Wang},
+  journal   = {Journal of computational physics},
+  volume    = {141},
+  number    = {2},
+  pages     = {199--224},
+  year      = {1998},
+  publisher = {Elsevier}
+}
+@article{cockburn1998local,
+  title     = {The local discontinuous Galerkin method for time-dependent convection-diffusion systems},
+  author    = {Cockburn, Bernardo and Shu, Chi-Wang},
+  journal   = {SIAM journal on numerical analysis},
+  volume    = {35},
+  number    = {6},
+  pages     = {2440--2463},
+  year      = {1998},
+  publisher = {SIAM}
+}
+@article{shu1988efficient,
+  title     = {Efficient implementation of essentially non-oscillatory shock-capturing schemes},
+  author    = {Shu, Chi-Wang and Osher, Stanley},
+  journal   = {Journal of computational physics},
+  volume    = {77},
+  number    = {2},
+  pages     = {439--471},
+  year      = {1988},
+  publisher = {Elsevier},
+  abstract  = {我们通过直接在通量上使用移动模板的思想来简化ENO格式（essentially non-oscillatory），而不是在单元平均值，并通过构建一类适用于其他线性方案（如TVD、TVB方案）的TVD高阶Runge-Kutta类型时间离散化方法。我们可以使用不同的一阶E通量作为构建模块。其中一些（如Lax-Friedrichs）简单而平滑，而其他一些（如各种迎风通量）则更为复杂，在音速点不太平滑，但通常在非音速点上的耗散性更小。我们给出了四个显式的TVD Runge-Kutta公式（二阶到五阶），并在数值实验中使用其中两个（三阶和四阶）。对于系统的推广已经简要讨论，并将在未来的工作中进一步探索。数值结果表明，在平滑区域中具有良好的冲击转换而没有任何明显的振荡，并且具有高精度。与冲击相比，接触间断面更加模糊，这将通过某种形式的人工压缩来解决。通过数值实验验证了对于凸和非凸通量的正确熵解的收敛性。}
+}
+@article{bank1983numerical,
+  title     = {Numerical methods for semiconductor device simulation},
+  author    = {Bank, Randolph E and Rose, Donald J and Fichtner, Wolfgang},
+  journal   = {SIAM Journal on Scientific and Statistical Computing},
+  volume    = {4},
+  number    = {3},
+  pages     = {416--435},
+  year      = {1983},
+  publisher = {SIAM}
+}
+@article{bassi1997high,
+  title     = {A high-order accurate discontinuous finite element method for the numerical solution of the compressible Navier--Stokes equations},
+  author    = {Bassi, Francesco and Rebay, Stefano},
+  journal   = {Journal of computational physics},
+  volume    = {131},
+  number    = {2},
+  pages     = {267--279},
+  year      = {1997},
+  publisher = {Elsevier}
+}
+@article{bank1998finite,
+  title     = {The finite volume Scharfetter-Gummel method for steady convection diffusion equations},
+  author    = {Bank, Randolph E and Coughran, Jr, WM and Cowsar, Lawrence C},
+  journal   = {Computing and Visualization in Science},
+  volume    = {1},
+  number    = {3},
+  pages     = {123--136},
+  year      = {1998},
+  publisher = {Springer}
+}
+@article{cercignani2000device,
+  title     = {Device benchmark comparisons via kinetic, hydrodynamic, and high-hield models},
+  author    = {Cercignani, Carlo and Gamba, Irene M and Jerome, Joseph W and Shu, Chi-Wang},
+  journal   = {Computer Methods in Applied Mechanics and Engineering},
+  volume    = {181},
+  number    = {4},
+  pages     = {381--392},
+  year      = {2000},
+  publisher = {Elsevier}
+}
+@incollection{cockburn2000development,
+  title     = {The development of discontinuous Galerkin methods},
+  author    = {Cockburn, Bernardo and Karniadakis, George E and Shu, Chi-Wang},
+  booktitle = {Discontinuous Galerkin methods theory, computation and applications},
+  pages     = {3--50},
+  year      = {2000},
+  publisher = {Springer}
+}
+@article{cockburn2001runge,
+  title     = {Runge--Kutta discontinuous Galerkin methods for convection-dominated problems},
+  author    = {Cockburn, Bernardo and Shu, Chi-Wang},
+  journal   = {Journal of scientific computing},
+  volume    = {16},
+  pages     = {173--261},
+  year      = {2001},
+  publisher = {Springer}
+}
+@article{zhang2003analysis,
+  title     = {An analysis of three different formulations of the discontinuous Galerkin method for diffusion equations},
+  author    = {Zhang, Mengping and Shu, Chi-Wang},
+  journal   = {Mathematical Models and Methods in Applied Sciences},
+  volume    = {13},
+  number    = {03},
+  pages     = {395--413},
+  year      = {2003},
+  publisher = {World Scientific}
+}
+@article{chainais2003finite,
+  title     = {Finite volume scheme for multi-dimensional drift-diffusion equations and convergence analysis},
+  author    = {Chainais-Hillairet, Claire and Liu, Jian-Guo and Peng, Yue-Jun},
+  journal   = {ESAIM: Mathematical Modelling and Numerical Analysis},
+  volume    = {37},
+  number    = {2},
+  pages     = {319--338},
+  year      = {2003},
+  publisher = {EDP Sciences}
+}
+
+@article{brezzi1989two,
+  title     = {Two-dimensional exponential fitting and applications to drift-diffusion models},
+  author    = {Brezzi, Franco and Marini, Luisa Donatella and Pietra, Paola},
+  journal   = {SIAM Journal on Numerical Analysis},
+  volume    = {26},
+  number    = {6},
+  pages     = {1342--1355},
+  year      = {1989},
+  publisher = {SIAM}
+}
+@article{mauri20153d,
+  title     = {3D finite element modeling and simulation of industrial semiconductor devices including impact ionization},
+  author    = {Mauri, Aurelio and Bortolossi, Andrea and Novielli, Giovanni and Sacco, Riccardo},
+  journal   = {Journal of Mathematics in Industry},
+  volume    = {5},
+  number    = {1},
+  pages     = {1--18},
+  year      = {2015},
+  publisher = {SpringerOpen}
+}
+@article{fichtner1983semiconductor,
+  title     = {Semiconductor device simulation},
+  author    = {Fichtner, Wolfgang and Rose, Donald J and Bank, Randolph E},
+  journal   = {SIAM Journal on Scientific and Statistical Computing},
+  volume    = {4},
+  number    = {3},
+  pages     = {391--415},
+  year      = {1983},
+  publisher = {SIAM}
+}
+@article{chen2007discontinuous,
+  title     = {A discontinuous Galerkin implementation of a domain decomposition method for kinetic-hydrodynamic coupling multiscale problems in gas dynamics and device simulations},
+  author    = {Chen, Shanqin and Weinan, E and Liu, Yunxian and Shu, Chi-Wang},
+  journal   = {Journal of Computational Physics},
+  volume    = {225},
+  number    = {2},
+  pages     = {1314--1330},
+  year      = {2007},
+  publisher = {Elsevier}
+}
+@article{xu2010local,
+  title   = {Local discontinuous Galerkin methods for high-order time-dependent partial differential equations},
+  author  = {Xu, Yan and Shu, Chi-Wang},
+  journal = {Communications in Computational Physics},
+  volume  = {7},
+  number  = {1},
+  pages   = {1},
+  year    = {2010}
+}
+
+@article{liu2010error,
+  title     = {Error analysis of the semi-discrete local discontinuous Galerkin method for semiconductor device simulation models},
+  author    = {Liu, YunXian and Shu, Chi-Wang},
+  journal   = {Science China Mathematics},
+  volume    = {53},
+  pages     = {3255--3278},
+  year      = {2010},
+  publisher = {Springer}
+}
+@article{bessemoulin2012finite,
+  title     = {A finite volume scheme for convection--diffusion equations with nonlinear diffusion derived from the Scharfetter--Gummel scheme},
+  author    = {Bessemoulin-Chatard, Marianne},
+  journal   = {Numerische Mathematik},
+  volume    = {121},
+  pages     = {637--670},
+  year      = {2012},
+  publisher = {Springer}
+}
+@article{wang2015stability,
+  title     = {Stability and error estimates of local discontinuous Galerkin methods with implicit-explicit time-marching for advection-diffusion problems},
+  author    = {Wang, Haijin and Shu, Chi-Wang and Zhang, Qiang},
+  journal   = {SIAM Journal on Numerical Analysis},
+  volume    = {53},
+  number    = {1},
+  pages     = {206--227},
+  year      = {2015},
+  publisher = {SIAM},
+  abstract  = {本文考虑了几种特定的隐式-显式龙格-库塔时间推进方法，结合LDG方案来求解具有周期边界条件的线性对流-扩散问题。在这些方法中，扩散项以隐式方式处理，对流项以显式方式处理。通过建立数值解与其梯度之间的重要关系，并借助能量技术，我们证明了相应的IMEX LDG方案在时间步长限制$\tau \leq \tau_0$下是稳定的，其中常数\tau_0$仅依赖于对流和扩散系数，与网格尺寸h无关。在相同的时间条件$\tau \leq \tau_0$下，我们还提供了空间和时间上的最优误差估计。稳定性分析和误差估计可以推广到具有非线性对流部分的对流-扩散问题，并且类似的稳定性分析和误差估计也可以用于多步IMEX LDG格式，这些都构成了我们目前的研究工作。未来，我们希望考虑用于非周期边界条件的IMEX LDG方案，我们预计可以获得类似的稳定性，但精确的数值边界条件需要进行一些工作。}
+}
+@article{wang2016stability,
+  title     = {Stability analysis and error estimates of local discontinuous Galerkin methods with implicit--explicit time-marching for nonlinear convection--diffusion problems},
+  author    = {Wang, Haijin and Shu, Chi-Wang and Zhang, Qiang},
+  journal   = {Applied Mathematics and Computation},
+  volume    = {272},
+  pages     = {237--258},
+  year      = {2016},
+  publisher = {Elsevier},
+  abstract  = {Wang和Shu分析了周期性边界非线性对流扩散问题的集中特定的IMEX RK时间离散LDG法的稳定性和误差估计。在相同的时间条件下，如果采用一般单调数值通量，针对阶IMEX RK格式和三阶多步IMEX格式耦合LDG空间离散，给出了空间和时间上的最优误差估计。这也是本文中采用的IMEX RK时间离散方法。其分析推广到多维非线性对流-扩散问题需要一些技术处理，以获得数值解及其梯度之间的关键关系。同时，不能直接将误差估计从一维推广到多维，特别是对于一般的三角形网格。未来，我们希望考虑用于求解具有非线性扩散的非线性对流-扩散问题的IMEX LDG方法。}
+}
+
+@article{liu2016analysis,
+  title     = {Analysis of the local discontinuous Galerkin method for the drift-diffusion model of semiconductor devices},
+  author    = {Liu, YunXian and Shu, Chi-Wang},
+  journal   = {Science China Mathematics},
+  volume    = {59},
+  pages     = {115--140},
+  year      = {2016},
+  publisher = {Springer}
+}
+@article{gao2018linearized,
+  title     = {A linearized local conservative mixed finite element method for Poisson--Nernst--Planck equations},
+  author    = {Gao, Huadong and Sun, Pengtao},
+  journal   = {Journal of Scientific Computing},
+  volume    = {77},
+  pages     = {793--817},
+  year      = {2018},
+  publisher = {Springer}
+}
+@article{ding2019optimal,
+  title   = {Optimal rate convergence analysis of a second order numerical scheme for the Poisson-Nernst-Planck system},
+  author  = {Ding, Jie and Wang, Cheng and Zhou, Shenggao},
+  journal = {Numer. Math. Theor. Meth. Appl},
+  volume  = {12},
+  number  = {607-626},
+  pages   = {1},
+  year    = {2019}
+}
+@article{chen2020steady,
+  title     = {Steady-state simulation of semiconductor devices using discontinuous Galerkin methods},
+  author    = {Chen, Liang and Bagci, Hakan},
+  journal   = {IEEE Access},
+  volume    = {8},
+  pages     = {16203--16215},
+  year      = {2020},
+  publisher = {IEEE}
+}
+@article{liu2021virtual,
+  title     = {A virtual element method for the steady-state Poisson-Nernst-Planck equations on polygonal meshes},
+  author    = {Liu, Yang and Shu, Shi and Wei, Huayi and Yang, Ying},
+  journal   = {Computers \& Mathematics with Applications},
+  volume    = {102},
+  pages     = {95--112},
+  year      = {2021},
+  publisher = {Elsevier}
+}
+@article{li2022stabilized,
+  title     = {A stabilized finite volume element method for solving Poisson--Nernst--Planck equations},
+  author    = {Li, Jiao and Ying, Jinyong},
+  journal   = {International Journal for Numerical Methods in Biomedical Engineering},
+  volume    = {38},
+  number    = {1},
+  pages     = {e3543},
+  year      = {2022},
+  publisher = {Wiley Online Library}
+}
+@article{肖红单2023半导体,
+  title   = {半导体 drift-diffusion 模型的局部间断 Galerkin 方法及数值模拟},
+  author  = {肖红单 and 刘蕴贤},
+  journal = {《 山东大学学报 (理学版)》},
+  volume  = {58},
+  number  = {4},
+  pages   = {1--7},
+  year    = {2023}
+}
+@article{li2024weak,
+  title     = {A weak Galerkin finite element method for 1D semiconductor device simulation models},
+  author    = {Li, Wenjuan and Liu, Yunxian and Gao, Fuzheng and Cui, Jintao},
+  journal   = {Journal of Computational and Applied Mathematics},
+  volume    = {438},
+  pages     = {115531},
+  year      = {2024},
+  publisher = {Elsevier}
+}
+
