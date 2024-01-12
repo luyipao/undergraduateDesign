@@ -97,7 +97,7 @@
   pages     = {439--471},
   year      = {1988},
   publisher = {Elsevier},
-  abstract  = {我们通过直接在通量上使用移动模板的思想来简化ENO格式（essentially non-oscillatory），而不是在单元平均值，并通过构建一类适用于其他线性方案（如TVD、TVB方案）的TVD高阶Runge-Kutta类型时间离散化方法。我们可以使用不同的一阶E通量作为构建模块。其中一些（如Lax-Friedrichs）简单而平滑，而其他一些（如各种迎风通量）则更为复杂，在音速点不太平滑，但通常在非音速点上的耗散性更小。我们给出了四个显式的TVD Runge-Kutta公式（二阶到五阶），并在数值实验中使用其中两个（三阶和四阶）。对于系统的推广已经简要讨论，并将在未来的工作中进一步探索。数值结果表明，在平滑区域中具有良好的冲击转换而没有任何明显的振荡，并且具有高精度。与冲击相比，接触间断面更加模糊，这将通过某种形式的人工压缩来解决。通过数值实验验证了对于凸和非凸通量的正确熵解的收敛性。}
+  abstract  = {}
 }
 @article{bank1983numerical,
   title     = {Numerical methods for semiconductor device simulation},
@@ -254,7 +254,7 @@
   pages     = {206--227},
   year      = {2015},
   publisher = {SIAM},
-  abstract  = {本文考虑了几种特定的隐式-显式龙格-库塔时间推进方法，结合LDG方案来求解具有周期边界条件的线性对流-扩散问题。在这些方法中，扩散项以隐式方式处理，对流项以显式方式处理。通过建立数值解与其梯度之间的重要关系，并借助能量技术，我们证明了相应的IMEX LDG方案在时间步长限制$\tau \leq \tau_0$下是稳定的，其中常数\tau_0$仅依赖于对流和扩散系数，与网格尺寸h无关。在相同的时间条件$\tau \leq \tau_0$下，我们还提供了空间和时间上的最优误差估计。稳定性分析和误差估计可以推广到具有非线性对流部分的对流-扩散问题，并且类似的稳定性分析和误差估计也可以用于多步IMEX LDG格式，这些都构成了我们目前的研究工作。未来，我们希望考虑用于非周期边界条件的IMEX LDG方案，我们预计可以获得类似的稳定性，但精确的数值边界条件需要进行一些工作。}
+  abstract  = {}
 }
 @article{wang2016stability,
   title     = {Stability analysis and error estimates of local discontinuous Galerkin methods with implicit--explicit time-marching for nonlinear convection--diffusion problems},
@@ -264,7 +264,7 @@
   pages     = {237--258},
   year      = {2016},
   publisher = {Elsevier},
-  abstract  = {Wang和Shu分析了周期性边界非线性对流扩散问题的集中特定的IMEX RK时间离散LDG法的稳定性和误差估计。在相同的时间条件下，如果采用一般单调数值通量，针对阶IMEX RK格式和三阶多步IMEX格式耦合LDG空间离散，给出了空间和时间上的最优误差估计。这也是本文中采用的IMEX RK时间离散方法。其分析推广到多维非线性对流-扩散问题需要一些技术处理，以获得数值解及其梯度之间的关键关系。同时，不能直接将误差估计从一维推广到多维，特别是对于一般的三角形网格。未来，我们希望考虑用于求解具有非线性扩散的非线性对流-扩散问题的IMEX LDG方法。}
+  abstract  = {}
 }
 
 @article{liu2016analysis,
@@ -341,3 +341,542 @@
   publisher = {Elsevier}
 }
 
+@article{ayusobcarrillojashucw.discontinuous,
+  title  = {Discontinuous {{Galerkin}} Methods for the One-Dimensional {{Vlasov-Poisson}} System. {{Preprint}}.},
+  author = {{Ayuso B, Carrillo J A, Shu C W.}}
+}
+
+@incollection{castillo2000optimala,
+  title     = {An Optimal Error Estimate for the {{Local Discontinuous Galerkin}} Method, in Discontinuous {{Galerkin}} Methods: {{Theory}}, Computation and Application},
+  booktitle = {Lecture {{Notes}} in {{Computational Science}} and {{Egnineering}}, Vol. 11},
+  author    = {Castillo, P.},
+  editor    = {Cockburn, B. and Karniadakis, G. and Shu, C. W.},
+  year      = {2000},
+  publisher = {{Springer}},
+  address   = {{Berlin}}
+}
+
+@article{castillo2000priorib,
+  title   = {An a Priori Error Analysis of the Local Discontinuous {{Galerkin}} Method for Elliptic Problems},
+  author  = {Castillo, P. and Cockburn, B. and Perugia, I.},
+  year    = {2000},
+  journal = {SIAM J Numer Anal},
+  volume  = {38},
+  doi     = {10.1137/S0036142900371003}
+}
+
+@article{castillo2002optimalb,
+  title   = {Optimal a Priori Error Estimates for the Hp-Version of the {{LDG}} Method for Convection Diffusion Problems},
+  author  = {Castillo, P. and Cockburn, B. and Sch{\"o}tzau, D.},
+  year    = {2002},
+  journal = {Math Comp},
+  volume  = {71},
+  doi     = {10.1090/S0025-5718-01-01317-5}
+}
+
+@article{cercignani2000deviceb,
+  title   = {Device Benchmark Comparisons via Kinetic, Hydrodynamic, and High-Field Models},
+  author  = {Cercignani, C. and Gamba, I. M. and Jerome, J. W.},
+  year    = {2000},
+  journal = {Comput Methods Appl Mech Engrg},
+  volume  = {181},
+  doi     = {10.1016/S0045-7825(99)00186-3}
+}
+
+@book{ciarlet1975finite,
+  title     = {The {{Finite Element Method}} for {{Elliptic Problem}}},
+  author    = {Ciarlet, P.},
+  year      = {1975},
+  publisher = {{North Holland}},
+  address   = {{Amsterdam}}
+}
+
+@article{cockburn1989tvbb,
+  title   = {{{TVB Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{III}}: {{One-dimensional}} Systems},
+  author  = {Cockburn, B. and Lin, S. Y. and Shu, C. W.},
+  year    = {1989},
+  journal = {J Comput Phys},
+  volume  = {84},
+  doi     = {10.1016/0021-9991(89)90183-6}
+}
+
+@article{cockburn1989tvbc,
+  title   = {{{TVB Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{II}}: {{General Framework}}},
+  author  = {Cockburn, B. and Shu, C. W.},
+  year    = {1989},
+  journal = {Math Comp},
+  volume  = {52}
+}
+
+@article{cockburn1990rungekuttaa,
+  title   = {The {{Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{IV}}: {{The}} Multidimensional Case},
+  author  = {Cockburn, B. and Hou, S. and Shu, C. W.},
+  year    = {1990},
+  journal = {Math Comp},
+  volume  = {54}
+}
+
+@article{cockburn1998localb,
+  title   = {The Local Discontinuous {{Galerkin}} Method for Time-Dependent Convection-Diffusion Systems},
+  author  = {Cockburn, B. and Shu, C. W.},
+  year    = {1998},
+  journal = {SIAM J Numer Anal},
+  volume  = {35},
+  doi     = {10.1137/S0036142997316712}
+}
+
+@article{cockburn1998rungekuttaa,
+  title   = {The {{Runge-Kutta}} Discontinuous {{Galerkin}} Method for Conservation {{Laws V}}: {{Multidimensional}} Systems},
+  author  = {Cockburn, B. and Shu, C. W.},
+  year    = {1998},
+  journal = {J Comput Phys},
+  volume  = {141},
+  doi     = {10.1006/jcph.1998.5892}
+}
+
+@article{cockburn2002rungekutta,
+  title   = {Runge-{{Kutta Discontinuous Galerkin}} Methods for Convection-Dominated Problems},
+  author  = {Cockburn, B. and Shu, C. W.},
+  year    = {2002},
+  journal = {J Sci Comput},
+  volume  = {16},
+  doi     = {10.1023/A:1012873910884}
+}
+
+@article{cockburn2008optimala,
+  title   = {Optimal Convergence of the Original Discontinuous {{Galerkin}} Method for the Transport-Reaction Equation on Special Meshes},
+  author  = {Cockburn, B. and Dong, B. and Guzman, J.},
+  year    = {2008},
+  journal = {SIAM J Numer Anal},
+  volume  = {48},
+  doi     = {10.1137/060677215}
+}
+
+@article{douglas1986simulationa,
+  title   = {Simulation of the Transient Behavior for a One-Dimensional Semiconductor Device},
+  author  = {Douglas, J. and Gamba, I. M. and Squeff, M. C. J.},
+  year    = {1986},
+  journal = {Mat Apl Comput},
+  volume  = {5}
+}
+
+@article{gamba1989simulationa,
+  title   = {Simulation of the Transient Behavior for a One-Dimensional Semiconductor Device {{II}}},
+  author  = {Gamba, I. M. and Squeff, M. C. J.},
+  year    = {1989},
+  journal = {SIAM J Numer Anal},
+  volume  = {26},
+  doi     = {10.1137/0726032}
+}
+
+@incollection{jerome1994energy,
+  title     = {Energy Models for One-Carrier Transport in Semiconductor Devices},
+  booktitle = {{{IMA Volumes}} in {{Mathematics}} and {{Its Applications}}, Vol. 59},
+  author    = {Jerome, J. and Shu, C. W.},
+  editor    = {Coughran, W. and Cole, J. and Lloyd, P.},
+  year      = {1994},
+  publisher = {{Springer-Verlag}},
+  address   = {{Berlin}}
+}
+
+@article{johnson1986analysisa,
+  title   = {An Analysis of the Discontinuous {{Galerkin}} Method for a Scalar Hyperbolic Equation},
+  author  = {Johnson, C. and Pitk{\"a}ranta, J.},
+  year    = {1986},
+  journal = {Math Comp},
+  volume  = {46},
+  doi     = {10.1090/S0025-5718-1986-0815828-4}
+}
+
+@incollection{lesaint1974finite,
+  title     = {On a Finite Element Method for Solving the Neutron Transport Equation},
+  booktitle = {Mathematical {{Aspects}} of {{Finite Elements}} in {{Partial Differential Equations}}},
+  author    = {Lesaint, P. and Raviart, P. A.},
+  editor    = {Boor, C.},
+  year      = {1974},
+  publisher = {{Academic Press}},
+  address   = {{New York}}
+}
+
+@article{liu2004local,
+  title   = {Local Discontinuous {{Galerkin}} Methods for Moment Models in Device Simulations: {{Formulation}} and One-Dimensional Results},
+  author  = {Liu, Y. and Shu, C. W.},
+  year    = {2004},
+  journal = {J Comput Electronics},
+  volume  = {3},
+  doi     = {10.1007/s10825-004-7058-5}
+}
+
+@article{liu2007locala,
+  title   = {Local Discontinuous {{Galerkin}} Methods for Moment Models in Device Simulations: {{Performance}} Assessment and Two-Dimensional Results},
+  author  = {Liu, Y. and Shu, C. W.},
+  year    = {2007},
+  journal = {Appl Numer Math},
+  volume  = {57},
+  doi     = {10.1016/j.apnum.2006.07.027}
+}
+
+@article{richter1988optimalordera,
+  title   = {An Optimal-Order Error Estimate for the Discontinuous {{Galerkin}} Method},
+  author  = {Richter, G. R.},
+  year    = {1988},
+  journal = {Math Comp},
+  volume  = {50},
+  doi     = {10.1090/S0025-5718-1988-0917819-3}
+}
+
+@incollection{riviere2000discontinuousa,
+  title     = {A Discontinuous {{Galerkin}} Methods Applied to Nonlinear Parabolic Equations, in Discontinuous {{Galerkin}} Methods: {{Theory}}, Computation and Application},
+  booktitle = {Lecture {{Notes}} in {{Computational Science}} and {{Egnineering}}, Vol. 11},
+  author    = {Rivi{\`e}re, B. and Wheeler, M. F.},
+  editor    = {Cockburn, B. and Karniadakis, G. and Shu, C. W.},
+  year      = {2000},
+  publisher = {{Springer}},
+  address   = {{Berlin}}
+}
+
+@article{shu1988efficientb,
+  title   = {Efficient Implementation of Essentially Non-Oscillatory Shock-Capturing Schemes},
+  author  = {Shu, C. W. and Osher, S.},
+  year    = {1988},
+  journal = {Comput Phys},
+  volume  = {77},
+  doi     = {10.1016/0021-9991(88)90177-5}
+}
+
+@article{xu2007errora,
+  title   = {Error Estimates of the Semi-Discrete Local Discontinuous {{Galerkin}} Method for Nonlinear Convectiondiffusion and {{KdV}} Equations},
+  author  = {Xu, Y. and Shu, C. W.},
+  year    = {2007},
+  journal = {Comput Methods Appl Mech Engrg},
+  volume  = {196},
+  doi     = {10.1016/j.cma.2006.10.043}
+}
+
+@article{xu2010localb,
+  title   = {Local Discontinuous {{Galerkin}} Methods for High-Order Time-Dependent Partial Differential Equations},
+  author  = {Xu, Y. and Shu, C. W.},
+  year    = {2010},
+  journal = {Comm Comput Phys},
+  volume  = {7}
+}
+
+@article{yan2002localb,
+  title   = {A Local Discontinuous {{Galerkin}} Method for {{KdV}} Type Equations},
+  author  = {Yan, J. and Shu, C. W.},
+  year    = {2002},
+  journal = {SIAM J Numer Anal},
+  volume  = {40},
+  doi     = {10.1137/S0036142901390378}
+}
+
+@article{zhang2004errorb,
+  title   = {Error Estimates to Smooth Solutions of {{Runge-Kutta}} Discontinuous {{Galerkin}} Methods for Scalar Conservation Laws},
+  author  = {Zhang, Q. and Shu, C. W.},
+  year    = {2004},
+  journal = {SIAM J Numer Anal},
+  volume  = {42},
+  doi     = {10.1137/S0036142902404182}
+}
+
+@article{zhang2006errora,
+  title   = {Error Estimates to Smooth Solutions of {{Runge-Kutta}} Discontinuous {{Galerkin}} Methods for Symmetrizable Systems of Conservation Laws},
+  author  = {Zhang, Q. and Shu, C. W.},
+  year    = {2006},
+  journal = {SIAM J Numer Anal},
+  volume  = {44},
+  doi     = {10.1137/040620382}
+}
+@article{ascher1997implicitexplicita,
+  title   = {Implicit-Explicit {{Runge-Kutta}} Methods for Time-Dependent Partial Differential Equations},
+  author  = {Ascher, U. M. and Ruuth, S. J. and Spiteri, R. J.},
+  year    = {1997},
+  journal = {Appl Numer Math},
+  volume  = {25},
+  doi     = {10.1016/S0168-9274(97)00056-1}
+}
+
+@article{ayuso2011discontinuous,
+  title   = {Discontinuous {{Galerkin}} Methods for the One-Dimensional {{Vlasov-Poisson}} System},
+  author  = {Ayuso, B. and Carrillo, J. A. and Shu, C. -. W.},
+  year    = {2011},
+  journal = {Kinet Relat Models},
+  volume  = {4},
+  doi     = {10.3934/krm.2011.4.955}
+}
+
+@article{burman2010explicit,
+  title   = {Explicit {{Runge-Kutta}} Schemes and Finite Elements with Symmetric Stabilization for First-Order Linear {{PDE}} Systems},
+  author  = {Burman, E. and Ern, A. and Fern{\'a}ndez, M. A.},
+  year    = {2010},
+  journal = {SIAM J Numer Anal},
+  volume  = {48},
+  doi     = {10.1137/090757940}
+}
+
+@article{castillo,
+  title = {Castillo {{P}}. {{An}} Optimal Error Estimate for the Local Discontinuous {{Galerkin}} Method. {{In}}: {{Cockburn B}}, {{Karniadakis G}}, {{Shu C-W}}, Eds. {{Discontinuous Galerkin Methods}}: {{Theory}}, {{Computation}} and {{Application}}. {{Lecture Notes}} in {{Computational Science}} and {{Egnineering}}, Vol. 11. {{Berlin}}: {{Springer}}, 2000, 285{\textendash}290}
+}
+
+@article{castillo2000prioric,
+  title   = {An a Priori Error Analysis of the Local Discontinuous {{Galerkin}} Method for Elliptic Problems},
+  author  = {Castillo, P. and Cockburn, B. and Perugia, I.},
+  year    = {2000},
+  journal = {SIAM J Numer Anal},
+  volume  = {38},
+  doi     = {10.1137/S0036142900371003}
+}
+
+@article{castillo2002optimalc,
+  title   = {Optimal a Priori Error Estimates for the Hp-Version of the {{LDG}} Method for Convection Diffusion Problems},
+  author  = {Castillo, P. and Cockburn, B. and Sch{\"o}tzau, D.},
+  year    = {2002},
+  journal = {Math Comp},
+  volume  = {71},
+  doi     = {10.1090/S0025-5718-01-01317-5}
+}
+
+@article{cercignani2000devicec,
+  title   = {Device Benchmark Comparisons via Kinetic, Hydrodynamic, and High-Field Models},
+  author  = {Cercignani, C. and Gamba, I. M. and Jerome, J. W.},
+  year    = {2000},
+  journal = {Comput Methods Appl Mech Engrg},
+  volume  = {181},
+  doi     = {10.1016/S0045-7825(99)00186-3}
+}
+
+@book{ciarlet1978finite,
+  title     = {The {{Finite Element Method}} for {{Elliptic Problem}}},
+  author    = {Ciarlet, P.},
+  year      = {1978},
+  publisher = {{NorthHolland}},
+  address   = {{Amsterdam-New York}}
+}
+
+@article{cockburn1989tvbd,
+  title   = {{{TVB Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{III}}: {{One-dimensional}} Systems},
+  author  = {Cockburn, B. and Lin, S. -. Y. and Shu, C. -. W.},
+  year    = {1989},
+  journal = {J Comput Phys},
+  volume  = {84},
+  doi     = {10.1016/0021-9991(89)90183-6}
+}
+
+@article{cockburn1989tvbe,
+  title   = {{{TVB Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{II}}: {{General Framework}}},
+  author  = {Cockburn, B. and Shu, C. -. W.},
+  year    = {1989},
+  journal = {Math Comp},
+  volume  = {52}
+}
+
+@article{cockburn1990rungekuttab,
+  title   = {The {{Runge-Kutta}} Local Projection Discontinuous {{Galerkin}} Finite Element Method for Conservation Laws {{IV}}: {{The}} Multidimensional Case},
+  author  = {Cockburn, B. and Hou, S. and Shu, C. -. W.},
+  year    = {1990},
+  journal = {Math Comp},
+  volume  = {54}
+}
+
+@article{cockburn1998localc,
+  title   = {The Local Discontinuous {{Galerkin}} Method for Time-Dependent Convection-Diffusion Systems},
+  author  = {Cockburn, B. and Shu, C. -. W.},
+  year    = {1998},
+  journal = {SIAM J Numer Anal},
+  volume  = {35},
+  doi     = {10.1137/S0036142997316712}
+}
+
+@article{cockburn1998rungekuttab,
+  title   = {The {{Runge-Kutta}} Discontinuous {{Galerkin}} Method for Conservation {{Laws V-Multidimensional}} Systems},
+  author  = {Cockburn, B. and Shu, C. -. W.},
+  year    = {1998},
+  journal = {J Comput Phys},
+  volume  = {141},
+  doi     = {10.1006/jcph.1998.5892}
+}
+
+@article{cockburn2002rungekuttaa,
+  title   = {Runge-{{Kutta Discontinuous Galerkin}} Methods for Convection-Dominated Problems},
+  author  = {Cockburn, B. and Shu, C. -. W.},
+  year    = {2002},
+  journal = {J Sci Comput},
+  volume  = {16},
+  doi     = {10.1023/A:1012873910884}
+}
+
+@article{cockburn2008optimalb,
+  title   = {Optimal Convergence of the Original Discontinuous {{Galerkin}} Method for the Transportreaction Equation on Special Meshes},
+  author  = {Cockburn, B. and Dong, B. and Guzman, J.},
+  year    = {2008},
+  journal = {SIAM J Numer Anal},
+  volume  = {48},
+  doi     = {10.1137/060677215}
+}
+
+@article{jerome1994energya,
+  title   = {Energy Models for One-Carrier Transport in Semiconductor Devices},
+  author  = {Jerome, J. and Shu, C. -. W.},
+  year    = {1994},
+  journal = {IMA Volumes in Mathematics and Its Applications},
+  volume  = {59},
+  doi     = {10.1007/978-1-4613-8410-6_10}
+}
+
+@article{johnson1986analysisb,
+  title   = {An Analysis of the Discontinuous {{Galerkin}} Method for a Scalar Hyperbolic Equation},
+  author  = {Johnson, C. and Pitk{\"a}ranta, J.},
+  year    = {1986},
+  journal = {Math Comp},
+  volume  = {46},
+  doi     = {10.1090/S0025-5718-1986-0815828-4}
+}
+
+@incollection{lesaint1974finitea,
+  title     = {On a Finite Element Method for Solving the Neutron Transport Equation},
+  booktitle = {Mathematical {{Aspects}} of {{Finite Elements}} in {{Partial Differential Equations}}},
+  author    = {Lesaint, P. and Raviart, P. A.},
+  editor    = {Boor, C.},
+  year      = {1974},
+  publisher = {{Academic Press}},
+  address   = {{New York}}
+}
+
+@article{liu2004locala,
+  title   = {Local Discontinuous {{Galerkin}} Methods for Moment Models in Device Simulations: {{Formulation}} and One Dimensional Results},
+  author  = {Liu, Y. and Shu, C. -. W.},
+  year    = {2004},
+  journal = {J Comput Electronics},
+  volume  = {3},
+  doi     = {10.1007/s10825-004-7058-5}
+}
+
+@article{liu2007localb,
+  title   = {Local Discontinuous {{Galerkin}} Methods for Moment Models in Device Simulations: {{Performance}} Assessment and Two-Dimensional Results},
+  author  = {Liu, Y. and Shu, C. -. W.},
+  year    = {2007},
+  journal = {Appl Numer Math},
+  volume  = {57},
+  doi     = {10.1016/j.apnum.2006.07.027}
+}
+
+@article{liu2010errorc,
+  title   = {Error Analysis of the Semi-Discrete Local Discontinuous {{Galerkin}} Method for Semiconductor Device Simulation Models},
+  author  = {Liu, Y. and Shu, C. -. W.},
+  year    = {2010},
+  journal = {Sci China Math},
+  volume  = {53},
+  doi     = {10.1007/s11425-010-4075-7}
+}
+
+@incollection{luo2015priori,
+  title     = {A Priori Error Estimates to Smooth Solutions of the Third Order {{Runge-Kutta}} Discontinuous {{Galerkin}} Method for Symmetrizable Systems of Conservation Laws},
+  booktitle = {Math {{Modelling Num Anal}}},
+  author    = {Luo, J. and Shu, C. -. W. and Zhang, Q.},
+  year      = {2015}
+}
+
+@incollection{meng2015optimal,
+  title     = {Optimal Error Estimates for Discontinuous {{Galerkin}} Methods Based on Upwind-Biased Fluxes for Linear Hyperbolic Equations},
+  booktitle = {Math {{Comp}}},
+  author    = {Meng, X. and Shu, C. -. W. and Wu, B.},
+  year      = {2015}
+}
+
+@article{richter1988optimalorderb,
+  title   = {An Optimal-Order Error Estimate for the Discontinuous {{Galerkin}} Method},
+  author  = {Richter, G. R.},
+  year    = {1988},
+  journal = {Math Comp},
+  volume  = {50},
+  doi     = {10.1090/S0025-5718-1988-0917819-3}
+}
+
+@incollection{riviere2000discontinuousb,
+  title     = {A Discontinuous {{Galerkin}} Methods Applied to Nonlinear Parabolic Equations},
+  booktitle = {Discontinuous {{Galerkin Methods}}: {{Theory}}, {{Computation}} and {{Application}}, Vol. 11. {{Lecture Notes}} in {{Computational Science}} and {{Egnineering}}},
+  author    = {Rivi{\`e}re, B. and Wheeler, M. F.},
+  editor    = {Cockburn, B. and Karniadakis, G. and Shu, C. -. W.},
+  year      = {2000},
+  publisher = {{Springer}},
+  address   = {{Berlin}},
+  doi       = {10.1007/978-3-642-59721-3_17}
+}
+
+@article{shu1988efficientc,
+  title   = {Efficient Implementation of Essentially Non-Oscillatory Shock-Capturing Schemes},
+  author  = {Shu, C. -. W. and Osher, S.},
+  year    = {1988},
+  journal = {J Comput Phys},
+  volume  = {77},
+  doi     = {10.1016/0021-9991(88)90177-5}
+}
+
+@article{wang2013errora,
+  title   = {Error Estimate on a Fully Discrete Local Discontinuous {{Galerkin}} Method for Linear Convection-Diffusion Problem},
+  author  = {Wang, H. and Zhang, Q.},
+  year    = {2013},
+  journal = {J Comput Math},
+  volume  = {31},
+  doi     = {10.4208/jcm.1212-m4174}
+}
+
+@article{wang2015stabilityc,
+  title   = {Stability and Error Estimates of Local Discontinuous {{Galerkin}} Methods with Implicit-Explicit Time-Marching for Advection-Diffusion Problems},
+  author  = {Wang, H. and Shu, C. -. W. and Zhang, Q.},
+  year    = {2015},
+  journal = {SIAM J Numer Anal},
+  volume  = {53},
+  doi     = {10.1137/140956750}
+}
+
+@incollection{wang2015stabilityd,
+  title     = {Stability Analysis and Error Estimates of Local Discontinuous {{Galerkin}} Methods with Implicit-Explicit Time-Marching for Nonlinear Convection-Diffusion Problems},
+  booktitle = {Appl {{Math Comp}}},
+  author    = {Wang, H. and Shu, C. -. W. and Zhang, Q.},
+  year      = {2015}
+}
+
+@article{xu2007errorb,
+  title   = {Error Estimates of the Semi-Discrete Local Discontinuous {{Galerkin}} Method for Nonlinear Convectiondiffusion and {{KdV}} Equations},
+  author  = {Xu, Y. and Shu, C. -. W.},
+  year    = {2007},
+  journal = {Comput Methods Appl Mech Engrg},
+  volume  = {196},
+  doi     = {10.1016/j.cma.2006.10.043}
+}
+
+@article{xu2010localc,
+  title   = {Local Discontinuous {{Galerkin}} Methods for High-Order Time-Dependent Partial Differential Equations},
+  author  = {Xu, Y. and Shu, C. -. W.},
+  year    = {2010},
+  journal = {Comm Comput Phys},
+  volume  = {7}
+}
+
+@article{zhang2004errorc,
+  title   = {Error Estimates to Smooth Solutions of {{Runge-Kutta}} Discontinuous {{Galerkin}} Methods for Scalar Conservation Laws},
+  author  = {Zhang, Q. and Shu, C. -. W.},
+  year    = {2004},
+  journal = {SIAM J Numer Anal},
+  volume  = {42},
+  doi     = {10.1137/S0036142902404182}
+}
+
+@article{zhang2006errorb,
+  title   = {Error Estimates to Smooth Solutions of {{Runge-Kutta}} Discontinuous {{Galerkin}} Methods for Symmetrizable Systems of Conservation Laws},
+  author  = {Zhang, Q. and Shu, C. -. W.},
+  year    = {2006},
+  journal = {SIAM J Numer Anal},
+  volume  = {44},
+  doi     = {10.1137/040620382}
+}
+
+@article{zhang2010stabilitya,
+  title   = {Stability Analysis and a Priori Error Estimates to the Third Order Explicit {{Runge-Kutta}} Discontinuous {{Galerkin}} Method for Scalar Conservation Laws},
+  author  = {Zhang, Q. and Shu, C. -. W.},
+  year    = {2010},
+  journal = {SIAM J Numer Anal},
+  volume  = {48},
+  doi     = {10.1137/090771363}
+}
