@@ -83,13 +83,13 @@ LDG方法的起点是引入一个辅助变量，将包含高阶空间导数的�
 \end{align}
 将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n^{h}, q^{h}$，注意到数值解$n^{h}$和$q^{h}$在单元边界上不连续，然后将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
 \begin{align}
-     & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x                                                                                                                                      \\
+     & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x      \nonumber                                                                                                                       \\
      & \quad-\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDaReformLDGa} \\
      & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta} n^{h} w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDaReformLDGb} \\
      & E_{x}^{h}=\tilde{E}_{x}^{h}=-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right),   \label{eq:DDaReformLDGc}                                                                                                                                                    \\
      & E^{h}=\tilde{E}^{h}-v_{\text {bias }}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDaReformLDGd}
 \end{align}
-其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的$\widehat{}$表示数值通量。我们选择交替通量来计算$\hat{n}^{h}$和$\hat{q}^{h}$，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
+其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“hat”表示数值通量。我们选择交替通量来计算$\hat{n}^{h}$和$\hat{q}^{h}$，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
 注意到辅助变量$q^{h}$可以通过~\eqref{eq:DDaReformLDGb}在局部得到解，并代入~\eqref{eq:DDaReformLDGa}中。这就是该方法被称为“局部”不连续Galerkin方法的原因，也是LDG方法与传统的混合有限元方法不同的地方，传统方法中辅助变量$q^{h}$必须从一个全局系统中求解。
 \paragraph{误差估计}
 假设$n, q$是问题~\eqref{eq:DDaReforma}-\eqref{eq:DDaReformb}足够光滑的精确解，且导数有界。假设$n^{h}, q^{h}$是半离散LDG方案~\eqref{eq:DDaReformLDGa}-\eqref{eq:DDaReformLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}$ $(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
@@ -125,7 +125,7 @@ $$
 \begin{equation}
     n_{t}+\left(-\left(\frac{3 \tau \mu^{2} e}{\varepsilon} E n_{d} n+\mu E n-\frac{\tau \mu e \omega}{\varepsilon} n\right)+\frac{2 \tau \mu^{2} e}{\varepsilon} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 . \label{eq:HFRewrittenb}
 \end{equation}
-或者，通过设定$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，我们得到以下的高场（HF）模型
+或者，通过定义$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，我们得到以下的高场（HF）模型
 \begin{equation}
     n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 .  \label{eq:HFRewrittenc}
 \end{equation}
@@ -277,7 +277,9 @@ $\hat{\phi}_h$和$\hat{E}_h$的交变通量，带有一个边界条件的调节�
     -\int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0, \label{equation:IMEX2 LDG:EPE 2}
 \end{align}
 中$j = 1,\cdots,N;\quad r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。带“hat”的项代表数值通量，选择与之前相同。
+
 \noindent \textbf{三阶格式}
+
 [1]中给出的使用三阶IMEX时间推进格式的LDG格式是：找到数值解$n_h^{m+1},q_h^{m+1} \in V_h$使得
 \begin{align}
     (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{weakForm:IMEX3 LDG 1}                   \\
@@ -325,22 +327,20 @@ Dirichlet边界条件是：
 
 先前的文献已经证明了上述模型的误差分析。由于篇幅限制，具体证明过程此处不列出。
 \paragraph{DD模型LDG格式}
-为了方便起见，我们在以下分析中定义$a:=\sqrt{\tau \theta+\tau \mu^{2} E^{2}}$和$b:=3 C_{2} E n_{d}+\mu E-C_{3}$。
 \begin{theorem}
-    设$n, q$是问题(4.5)-(4.6)的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式(4.9)-(4.10)的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    设$n, q$是问题\eqref{eq:DDa}-\eqref{eq:DDb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式\eqref{eq:DDaReformLDGa}-\eqref{eq:DDaReformLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
     $$
         \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
     $$
-    其中常数$C$依赖于最终时间$T$、$k$、$\|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}$、$\left\|n_{x}\right\|_{0, \infty}$、$\left\|n_{d}\right\|_{0, \infty}$以及导数$\left|a^{\prime}\right|$和$\left|b^{\prime}\right|$的界。
+    其中常数$C$依赖于最终时间$T$、$k$、$\|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}$、$\left\|n_{x}\right\|_{0, \infty}$、$\left\|n_{d}\right\|_{0, \infty}$。
 \end{theorem}
 \paragraph{HF模型LDG格式}
+为了方便起见，我们在以下分析中定义$a:=\sqrt{\tau \theta+\tau \mu^{2} E^{2}}$和$b:=3 C_{2} E n_{d}+\mu E-C_{3}$。
 \begin{theorem}
-    设$n, q$是问题~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGa}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
-
+    设$n, q$是问题~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
     $$
         \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
     $$
-
     其中常数$C$依赖于最终时间$T$、$k$、$\|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}$、$\left\|n_{x}\right\|_{0, \infty}$、$\left\|n_{d}\right\|_{0, \infty}$以及导数$\left|a^{\prime}\right|$和$\left|b^{\prime}\right|$的界。
 \end{theorem}
 \paragraph{一阶IMEX LDG格式}
@@ -355,27 +355,25 @@ Dirichlet边界条件是：
 
 \paragraph{二阶IMEX LDG格式}
 \begin{theorem}
-    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是一阶IMEX LDG格式~\eqref{weakForm:IMEX2 LDG 1} - ~\eqref{equation:IMEX2 LDG:EPE 2}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在正常数C与h无关，使得下列误差估计成立
+    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是二阶IMEX LDG格式~\eqref{weakForm:IMEX2 LDG 1} - ~\eqref{equation:IMEX2 LDG:EPE 2}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在正常数C与h无关，使得下列误差估计成立
     \begin{equation}
         ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2)
     \end{equation}
     其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
-其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 
 \paragraph{三阶IMEX LDG格式}
 \begin{theorem}
-    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是一阶IMEX LDG格式~\eqref{weakForm:IMEX3 LDG 1} - ~\eqref{equation:IMEX3 LDG:EPE 2}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在正常数C与h无关，使得下列误差估计成立
+    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式~\eqref{weakForm:IMEX3 LDG 1} - ~\eqref{equation:IMEX3 LDG:EPE 2}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在正常数C与h无关，使得下列误差估计成立
     \begin{equation}
         ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3)
     \end{equation}
-    其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
 其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 
 \paragraph{Dirichlet边界条件}
 \begin{lemma}\label{theo:6.1}
-    令$n,q$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}的精确解，它们足够光滑且导数有界。令$n_h,q_h$是半离散LDG格式~\eqref{LDG:1} - ~\eqref{LDG:4}的数值解，并且选择按照~\eqref{numbericalFlux:Dirichlet 1}或~\eqref{numbericalFlux:Dirichlet 2}选择通廊$\hat{n}_h,\hat{q}_h$。定义对应的数值误差$e_h = u-u_h(u = n,q)$。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，下列误差估计成立
+    令$n,q$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}的精确解，它们足够光滑且导数有界。令$n_h,q_h$是半离散LDG格式~\eqref{LDG:1} - ~\eqref{LDG:4}的数值解，并且选择按照~\eqref{numbericalFlux:Dirichlet 1}或~\eqref{numbericalFlux:Dirichlet 2}选择通量$\hat{n}_h,\hat{q}_h$。定义对应的数值误差$e_h = u-u_h(u = n,q)$。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，下列误差估计成立
     \begin{equation}
         ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq Ch^{k+\frac{1}{2}}
     \end{equation}
