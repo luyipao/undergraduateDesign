@@ -1,4 +1,7 @@
 clear;clc;
-addpath('../src/functions');
-testDopingFunction
-rmpath('../src/functions');
+addpath('.\..\src\functions');
+% testDopingFunction
+% testLegendreBaseFunction
+% testL2Projection
+% testPiecewiseL2Projection
+rmpath('.\..\src\functions');
