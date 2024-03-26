@@ -1,8 +1,10 @@
-function fProj = L2Projection(f,n,a,b)
+function [fProj,fProjCoeffVec]= L2Projection(f,n,a,b)
 fProj = @(x) 0 * (x) ;
+fProjCoeffVec = zeros(n+1,1);
 for i = 0:n
-    fi = legendreBaseFunction(i,a,b);
-    fProj = @(x) fProj(x) + quadgk(@(x) fi(x).*f(x),a,b) * fi(x);
+    fBase = legendreBaseFunction(i,a,b);
+    fProjCoeffVec(i+1) = quadgk(@(x) fBase(x).*f(x),a,b,'MaxIntervalCount',1e5);
+    fProj = @(x) fProj(x) + fProjCoeffVec(i+1) * fBase(x);
 end
 end
 
