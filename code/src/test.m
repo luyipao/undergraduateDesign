@@ -14,3 +14,11 @@ meshSize = (b-a)/N;
 epsilon = 1;
 CFL = 0.2;
 [C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,auxq, mesh, n, epsilon, CFL);
+
+
+% clear;
+% ff = @(x) x;
+% gg = @(x) x;
+% f = @(x) arrayfun(@(x) ff(x), x);
+% g = @(x) arrayfun(@(x) gg(x).^2, x);
+% h = @(x) arrayfun(@(x) quadgk(@(y) f(y)+g(y), 0, x), x);

@@ -55,17 +55,16 @@ end
 function electricField = getElectricField(electronConcentration)
 global ELECTRON_CHARGE DIELECTRIC_PERMITTIVITY
 coeff = ELECTRON_CHARGE / DIELECTRIC_PERMITTIVITY;
-electronConcentration = sym(electronConcentration);
-dopingFunc = @(x) dopingFunction(x);
-dopingFunc = sym(dopingFunc);
+electronConcentrationFunc = @(x) arrayfun(@(x) electronConcentration(x), x);
+dopingFunc = @(x) arrayfun(@(x) dopingFunction(x),x);
 % E0
-tempFunc =  int(coeff * (electronConcentration - dopingFunc));
-tempFunc = matlabFunction(tempFunc);
-electricField0 = integral(tempFunc, 0, 1);
+tempFunc = @(x) arrayfun(@(x) quadgk(@(y) (electronConcentrationFunc(y)), 0, x),  x);
+% tempFunc = @(x) arrayfun(@(x) quadgk(@(y) -coeff*(electronConcentrationFunc(y)-dopingFunc(y)), 0, x),  x);
+electricField0 = quadgk(@(x) tempFunc(x), 0, 1);
 
 % E^h
 global VOLTAGE_DROP
-electricField = int(@(x) -coeff * (electronConcentration(x)-dopingFunc(x)),x);
+electricField = quadgk(@(x) -coeff * (electronConcentration(x)-dopingFunc(x)),x);
 electricField = electricField + electricField0 - VOLTAGE_DROP;
 electricField = matlabFunction(electricField);
 
