@@ -1,9 +1,16 @@
-clear; clc;
-addpath('./functions');
-% 假设你的table名为T
-Age = [38;43;38;40;11];
-Smoker = logical([1;0;1;0;1]);
-T = table(Age, Smoker);
+
+addpath('.\functions');
+addpath('..\src\functions')
+setParameters
+
+mesh = linspace(a,b,N+1);
+meshSize = (b-a)/N;
+
+[dopingProj,dopingProjCoeffVec] = piecewiseL2Projection(@(x) dopingFunction(x),n,a,b,N);
+
+[auxq,auxiliaryVarCoeffVec] = auxiliaryDDModelDGFunction(mesh,dopingProj,n);
 
 
-table2latex(T);
+epsilon = 1;
+CFL = 0.2;
+[C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,auxq, mesh, n, epsilon, CFL);
