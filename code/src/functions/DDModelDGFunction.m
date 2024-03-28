@@ -52,16 +52,19 @@ C = 1/3 * C + 2/3 * k2 + 2/3 * t * A\F;
 end
 
 %%
-function electricField = getElectricField(electronConcentration)
+function electricField = getElectricField(electronConcentration, C, mesh)
 global ELECTRON_CHARGE DIELECTRIC_PERMITTIVITY
 coeff = ELECTRON_CHARGE / DIELECTRIC_PERMITTIVITY;
-electronConcentrationFunc = @(x) arrayfun(@(x) electronConcentration(x), x);
-dopingFunc = @(x) arrayfun(@(x) dopingFunction(x),x);
+electronConcentrationFunc = @(x) arrayfun(@(x) electronConcentration(mod(x,mesh(end))), x);
+dopingFunc = @(x) arrayfun(@(x) dopingFunction(mod(x,mesh(end))),x);
 % E0
-tempFunc = @(x) arrayfun(@(x) quadgk(@(y) (electronConcentrationFunc(y)), 0, x),  x);
-% tempFunc = @(x) arrayfun(@(x) quadgk(@(y) -coeff*(electronConcentrationFunc(y)-dopingFunc(y)), 0, x),  x);
-electricField0 = quadgk(@(x) tempFunc(x), 0, 1);
+tempFunc = @(x) arrayfun(@(x) integral(@(y) -coeff * (electronConcentrationFunc(y) - dopingFunc(y)), 0, x),  x);
 
+% tempFunc = @(x) arrayfun(@(x) quadgk(@(y) -coeff*(electronConcentrationFunc(y)-dopingFunc(y)), 0, x),  x);
+tic
+electricField0 = integral(@(x) tempFunc(x), 0, 1);
+toc
+disp(['electricField0 cal time:',num2str(toc)]);
 % E^h
 global VOLTAGE_DROP
 electricField = quadgk(@(x) -coeff * (electronConcentration(x)-dopingFunc(x)),x);
@@ -70,18 +73,7 @@ electricField = matlabFunction(electricField);
 
 end
 
-%% input: electronConcentrationCoeff C; mesh; poly max degree n
-function electronConcentration = getElectronConcentration(C,mesh,n)
-N = length(mesh) - 1;
-electronConcentration = @(x) 0*x;
-for j = 1:N
-    for i = 1:n+1
-        [Pi,~] = legendreBaseFunction(i-1, mesh(j),mesh(j+1));
-        electronConcentration = @(x) electronConcentration(x) + C((j-1)*(n+1)+i) * (x>=mesh(i) & x < mesh(i+1)) .* Pi(x);
-    end
-end
-electronConcentration = @(x) electronConcentration(x) + (x == mesh(end)) * electronConcentration(mesh(1));
-end
+
 %%
 function getF(mesh, auxq, electronConcentration, E, n)
 global MOBILITY THETA RELAXATION_PARAMETER
