@@ -57,6 +57,7 @@ global ELECTRON_CHARGE DIELECTRIC_PERMITTIVITY
 coeff = ELECTRON_CHARGE / DIELECTRIC_PERMITTIVITY;
 
 % E0
+priElectronConcentrationFunc = @(x) arrayfun(@(x) electronConcentration(mod(x,mesh(end))), x);
 meshSize = max(abs(mesh(2:end)-mesh(1:end-1)));
 N = length(mesh) - 1;
 n = length(C) / N;
@@ -80,9 +81,11 @@ electricField0 = coeff * electricField0;
 % E^h
 global VOLTAGE_DROP
 
-electricField = @(x) -coeff * (quadgk(@(x) electronConcentration(x),0, x) - priDopingFunction(x));
+electricField = -coeff * quadgk(@(x) electronConcentration(x) - dopingFunc(x)), x);
 
 electricField = electricField + electricField0 - VOLTAGE_DROP;
+electricField = matlabFunction(electricField);
+
 end
 
 
