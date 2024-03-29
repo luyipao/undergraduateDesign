@@ -5,7 +5,8 @@ N = length(mesh) - 1;
 meshSize = max(abs(mesh(2:end)-mesh(1:end-1)));
 
 [~, ~, PiPjIntegral] = getLegendreBasisInfo(n,meshSize);
-A = PiPjIntegral;
+I = eye(N);
+A = kron(I,PiPjIntegral);
 
 t = CFL * meshSize;
 
@@ -13,14 +14,16 @@ C = [electronConcentrationCoeffVec GK3(electronConcentrationCoeffVec,A,t,mesh,n)
 T = [0];
 nLast = getElectronConcentration(C(:,end-1),mesh,n);
 nNow = getElectronConcentration(C(:,end),mesh,n);
-electronConcentrationValue = [nLast(mesh)' nNow(mesh)'];
+X = linspace(mesh(1),mesh(end),1000);
+electronConcentrationValue = [nLast(X)' nNow(X)'];
 
 while(norm(electronConcentrationValue(:,end-1) - electronConcentrationValue(:,end)) > epsilon)
     T = [T T(end)+t];
     C = [C GK3(electronConcentrationCoeffVec,A,t,mesh,n)] ;
     nNow = getElectronConcentration(C(:,end),mesh,n);
-    electronConcentrationValue = [electronConcentrationValue nNow(mesh)'];
+    electronConcentrationValue = [electronConcentrationValue nNow(X)'];
 end
+
 end
 
 
@@ -28,67 +31,50 @@ end
 
 
 function C = GK3(C,A,t,mesh,n)
-global F auxq E electronConcentration
-electronConcentration = getElectronConcentration(C, mesh, n);
+global F auxq E electronConcentration priElectronConcentration
+[electronConcentration,priElectronConcentration] = getElectronConcentration(C, mesh, n);
 auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
-E = getElectricField(electronConcentration);
+E = getElectricField(priElectronConcentration);
 F = getF(mesh, auxq, electronConcentration, E, n);
 
-k1 = C + A\F;
+k1 = C + A \ F;
 
-electronConcentration = getElectronConcentration(k1, mesh, n);
+[electronConcentration,priElectronConcentration] = getElectronConcentration(k1, mesh, n);
+plot(linspace(0,0.6), electronConcentration(linspace(0,0.6)));
 auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
-E = getElectricField(electronConcentration);
+E = getElectricField(priElectronConcentration);
 F = getF(mesh, auxq, electronConcentration, E, n);
 
 k2 = 3/4 * C + 1/4 * k1 + A\F;
 
-electronConcentration = getElectronConcentration(k2, mesh, n);
+[electronConcentration,priElectronConcentration] = getElectronConcentration(k2, mesh, n);
 auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
-E = getElectricField(electronConcentration);
+E = getElectricField(priElectronConcentration);
 F = getF(mesh, auxq, electronConcentration, E, n);
-
+plot(linspace(0,0.6), electronConcentration(linspace(0,0.6)));
 C = 1/3 * C + 2/3 * k2 + 2/3 * t * A\F;
 end
 
 %%
-function electricField = getElectricField(electronConcentration, C, mesh)
+function electricField = getElectricField(priElectronConcentration)
 global ELECTRON_CHARGE DIELECTRIC_PERMITTIVITY
 coeff = ELECTRON_CHARGE / DIELECTRIC_PERMITTIVITY;
 
 % E0
-meshSize = max(abs(mesh(2:end)-mesh(1:end-1)));
-N = length(mesh) - 1;
-n = length(C) / N;
-electricField0 = 0;
-for j = 1:N
-    tempjSum = 0;
-    for i = 1:n
-        yi = legendreBaseFunction(i-1, mesh(j), mesh(j+1));
-        yi = sym(yi);
-        pyi = int(yi);
-        ppyi = int(pyi);
-        pyi = matlabFunction(pyi); ppyi = matlabFunction(ppyi);
-        tempi =  ppyi(mesh(j+1)) - ppyi(mesh(j)) + pyi(mesh(j)) * (mesh(j+1)-mesh(j-1));
-        tempjSum = tempjSum + tempi * C((j-1)*(n+1)+i);
-    end
-    electricField0 = electricField0 + tempjSum + sum(mesh(1:end-1))*sqrt(meshSize);
-end
-electricField0 = electricField0 - quadgk(@(x) priDopingFunction(x), 0, 1);
-electricField0 = coeff * electricField0;
-
+T1 = quadgk(@(x) priElectronConcentration(x), 0, 1);
+T2 = quadgk(@(x) priDopingFunction(x), 0, 1);
+electricField0 = coeff * (T1 - T2);
 % E^h
 global VOLTAGE_DROP
 
-electricField = @(x) -coeff * (quadgk(@(x) electronConcentration(x),0, x) - priDopingFunction(x));
-
-electricField = electricField + electricField0 - VOLTAGE_DROP;
+electricField = @(x) -coeff * (priElectronConcentration(x) - priDopingFunction(x)) + electricField0 - VOLTAGE_DROP;
 end
 
 
 %%
-function getF(mesh, auxq, electronConcentration, E, n)
+function F = getF(mesh, auxq, electronConcentration, E, n)
 global MOBILITY THETA RELAXATION_PARAMETER
+N = length(mesh) - 1;
 F = zeros(N*(n+1),1);
 for j = 1:N
     for l = 1:n+1
@@ -101,6 +87,7 @@ for j = 1:N
     end
 end
 end
+
 function y = upwindFlux4En(E,electronConcentration,x)
 y = max(E(x),0) .* electronConcentration(x) + min(E(x),0) .* electronConcentration(x);
 end

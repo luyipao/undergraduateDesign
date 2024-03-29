@@ -1,6 +1,6 @@
 
-addpath('.\functions');
-addpath('..\src\functions')
+addpath('C:\Users\12192\OneDrive - zju.edu.cn\documents\homeworks\undergraduateDesign\code\src\functions');
+
 setParameters
 
 mesh = linspace(a,b,N+1);
@@ -11,7 +11,7 @@ meshSize = (b-a)/N;
 [auxq,auxiliaryVarCoeffVec] = auxiliaryDDModelDGFunction(mesh,dopingProj,n);
 
 
-epsilon = 1;
+epsilon = 0.001;
 CFL = 0.2;
 [C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,auxq, mesh, n, epsilon, CFL);
 
