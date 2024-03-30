@@ -16,7 +16,8 @@ meshSize = (b-a)/N;
 
 
 epsilon = 0.001;
-CFL = 1;
+CFL = 0.3;
 [C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,auxq, mesh, n, epsilon, CFL);
 
 
+% 

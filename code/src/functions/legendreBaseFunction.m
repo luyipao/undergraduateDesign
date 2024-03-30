@@ -28,6 +28,3 @@ function [PN, DPN] = legendreBaseFunction(n,a,b)
     PN = @(x) sqrt((2*n + 1) / (b - a)) * P((2.*x - b - a) / (b - a));
     DPN = @(x) sqrt(4*(2*n + 1) / (b - a)^3) * DP((2.*x - b - a) / (b - a));
 end
-
-
-

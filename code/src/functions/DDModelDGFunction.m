@@ -16,13 +16,14 @@ for j = 1:N
     end
     A((j-1)*(n+1)+1 : j*(n+1), (j-1)*(n+1)+1 : j*(n+1)) = A_j;
 end
+
 % t
 t = CFL * meshSize;
 
 C = [electronConcentrationCoeffVec GK3(electronConcentrationCoeffVec,A,t,mesh,n)] ;
 %draw 
 [electronConcentration,~,~] = getElectronConcentration(C(:,end), mesh, n);
-plot(linspace(0,0.6,1000), electronConcentration(linspace(0,0.6,1000)));
+plot(linspace(0.05,0.6,1000), electronConcentration(linspace(0.05,0.6,1000)));
 % T
 T = [0];
 nLast = getElectronConcentration(C(:,end-1),mesh,n);
@@ -41,13 +42,25 @@ end
 
 function C = GK3(C,A,t,mesh,n)
 % global F auxq E electronConcentration priElectronConcentration 
+N = length(mesh) - 1;
 [electronConcentration,priElectronConcentration,electronConcentrationCells] = getElectronConcentration(C, mesh, n); %ok
 auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);%ok
 E = getElectricField(priElectronConcentration);% seem ok
 F = getF(mesh, auxq, electronConcentration,electronConcentrationCells, E, n);% seem ok
+global MOBILITY 
+for j = 1:N
+    B_j = zeros(n+1, n+1);
+    for k = 1:n+1
+        [Pk, ~] = legendreBaseFunction(k-1,mesh(j),mesh(j+1));
+        for l = 1:n+1
+            [~, DPl] = legendreBaseFunction(l-1,mesh(j),mesh(j+1));
+            B_j(k,l) = quadgk(@(x) MOBILITY * E(x) .* Pk(x).*DPl(x), mesh(j), mesh(j+1));
+        end
+    end
+    B((j-1)*(n+1)+1 : j*(n+1), (j-1)*(n+1)+1 : j*(n+1)) = B_j;
+end
 
-
-C = C + t * (A \ F); %%error line k1 can't get correct result.
+C = C + t * (A \ F) - t * A \ (B*C); %%error line k1 can't get correct result.
 % 
 % [electronConcentration,priElectronConcentration,electronConcentrationCells] = getElectronConcentration(k1, mesh, n);
 % auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
@@ -76,7 +89,7 @@ electricField0 = coeff * (T1 - T2);
 % E^h
 global VOLTAGE_DROP
 
-electricField = @(x) -coeff * (priElectronConcentration(x) - priDopingFunction(x)) + electricField0 - VOLTAGE_DROP;
+electricField = @(x) -coeff * (priElectronConcentration(x) - priDopingFunction(x) - priElectronConcentration(0) + priDopingFunction(0)) + electricField0 - VOLTAGE_DROP;
 end
 
 
@@ -88,28 +101,24 @@ F = zeros(N*(n+1),1);
 for j = 1:N
     for l = 1:n+1
         [Pl, DPl] = legendreBaseFunction(l-1, mesh(j),mesh(j+1));
-%         hold on
-%         plot(linspace(0,0.6,1000),electronConcentration(linspace(0,0.6,1000)));
-%         plot(linspace(0,0.6,1000),auxq(linspace(0,0.6,1000)));
-%         hold off
-        T1 = quadgk(@(x) MOBILITY*E(x) .* electronConcentration(x) .* DPl(x), mesh(j),mesh(j+1));
+        T1 = quadgk(@(x) MOBILITY * E(x) .* electronConcentration(x) .* DPl(x), mesh(j),mesh(j+1));
         T2 = quadgk(@(x) sqrt(THETA * RELAXATION_PARAMETER) * auxq(x) .* DPl(x), mesh(j),mesh(j+1));
         
         if j ==N
-            upwindFlux = max(E(mesh(j+1)), 0) .* electronConcentrationCells{1}(mesh(1)) + min(E(mesh(j)), 0) .* electronConcentrationCells{end}(mesh(end));
+            upwindFlux = max(E(mesh(j+1)), 0) .* electronConcentrationCells{1}(mesh(1)) + min(E(mesh(j+1)), 0) .* electronConcentrationCells{j}(mesh(j+1));
         else
-            upwindFlux = max(E(mesh(j+1)),0) .* electronConcentrationCells{j+1}(mesh(j+1)) + min(E(mesh(j)), 0) .* electronConcentrationCells{j}(mesh(j+1));
+            upwindFlux = max(E(mesh(j+1)),0) .* electronConcentrationCells{j+1}(mesh(j+1)) + min(E(mesh(j+1)), 0) .* electronConcentrationCells{j}(mesh(j+1));
         end
         T3 = (MOBILITY * upwindFlux  + sqrt(THETA * RELAXATION_PARAMETER) * auxq(mesh(j+1))) * Pl(mesh(j+1));
         
         if j == 1
             upwindFlux = max(E(mesh(j)),0) .* electronConcentrationCells{j}(mesh(j)) + min(E(mesh(j)), 0) .* electronConcentrationCells{end}(mesh(end));
-            T4 = (MOBILITY * upwindFlux) * Pl(mesh(j+1));
+            T4 = (MOBILITY * upwindFlux + sqrt(THETA * RELAXATION_PARAMETER) * auxq(mesh(j))) * Pl(mesh(j));
         else
             upwindFlux = max(E(mesh(j)),0) .* electronConcentrationCells{j}(mesh(j)) + min(E(mesh(j)), 0) .* electronConcentrationCells{j-1}(mesh(j));
             T4 = (MOBILITY * upwindFlux  + sqrt(THETA * RELAXATION_PARAMETER) * auxq(mesh(j))) * Pl(mesh(j));
         end
-        F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
+        F((j-1)*(n+1) + l) = -T2+T3-T4;
     end
 end
 end
