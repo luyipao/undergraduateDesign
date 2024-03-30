@@ -1,8 +1,7 @@
 clear;
-% 确定待处理函数，区间及初始数量
 %f = @(x) sin(x);
-f = @(x) dopingFunction(x) / 10e17;
-a = 0.096; b = 0.1020; n = 4;
+f = @(x) dopingFunction(x);
+a = 0.1; b = 0.15; n = 5;
 
 
  % draw 

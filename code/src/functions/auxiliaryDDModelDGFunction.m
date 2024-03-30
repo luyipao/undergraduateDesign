@@ -4,6 +4,8 @@
 
 function [auxq,auxiliaryVarCoeffVec] = auxiliaryDDModelDGFunction(mesh, nFunc, n)
 %% initlize
+ X = linspace(0,0.6,1000);
+ h = X(2) - X(1);
 global RELAXATION_PARAMETER THETA
 N = length(mesh) - 1;
 meshSize = max(abs(mesh(2:end)-mesh(1:end-1)));
@@ -36,7 +38,6 @@ for j = 1:N
 end
 % cal C
 auxiliaryVarCoeffVec = A\F;
-
 %% output auxiliary function q
 auxq = @(x) 0 * x;
 
@@ -49,7 +50,7 @@ for j = 1:N
     else
         for l = 1:n+1
             [Pl,~] = legendreBaseFunction(l-1,mesh(j),mesh(j+1));
-            auxq = @(x) auxq(x) + auxiliaryVarCoeffVec((j-1)*(n+1)+l) *(x > mesh(j) & x <= mesh(j+1)) .* Pl(x);
+            auxq = @(x) auxq(x) + auxiliaryVarCoeffVec((j-1)*(n+1)+l) *(x >= mesh(j) & x < mesh(j+1)) .* Pl(x);
         end
     end
 end

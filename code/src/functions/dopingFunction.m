@@ -10,6 +10,6 @@ dopingDensity = @(x) (x>=0 & x<=0.1)*500 ...
     + (x>0.45 & x<0.5) .* sinFunc2(x) ...
     + (x>=0.5 & x<=0.6) * 500;
 
-% change n units to 10e12 cm^{-3}
+% \mu m
 y = dopingDensity(x) * 10e2;
 end
