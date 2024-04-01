@@ -17,7 +17,7 @@ meshSize = (b-a)/N;
 
 
 epsilon = 0.001;
-CFL =1/(2*n+1);
+CFL =1/(2n+1);
 [C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,@(x) sqrt(THETA * RELAXATION_PARAMETER) * diffDopingFunction(x), mesh, n, epsilon, CFL);
 
 
