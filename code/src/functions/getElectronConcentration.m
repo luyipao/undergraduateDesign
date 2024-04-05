@@ -29,7 +29,7 @@ for j = 1:N
     electronConcentrationCoeffs((j-1)*(n+1) + 1) = (mesh(j+1)-mesh(j)) * localAverageElectronConcentration(j) / sqrt(mesh(j+1)-mesh(j));
     electronConcentrationCoeffs((j-1)*(n+1) + 2) = (urmod - ulmod) / (2*sqrt( 3/(mesh(j+1)-mesh(j)) ));
     electronConcentrationCoeffs((j-1)*(n+1) + 3) = urmod - electronConcentrationCoeffs((j-1)*(n+1) + 1) / sqrt(mesh(j+1)-mesh(j)) - electronConcentrationCoeffs((j-1)*(n+1) + 2)*sqrt( 3/(mesh(j+1)-mesh(j)) );
-    electronConcentrationCoeffs((j-1)*(n+1) + 3) = -electronConcentrationCoeffs((j-1)*(n+1) + 3) / sqrt( 5/(mesh(j+1)-mesh(j)) );
+    electronConcentrationCoeffs((j-1)*(n+1) + 3) = electronConcentrationCoeffs((j-1)*(n+1) + 3) / sqrt( 5/(mesh(j+1)-mesh(j)) );
     % electronConcentrationCoeffs((j-1)*(n+1) + 4) = 0;
 end
 
@@ -64,9 +64,10 @@ end
 end
 
 function y = minmod(v,M)
-if abs(v(1)) <= M
-    y = v(1);
-else
-    y = all(sign(v) == sign(v(1))) * sign(v(1)) * min(abs(v));
-end
+% if abs(v(1)) <= M
+%     y = v(1);
+% else
+%     y = all(sign(v) == sign(v(1))) * sign(v(1)) * min(abs(v));
+% end
+ y = all(sign(v) == sign(v(1))) * sign(v(1)) * min(abs(v));
 end

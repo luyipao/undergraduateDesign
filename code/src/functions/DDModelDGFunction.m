@@ -67,7 +67,7 @@ auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
 E = getElectricField(priElectronConcentration);
 F = getF(mesh, auxq, electronConcentration, electronConcentrationCells,E, n);
 
-k2 = 3/4 * C + 1/4 * k1 + 1/4 * t * A \ F;%% k2 already flies.
+k2 = 3/4 * C + 1/4 * k1 + 1/4 * t * A \ F;%% k2 already fail.
 
 [electronConcentration,priElectronConcentration,electronConcentrationCells] = getElectronConcentration(k2, mesh, n);
 auxq = auxiliaryDDModelDGFunction(mesh, electronConcentration, n);
