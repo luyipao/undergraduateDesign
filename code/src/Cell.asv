@@ -13,7 +13,6 @@ classdef Cell
         auxFunction
         coeffs (:,1) double
         auxCoeffs (:,1) double
-        % first colum Pi  second  DPi
         basisFunctions (:,2) cell
         basisFunctionsBoundaryValues (:,2) double
         degree double
@@ -67,6 +66,8 @@ classdef Cell
                     P1 = P;
                     DP1 = DP;
                 end
+                P = @(x) ((2*ii - 1) .* x .* P1(x) - (ii - 1) .* P0(x)) / ii;
+                DP = @(x) ((2*ii - 1) .* P1(x) + (2*ii - 1) .* x .* DP1(x) - (ii - 1) .* DP0(x)) / ii;
             end
             PN = @(x) sqrt((2*n + 1) / (obj.b - obj.a)) * P((2.*x - obj.b - obj.a) / (obj.b - obj.a));
             DPN = @(x) sqrt(4*(2*n + 1) / (obj.b - obj.a)^3) * DP((2.*x - obj.b - obj.a) / (obj.b - obj.a));

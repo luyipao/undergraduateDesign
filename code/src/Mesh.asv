@@ -156,10 +156,10 @@ classdef Mesh
         function obj = DDModelDGFunction(obj,f)
             t = obj.CFL * obj.meshSize;
             [~, obj.coeffs] = piecewiseL2Projection(f,obj.X,obj.degree);
-            [electronConcentration,priElectronConcentration,electronConcentrationCells] = getElectronConcentration(obj.coeffs, obj.X, obj.degree);
+            [electronConcentration,priElectronConcentration,~] = getElectronConcentration(obj.coeffs, obj.X, obj.degree);
             E = getElectricField(priElectronConcentration);% seem ok
         end
-        function F = getF(obj,E,electronConcentration,electronConcentrationCells)
+        function F = getF(obj,E,f)
             N = obj.CellsNum;
             n = obj.degree;
             mesh = obj.X;
@@ -168,7 +168,7 @@ classdef Mesh
                     [Pl, DPl] = legendreBaseFunction(l-1, mesh(j),mesh(j+1));
                     T1 = gaussLegendre(@(x) 0.75 * E(x) .* electronConcentration(x) .* DPl(x), mesh(j),mesh(j+1));
                     T2 = gaussLegendre(@(x) 0.139219332249189 * auxq(x) .* DPl(x), mesh(j),mesh(j+1));
-                    Cellj = obj.Cells(j);
+                    
                     if j == N
                         upwindFlux = max(E(mesh(j+1)), 0) .* electronConcentrationCells{1}(mesh(1)) + min(E(mesh(j+1)), 0) .* electronConcentrationCells{j}(mesh(j+1));
                     else
