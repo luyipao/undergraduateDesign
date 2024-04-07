@@ -10,6 +10,7 @@ classdef Cell
         auxlr (1,1) double
         auxrl (1,1) double
         auxrr (1,1) double
+        func
         auxFunction
         coeffs (:,1) double
         auxCoeffs (:,1) double

@@ -6,6 +6,8 @@ n = 3;
 N = 100;
 
 mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
+
+mesh.draw();
 mesh = mesh.DDModelDGFunction();
 
 % [dopingProj,dopingProjCoeffVec] = piecewiseL2Projection(@(x) dopingFunction(x),n,a,b,N);

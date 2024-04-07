@@ -12,32 +12,32 @@ for j = 1:N
         func1 = @(x) func1(x) + C((j-1)*(n+1)+i) * Pi(x);
     end
     func1Cells{j} = func1;
-    localAverageElectronConcentration(j) = quadgk(func1Cells{j}, mesh(j),mesh(j+1)) / (mesh(j+1)-mesh(j));
+    localAverageElectronConcentration(j) = gaussLegendre(func1Cells{j}, mesh(j),mesh(j+1)) / (mesh(j+1)-mesh(j));
 end
 
 %%minmode limiter
 %% coeffs(64)
-h = max(mesh(2:end)-mesh(1:end-1));
-M = 2 / 3 * 249*(20*pi)^2 * 10e2 * h^2;
-electronConcentrationCoeffs = zeros(N*(n+1),1);
-for j = 1:N
-    func1 = func1Cells{j};
-    ur = func1(mesh(j+1)) - localAverageElectronConcentration(j);
-    ul = localAverageElectronConcentration(j) - func1(mesh(j));
-    urmod = localAverageElectronConcentration(j) + minmod([ul localAverageElectronConcentration(mod(j,N)+1)-localAverageElectronConcentration(j) localAverageElectronConcentration(j)-localAverageElectronConcentration(mod(j-2+N,N)+1)], M);
-    ulmod =  localAverageElectronConcentration(j) - minmod([ur localAverageElectronConcentration(mod(j,N)+1)-localAverageElectronConcentration(j) localAverageElectronConcentration(j)-localAverageElectronConcentration(mod(j-2+N,N)+1)], M);
-    electronConcentrationCoeffs((j-1)*(n+1) + 1) = (mesh(j+1)-mesh(j)) * localAverageElectronConcentration(j) / sqrt(mesh(j+1)-mesh(j));
-    electronConcentrationCoeffs((j-1)*(n+1) + 2) = (urmod - ulmod) / (2*sqrt( 3/(mesh(j+1)-mesh(j)) ));
-    electronConcentrationCoeffs((j-1)*(n+1) + 3) = urmod - electronConcentrationCoeffs((j-1)*(n+1) + 1) / sqrt(mesh(j+1)-mesh(j)) - electronConcentrationCoeffs((j-1)*(n+1) + 2)*sqrt( 3/(mesh(j+1)-mesh(j)) );
-    electronConcentrationCoeffs((j-1)*(n+1) + 3) = electronConcentrationCoeffs((j-1)*(n+1) + 3) / sqrt( 5/(mesh(j+1)-mesh(j)) );
-    % electronConcentrationCoeffs((j-1)*(n+1) + 4) = 0;
-end
+% h = max(mesh(2:end)-mesh(1:end-1));
+% M = 2 / 3 * 249*(20*pi)^2 * 10e2 * h^2;
+% electronConcentrationCoeffs = zeros(N*(n+1),1);
+% for j = 1:N
+%     func1 = func1Cells{j};
+%     ur = func1(mesh(j+1)) - localAverageElectronConcentration(j);
+%     ul = localAverageElectronConcentration(j) - func1(mesh(j));
+%     urmod = localAverageElectronConcentration(j) + minmod([ul localAverageElectronConcentration(mod(j,N)+1)-localAverageElectronConcentration(j) localAverageElectronConcentration(j)-localAverageElectronConcentration(mod(j-2+N,N)+1)], M);
+%     ulmod =  localAverageElectronConcentration(j) - minmod([ur localAverageElectronConcentration(mod(j,N)+1)-localAverageElectronConcentration(j) localAverageElectronConcentration(j)-localAverageElectronConcentration(mod(j-2+N,N)+1)], M);
+%     electronConcentrationCoeffs((j-1)*(n+1) + 1) = (mesh(j+1)-mesh(j)) * localAverageElectronConcentration(j) / sqrt(mesh(j+1)-mesh(j));
+%     electronConcentrationCoeffs((j-1)*(n+1) + 2) = (urmod - ulmod) / (2*sqrt( 3/(mesh(j+1)-mesh(j)) ));
+%     electronConcentrationCoeffs((j-1)*(n+1) + 3) = urmod - electronConcentrationCoeffs((j-1)*(n+1) + 1) / sqrt(mesh(j+1)-mesh(j)) - electronConcentrationCoeffs((j-1)*(n+1) + 2)*sqrt( 3/(mesh(j+1)-mesh(j)) );
+%     electronConcentrationCoeffs((j-1)*(n+1) + 3) = electronConcentrationCoeffs((j-1)*(n+1) + 3) / sqrt( 5/(mesh(j+1)-mesh(j)) );
+%     % electronConcentrationCoeffs((j-1)*(n+1) + 4) = 0;
+% end
 
 %% output
 electronConcentration = @(x) 0*x;
 priElectronConcentration = @(x) 0*x;
 electronConcentrationCells = cell(N,1);
-
+electronConcentrationCoeffs = C;
 flux = 0;
 for j = 1:N
     syms x
