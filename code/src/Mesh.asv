@@ -30,33 +30,36 @@ classdef Mesh
             obj.degree = degree;
             obj.X = linspace(a, b, N+1);
             obj.Xc = (obj.X(1:end-1) + obj.X(2:end)) / 2;
-            obj.coeffs = zeros(N*(degree+1),1);
             obj.coeffs = [];
-            obj.func = @(x) 0 * x;
+%             obj.func = @(x) 0 * x;
             for i = 1:N
                 obj.Cells(i) = Cell(obj.X(i),obj.X(i+1),degree);
                 [~,fProjCoeffVec] = L2Projection(f,degree,obj.X(i),obj.X(i+1));
                 obj.Cells(i).coeffs = fProjCoeffVec;
                 obj.coeffs = [obj.coeffs; fProjCoeffVec];
-                if i==N
-                    obj.func = @(x) obj.func(x) + (x>=obj.X(i) & x<=obj.X(i+1)) .* fProj(x);
-                else
-                    obj.func = @(x) obj.func(x) + (x>=obj.X(i) & x<obj.X(i+1)) .* fProj(x);
-                end
+%                 if i==N
+%                     obj.func = @(x) obj.func(x) + (x>=obj.X(i) & x<=obj.X(i+1)) .* fProj(x);
+%                 else
+%                     obj.func = @(x) obj.func(x) + (x>=obj.X(i) & x<obj.X(i+1)) .* fProj(x);
+%                 end
             end
             else
                 error('Invalid number of inputs.')
             end
             obj = obj.getFunc;
-            obj = obj.ENOreconstruction;
-            obj = obj.auxiliaryDDModelDGFunction;
+            obj = obj.getNodesValues;
+            obj = obj.slopeLimiter;
+            obj = obj.getFunc;
+            obj = obj.getNodesValues;
+            % obj = obj.ENOreconstruction;
+            %obj = obj.auxiliaryDDModelDGFunction;
         end
         %% ENO reconstruction
         % accuracy: 2m+1
         % input: mesh
         % output: reconstructed function value at mesh nodes in both sides
         function obj = ENOreconstruction(obj)
-            m = round(obj.degree / 2);
+            m = round(obj.degree / 2) + 1;
             for j = 1:obj.CellsNum
                 pPos = obj.auxENOSolver(obj.func,j,m);
                 pNeg = obj.auxENOSolver(obj.func,j+1,m);
@@ -109,7 +112,7 @@ classdef Mesh
     methods (Access = public)
         %% getFunc
         % input: coeff
-        % output: func
+        % output: func in Ce
         function obj = getFunc(obj)
             obj.func = @(x) 0*x;
             for j = 1:obj.CellsNum
@@ -126,6 +129,25 @@ classdef Mesh
                 end
             end
         end
+        %% getNodesValues
+        function obj = getNodesValues(obj)
+            for j = 1:obj.CellsNum
+                fProj = @(x) obj.Cells(j).func(x);
+                obj.Cells(j).rl = fProj(obj.X(j+1));
+                obj.Cells(j).lr = fProj(obj.X(j));
+                if j == 1
+                    obj.Cells(obj.CellsNum).rr = obj.Cells(j).lr;
+                    obj.Cells(j+1).ll = obj.Cells(j).rl;
+                elseif j == obj.CellsNum
+                    obj.Cells(1).ll = obj.Cells(j).rl;
+                    obj.Cells(j-1).rr = obj.Cells(j).lr;
+                else
+                    obj.Cells(j+1).ll = obj.Cells(j).rl;
+                    obj.Cells(j-1).rr = obj.Cells(j).lr;
+                end
+
+            end
+        end
         %% auxENOsolver
         function p = auxENOSolver(obj,f,j,m)
             % init
@@ -136,7 +158,11 @@ classdef Mesh
             Q = cell(2*m+1,1);
             kmin = j;
             kmax = j;
-            Q{1} = @(x) f(x);
+            if j > obj.CellsNum
+                Q{1} = @(x) f(obj.Xc(j-obj.CellsNum)) + 0*x;
+            else
+                Q{1} = @(x) f(obj.Xc(j)) + 0*x;
+            end
             % inductively
             for i = 2:2*m+1
                 % nth divided differences of f
@@ -146,7 +172,7 @@ classdef Mesh
                 bx = obj.getLocalMesh(kmin-1,kmax);
                 by = f(bx);
                 b(i) = obj.dividedDiff(bx,by);
-                if abs(a(i) + 1) >= abs(b(i))  % error  when a(i) should equalt to b(i), small noisy may cause b(i) > a(i)
+                if abs(a(i))+1 >= abs(b(i))  % error  when a(i) should equalt to b(i), small noisy may cause b(i) > a(i)
                     c(i) = b(i);
                     kmin = kmin-1;
                 else
@@ -154,7 +180,7 @@ classdef Mesh
                     kmax = kmax+1;
                 end
                 % product
-                product = @(x) 0 * x;
+                product = @(x) 1 + 0 * x;
                 for xk = obj.getLocalMesh(kmin,kmax)
                     product = @(x) product(x) .* (x - xk);
                 end
@@ -163,6 +189,8 @@ classdef Mesh
             end
             % output
             p = @(x) Q{end}(x);
+%             plot(linspace(obj.X(j),obj.X(j+1)),p(linspace(obj.X(j),obj.X(j+1))),linspace(obj.X(j),obj.X(j+1)),obj.func(linspace(obj.X(j),obj.X(j+1))),'--');
+%             legend('reconstructed','origin');
         end
         %% dividedDiff
         function result = dividedDiff(~, x, y)
@@ -238,22 +266,26 @@ classdef Mesh
             k1 = k0 + t * F;
             obj.coeffs = k1;
             obj = obj.getFunc;
-            obj = obj.ENOreconstruction;
+            obj = obj.getNodesValues;
+            %obj = obj.ENOreconstruction;
             obj = obj.auxiliaryDDModelDGFunction;
             priElectronConcentration = obj.getElectronConcentration();
             E = getElectricField(priElectronConcentration);% seem ok
             F = getF(obj,E);
             obj = obj.getFunc;
+            obj = obj.getNodesValues;
             k2 = 3/4 * k0 + 1/4 * k1 + 1/4 * t * F;
             obj.coeffs = k2;
-            obj = obj.ENOreconstruction;
+            obj = obj.getFunc;
+            obj = obj.getNodesValues;
+            %obj = obj.ENOreconstruction;
             obj = obj.auxiliaryDDModelDGFunction;
             priElectronConcentration = obj.getElectronConcentration();
             E = getElectricField(priElectronConcentration);% seem ok
             F = getF(obj,E);
             obj.coeffs = 1/3 * k0 + 2/3 * k2 + 2/3 * t * F;
             obj = obj.getFunc;
-            obj = obj.ENOreconstruction;
+            %obj = obj.ENOreconstruction;
             obj = obj.auxiliaryDDModelDGFunction;
         end
         %% internal function getF
@@ -285,7 +317,8 @@ classdef Mesh
             F = zeros(obj.CellsNum*(n+1),1);
             for j = 1:obj.CellsNum
                 Cellj = obj.Cells(j);
-                Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
+                % Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
+                Fj = obj.func(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - obj.func(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
                 for i = 1:n+1
                     tempf = @(x) Cellj.basisFunctions{i,2}(x) .* Cellj.func(x);
                     Fj(i) = Fj(i) - gaussLegendre(tempf,Cellj.a,Cellj.b);
@@ -331,5 +364,39 @@ classdef Mesh
             plot(XX,Y,XX,YY);
             legend('auxiliray','aimed function');
         end
+        % limiter
+        % change coeffs not function
+        function obj = slopeLimiter(obj)
+            localAverages = zeros(obj.CellsNum,1);
+            for j = 1:obj.CellsNum
+                Cellj = obj.Cells(j);
+                localAverages(j) = gaussLegendre(Cellj.func, Cellj.a, Cellj.b) / obj.meshSize;
+            end
+            M = 6.553417322323334e+08 * obj.meshSize^2;
+            N = obj.CellsNum;
+            for j = 1:obj.CellsNum
+                Cellj = obj.Cells(j);
+                ur = Cellj.rl - localAverages(j);
+                ul = localAverages(j) - Cellj.lr;
+                urmod = localAverages(j) + obj.minmod([ul localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
+                ulmod =  localAverages(j) - obj.minmod([ur localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
+                if abs(urmod - Cellj.rl) < 1 && abs(ulmod - Cellj.lr) < 1
+                    continue;
+                end
+                Cj = zeros(obj.degree+1,1);
+                Cj(1) = sqrt(obj.meshSize) * localAverages(j);
+                Cj(2) = (urmod - ulmod) / (2*sqrt( 3/obj.meshSize ));
+                Cj(3) = urmod - Cj(1) / sqrt(obj.meshSize) - Cj(2) * sqrt(3/obj.meshSize);
+                obj.Cells(j).coeffs = Cj;
+                obj.coeffs((j-1)*(obj.degree+1)+1:j*(obj.degree+1)) = Cj; 
+            end
+        end
+        function y = minmod(~,v,M)
+        if abs(v(1)) <= M
+            y = v(1);
+        else
+            y = all(sign(v) == sign(v(1))) * sign(v(1)) * min(abs(v));
+        end
+end
     end
 end
