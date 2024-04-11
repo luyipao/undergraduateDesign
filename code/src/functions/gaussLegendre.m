@@ -5,7 +5,7 @@ function y = gaussLegendre(f,a,b,n)
 % A(:,1) integral nodes
 % A(:,2) weight factors
 if nargin == 3
-    n = 4;
+    n = 5;
 end
 switch n
     case 1

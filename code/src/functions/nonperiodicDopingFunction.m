@@ -1,4 +1,4 @@
-function y = dopingFunction(x)
+function y = nonperiodicDopingFunction(x)
 
 f = @(x) exp(-1./x) .*(x>0);
 g = @(x) f(x) ./ (f(x) + f(1-x));
