@@ -48,7 +48,7 @@ classdef Mesh
             %             obj = obj.getNodesValues;
             % obj = obj.ENOreconstruction;
             obj = obj.auxiliaryDDModelDGFunction;
-            %obj = obj.auxENOreconstruction;
+            obj = obj.auxENOreconstruction;
             %             obj = obj.auxSlopeLimiter;
             %             obj = obj.setAuxFunction;
         end
@@ -171,7 +171,7 @@ classdef Mesh
             %             obj = obj.getNodesValues;
             %obj = obj.ENOreconstruction;
             obj = obj.auxiliaryDDModelDGFunction;
-            %obj = obj.auxENOreconstruction;
+            obj = obj.auxENOreconstruction;
             %             obj = obj.auxSlopeLimiter;
             %             obj = obj.setAuxFunction;
             priElectronConcentration = obj.getElectronConcentration;
@@ -250,7 +250,7 @@ classdef Mesh
 %                     T4 = T4 + 0.139219332249189 * Cellj.auxll;
 %                     T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
 %                     
-%                     F((j-1)*(n+1) + l) = -T1-T2+T3-T4; 
+%                     F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
 %                 end
 %             end
     N = obj.CellsNum;
@@ -285,11 +285,10 @@ classdef Mesh
             % get coeff
             for j = 1:obj.CellsNum
                 Cellj = obj.Cells(j);
-                %Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
+                Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
                 %Fj = obj.func(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - obj.func(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
-                Fj= dopingFunction(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - dopingFunction(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
                 for i = 1:n+1
-                    tempf = @(x) Cellj.basisFunctions{i,2}(x) .*dopingFunction(x);
+                    tempf = @(x) Cellj.basisFunctions{i,2}(x) .* Cellj.func(x);
                     Fj(i) = Fj(i) - gaussLegendre(tempf,Cellj.a,Cellj.b);
                 end
                 Fj =  0.139219332249189 * Fj;

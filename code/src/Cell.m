@@ -72,6 +72,10 @@ classdef Cell
             PN = @(x) sqrt((2*n + 1) / (obj.b - obj.a)) * P((2.*x - obj.b - obj.a) / (obj.b - obj.a));
             DPN = @(x) sqrt(4*(2*n + 1) / (obj.b - obj.a)^3) * DP((2.*x - obj.b - obj.a) / (obj.b - obj.a));
         end
+        function drawAux(obj)
+            x = linspace(obj.a,obj.b);
+            plot(x,obj.auxFunction(x));
+        end
     end
     
 end
