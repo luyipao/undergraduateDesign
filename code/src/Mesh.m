@@ -15,7 +15,7 @@ classdef Mesh
         YR (1,:) double {mustBeNumeric}
         YL (1,:) double {mustBeNumeric}
         CFL = 0.1429;
-        epsilon = 0.1;
+        epsilon = 4000;
     end
     methods
         %% generate function
@@ -153,12 +153,21 @@ classdef Mesh
     methods
         %% deal with DD model
         function obj = DDModelDGFunction(obj)
-            
+            C(:,1) = obj.coeffs;
+            F{1} = obj.func;
             obj = obj.GK3;
+            C(:,2) = obj.coeffs;
+            F{2} = obj.func;    
+            while sqrt(gaussLegendre(@(x) (F{end-1}(x) - F{end}(x)).^2, obj.xa, obj.xb)) > obj.epsilon
+            obj = obj.GK3;
+            C(:,end+1) = obj.coeffs;
+            F{end+1} = obj.func;                
+            end
+            disp('over');
         end
         %% GK
         function obj = GK3(obj)
-            t = obj.CFL * obj.meshSize;
+            t = obj.CFL * obj.meshSize^2;
             k0 = obj.coeffs;
             priElectronConcentration = obj.getElectronConcentration;% run slowlt
             E = obj.getElectricField(priElectronConcentration);% seem ok
@@ -232,52 +241,51 @@ classdef Mesh
         end
         %% internal function getF
         function F = getF(obj,E)
-%             N = obj.CellsNum;
-%             n = obj.degree;
-%             mesh = obj.X;
-%             F = zeros(N*(n+1),1);
-%             for j = 1:N
-%                 Cellj = obj.Cells(j);
-%                 for l = 1:n+1
-%                     T1 = gaussLegendre(@(x) 0.75 * E(x) .* Cellj.func(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-%                     T2 = gaussLegendre(@(x) 0.139219332249189 * Cellj.auxFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-%                     
-%                     T3 = 0.75 * (max(E(mesh(j+1)),0) * Cellj.rr + min(E(mesh(j+1)),0) * Cellj.rl);
-%                     T3 = T3 + 0.139219332249189 * Cellj.auxrl;
-%                     T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
-%                     
-%                     T4 = 0.75 * (max(E(mesh(j+1)),0)*Cellj.lr + min(E(mesh(j)),0)*Cellj.ll);
-%                     T4 = T4 + 0.139219332249189 * Cellj.auxll;
-%                     T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
-%                     
-%                     F((j-1)*(n+1) + l) = -T1-T2+T3-T4; 
-%                 end
-%             end
-    N = obj.CellsNum;
-    n = obj.degree;
-    mesh = obj.X;
-    F = zeros(N*(n+1),1);
-    for j = 1:N
-        Cellj = obj.Cells(j);
-        tempDiffDpingFunction = @(x) diffDopingFunction(x) * 0.139219332249189;
-        for l = 1:n+1
-            T1 = gaussLegendre(@(x) 0.75 * E(x) .* dopingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-            T2 = gaussLegendre(@(x) 0.139219332249189 * tempDiffDpingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-            
-            T3 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)) + min(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)));
-            T3 = T3 + 0.139219332249189 * tempDiffDpingFunction(mesh(j+1));
-            T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
-            
-            T4 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j)) + min(E(mesh(j)),0) * dopingFunction(mesh(j)));
-            T4 = T4 + 0.139219332249189 *tempDiffDpingFunction(obj.X(j));
-            T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
-            
-            F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
+            N = obj.CellsNum;
+            n = obj.degree;
+            mesh = obj.X;
+            F = zeros(N*(n+1),1);
+            for j = 1:N
+                Cellj = obj.Cells(j);
+                for l = 1:n+1
+                    T1 = gaussLegendre(@(x) 0.75 * E(x) .* Cellj.func(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+                    T2 = gaussLegendre(@(x) 0.139219332249189 * Cellj.auxFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+                    
+                    T3 = 0.75 * (max(E(mesh(j+1)),0) * Cellj.rr + min(E(mesh(j+1)),0) * Cellj.rl);
+                    T3 = T3 + 0.139219332249189 * Cellj.auxrl;
+                    T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
+                    
+                    T4 = 0.75 * (max(E(mesh(j+1)),0)*Cellj.lr + min(E(mesh(j)),0)*Cellj.ll);
+                    T4 = T4 + 0.139219332249189 * Cellj.auxll;
+                    T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
+                    
+                    F((j-1)*(n+1) + l) = -T1-T2+T3-T4; 
+                end
+            end
+%     N = obj.CellsNum;
+%     n = obj.degree;
+%     mesh = obj.X;
+%     F = zeros(N*(n+1),1);
+%     for j = 1:N
+%         Cellj = obj.Cells(j);
+%         tempDiffDpingFunction = @(x) diffDopingFunction(x) * 0.139219332249189;
+%         for l = 1:n+1
+%             T1 = gaussLegendre(@(x) 0.75 * E(x) .* dopingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+%             T2 = gaussLegendre(@(x) 0.139219332249189 * tempDiffDpingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+%             
+%             T3 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)) + min(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)));
+%             T3 = T3 + 0.139219332249189 * tempDiffDpingFunction(mesh(j+1));
+%             T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
+%             
+%             T4 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j)) + min(E(mesh(j)),0) * dopingFunction(mesh(j)));
+%             T4 = T4 + 0.139219332249189 *tempDiffDpingFunction(obj.X(j));
+%             T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
+%             
+%             F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
+%         end
+%     end
         end
-    end
-        end
-        %% auxiliaryDDModelDGFunction
-        % input: aimed function
+        %% auxiliaryDDModelDGFunctionx
         % output: auxfunction Nodes values; auxfunction
         function obj = auxiliaryDDModelDGFunction(obj)
             n = obj.degree;
@@ -285,11 +293,11 @@ classdef Mesh
             % get coeff
             for j = 1:obj.CellsNum
                 Cellj = obj.Cells(j);
-                %Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
+                Fj = Cellj.rr * Cellj.basisFunctionsBoundaryValues(:,2) - Cellj.lr * Cellj.basisFunctionsBoundaryValues(:,1);
                 %Fj = obj.func(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - obj.func(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
-                Fj= dopingFunction(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - dopingFunction(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
+                %Fj= dopingFunction(obj.X(j+1)) * Cellj.basisFunctionsBoundaryValues(:,2) - dopingFunction(obj.X(j)) * Cellj.basisFunctionsBoundaryValues(:,1);
                 for i = 1:n+1
-                    tempf = @(x) Cellj.basisFunctions{i,2}(x) .*dopingFunction(x);
+                    tempf = @(x) Cellj.basisFunctions{i,2}(x) .* Cellj.func(x);
                     Fj(i) = Fj(i) - gaussLegendre(tempf,Cellj.a,Cellj.b);
                 end
                 Fj =  0.139219332249189 * Fj;
