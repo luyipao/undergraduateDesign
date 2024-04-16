@@ -15,7 +15,7 @@ classdef Mesh
         YR (1,:) double {mustBeNumeric}
         YL (1,:) double {mustBeNumeric}
         CFL = 0.1429;
-        epsilon = 4000;
+        epsilon = 100;
     end
     methods
         %% generate function
@@ -122,20 +122,45 @@ classdef Mesh
         % input:
         % output:
         function priElectronConcentration = getElectronConcentration(obj)
-            % init
+            %             % init
+            %             N = obj.CellsNum;
+            %             n = obj.degree;
+            %             % output
+            %             priElectronConcentration = @(x) 0*x;
+            %             flux = 0;
+            %             for j = 1:N
+            %                 syms x
+            %                 func1 = @(x) 0*x;
+            %                 Cellj = obj.Cells(j);
+            %                 for i = 1:n+1
+            %                     func1 = @(x) func1(x) + obj.coeffs((j-1)*(n+1)+i) * Cellj.basisFunctions{i,1}(x);
+            %                 end
+            %                 func2 = matlabFunction(int(sym(func1)),'vars', x);
+            %                 flux = flux - func2(obj.X(j));
+            %                 if j==1
+            %                     flux = 0;
+            %                 end
+            %                 if j==N
+            %                     priElectronConcentration = @(x) priElectronConcentration(x) + (x>=obj.X(j) & x <= obj.X(j+1)) .* (func2(x) + flux);
+            %                 else
+            %                     priElectronConcentration = @(x) priElectronConcentration(x) + (x>=obj.X(j) & x < obj.X(j+1)) .* (func2(x) + flux);
+            %                 end
+            %                 flux = flux + func2(obj.X(j+1));
+            %             end
+            f0 = @(x) x;
+            f1 = @(x) 1/2 * x.^2;
+            f2 = @(x) 1/2 * (x.^3 - x);
+            f3 = @(x) 5/8 * x.^4 - 3/4 * x.^2;
+            priLegendreFunctions = {f0 f1 f2 f3};
             N = obj.CellsNum;
             n = obj.degree;
-            % output
             priElectronConcentration = @(x) 0*x;
             flux = 0;
             for j = 1:N
-                syms x
-                func1 = @(x) 0*x;
-                Cellj = obj.Cells(j);
+                func2 = @(x) 0*x;
                 for i = 1:n+1
-                    func1 = @(x) func1(x) + obj.coeffs((j-1)*(n+1)+i) * Cellj.basisFunctions{i,1}(x);
+                    func2 = @(x) func2(x) + obj.coeffs((j-1)*(n+1)+i) * sqrt((2*i-1)*obj.meshSize)/2 * priLegendreFunctions{i}((2*x - 2*obj.Xc(j))/obj.meshSize);
                 end
-                func2 = matlabFunction(int(sym(func1)),'vars', x);
                 flux = flux - func2(obj.X(j));
                 if j==1
                     flux = 0;
@@ -157,11 +182,14 @@ classdef Mesh
             F{1} = obj.func;
             obj = obj.GK3;
             C(:,2) = obj.coeffs;
-            F{2} = obj.func;    
+            F{2} = obj.func;
             while sqrt(gaussLegendre(@(x) (F{end-1}(x) - F{end}(x)).^2, obj.xa, obj.xb)) > obj.epsilon
-            obj = obj.GK3;
-            C(:,end+1) = obj.coeffs;
-            F{end+1} = obj.func;                
+                tStart = cputime;
+                obj = obj.GK3;
+                tEnd = cputime - tStart;
+                disp(tEnd);
+                C(:,end+1) = obj.coeffs;
+                F{end+1} = obj.func;
             end
             disp('over');
         end
@@ -169,6 +197,7 @@ classdef Mesh
         function obj = GK3(obj)
             t = obj.CFL * obj.meshSize^2;
             k0 = obj.coeffs;
+            x = linspace(0,0.6,1000);
             priElectronConcentration = obj.getElectronConcentration;% run slowlt
             E = obj.getElectricField(priElectronConcentration);% seem ok
             F = getF(obj,E);
@@ -239,6 +268,10 @@ classdef Mesh
             % E^h
             electricField = @(x) -0.0015 * (priElectronConcentration(x) - priDopingFunction(x) - priElectronConcentration(0) + priDopingFunction(0)) + electricField0 -  1.5;
         end
+        %% ElectricField pro
+        function electricField = getElectricField(obj.priElectronConcentration)
+        
+        end
         %% internal function getF
         function F = getF(obj,E)
             N = obj.CellsNum;
@@ -259,31 +292,31 @@ classdef Mesh
                     T4 = T4 + 0.139219332249189 * Cellj.auxll;
                     T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
                     
-                    F((j-1)*(n+1) + l) = -T1-T2+T3-T4; 
+                    F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
                 end
             end
-%     N = obj.CellsNum;
-%     n = obj.degree;
-%     mesh = obj.X;
-%     F = zeros(N*(n+1),1);
-%     for j = 1:N
-%         Cellj = obj.Cells(j);
-%         tempDiffDpingFunction = @(x) diffDopingFunction(x) * 0.139219332249189;
-%         for l = 1:n+1
-%             T1 = gaussLegendre(@(x) 0.75 * E(x) .* dopingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-%             T2 = gaussLegendre(@(x) 0.139219332249189 * tempDiffDpingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
-%             
-%             T3 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)) + min(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)));
-%             T3 = T3 + 0.139219332249189 * tempDiffDpingFunction(mesh(j+1));
-%             T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
-%             
-%             T4 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j)) + min(E(mesh(j)),0) * dopingFunction(mesh(j)));
-%             T4 = T4 + 0.139219332249189 *tempDiffDpingFunction(obj.X(j));
-%             T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
-%             
-%             F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
-%         end
-%     end
+            %     N = obj.CellsNum;
+            %     n = obj.degree;
+            %     mesh = obj.X;
+            %     F = zeros(N*(n+1),1);
+            %     for j = 1:N
+            %         Cellj = obj.Cells(j);
+            %         tempDiffDpingFunction = @(x) diffDopingFunction(x) * 0.139219332249189;
+            %         for l = 1:n+1
+            %             T1 = gaussLegendre(@(x) 0.75 * E(x) .* dopingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+            %             T2 = gaussLegendre(@(x) 0.139219332249189 * tempDiffDpingFunction(x) .* Cellj.basisFunctions{l,2}(x), mesh(j),mesh(j+1));
+            %
+            %             T3 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)) + min(E(mesh(j+1)),0) * dopingFunction(mesh(j+1)));
+            %             T3 = T3 + 0.139219332249189 * tempDiffDpingFunction(mesh(j+1));
+            %             T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
+            %
+            %             T4 = 0.75 * (max(E(mesh(j+1)),0) * dopingFunction(mesh(j)) + min(E(mesh(j)),0) * dopingFunction(mesh(j)));
+            %             T4 = T4 + 0.139219332249189 *tempDiffDpingFunction(obj.X(j));
+            %             T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
+            %
+            %             F((j-1)*(n+1) + l) = -T1-T2+T3-T4;
+            %         end
+            %     end
         end
         %% auxiliaryDDModelDGFunctionx
         % output: auxfunction Nodes values; auxfunction
