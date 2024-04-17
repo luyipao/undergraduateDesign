@@ -11,13 +11,14 @@ classdef Mesh
         initialCoeffs (:,1) double
         func
         auxFunction
-        initialFunction
+        initialPriFunction
         degree (1,1) double {mustBeInteger}
         Cells (:,1) Cell
         YR (1,:) double {mustBeNumeric}
         YL (1,:) double {mustBeNumeric}
         CFL = 1;
         epsilon = 100;
+        priLegendreFunctions
     end
     methods
         %% generate function
@@ -25,6 +26,12 @@ classdef Mesh
             if nargin == 0
                 ...
             elseif nargin == 5
+            f0 = @(x) x;
+            f1 = @(x) 1/2 * x.^2;
+            f2 = @(x) 1/2 * (x.^3 - x);
+            f3 = @(x) 5/8 * x.^4 - 3/4 * x.^2;
+            obj.priLegendreFunctions = {f0 f1 f2 f3};
+            
             obj.xa = a;
             obj.xb = b;
             obj.meshSize = (obj.xb-obj.xa) / N;
@@ -46,6 +53,28 @@ classdef Mesh
             obj = obj.getFunc;
             obj = obj.getNodesValues;
             obj = obj.auxiliaryDDModelDGFunction;
+            %get primitive doping function
+            n = degree;
+            [~,dopingcCoeffs] = piecewiseL2Projection(@(x) dopingFunction(x),obj.degree,obj.xa,obj.xb,obj.CellsNum);
+            priDopingFunction = @(x) 0*x;
+            flux = 0;
+            for j = 1:N
+                func2 = @(x) 0*x;
+                for i = 1:n+1
+                    func2 = @(x) func2(x) + dopingcCoeffs((j-1)*(n+1)+i) * sqrt((2*i-1)*obj.meshSize)/2 * priLegendreFunctions{i}((2*x - 2*obj.Xc(j))/obj.meshSize);
+                end
+                flux = flux - func2(obj.X(j));
+                if j==1
+                    flux = 0;
+                end
+                if j==N
+                    priDopingFunction = @(x) priDopingFunction(x) + (x>=obj.X(j) & x <= obj.X(j+1)) .* (func2(x) + flux);
+                else
+                    priDopingFunction = @(x) priDopingFunction(x) + (x>=obj.X(j) & x < obj.X(j+1)) .* (func2(x) + flux);
+                end
+                flux = flux + func2(obj.X(j+1));
+            end
+            obj.initialPriFunction = priDopingFunction;
         end
         %% get Cell Info
         function Cell = getCell(obj, i)
@@ -64,15 +93,18 @@ classdef Mesh
         function obj = getFunc(obj)
             obj.func = @(x) 0*x;
             ParforCells = obj.Cells;
-            ParforCoeffs = obj.coeffs;
             n = obj.degree;
             N = obj.CellsNum;
+            ParforCoeffs = reshape(obj.coeffs,n+1,N);
             parfor j = 1:obj.CellsNum
+                parforCoeffs = ParforCoeffs(:,j);
+                Cellj = obj.Cells(j);
                 fProj = @(x) 0 * x;
                 for i = 1:n+1
-                    fProj = @(x) fProj(x) + ParforCoeffs((j-1)*(n+1) + i) * ParforCells(j).basisFunctions{i,1}(x);
+                    fProj = @(x) fProj(x) + parforCoeffs(i) * Cellj.basisFunctions{i,1}(x);
                 end
-                ParforCells(j).func = @(x) fProj(x);
+                Cellj.func = @(x) fProj(x);
+                obj.Cells(j) = Cellj;
             end
             obj.Cells = ParforCells;
             parforFunc = @(x) 0*x;
@@ -136,25 +168,6 @@ classdef Mesh
             parforXc = obj.Xc;
             parforX = obj.X;
             
-            parforFunc2s = cells(N);
-            parforFluxs = zeros(N,1);
-            parfor j = 1:N
-                func2 = @(x) 0*x;
-                for i = 1:n+1
-                    func2 = @(x) func2(x) +parforCoeffs((j-1)*(n+1)+i) * sqrt((2*i-1)*h)/2 * priLegendreFunctions{i}((2*x - 2*parforXc(j))/h);
-                end
-                parforFluxs(j) = func2(parforX(j+1)) - func2(parforX(j));
-                parforFunc2s{j} = @(x) func2(x);
-            end
-            parforFluxs = [0; parforFluxs];
-            parforFluxs = cumsum(parforFluxs);
-            parfor j = 1:N
-                parforFluxs(j) = -parforFunc2s{j}(parforX(j)) + parforFluxs(j);
-            end
-            for j = 1:N-1
-                priElectronConcentration = @(x) priElectronConcentration(x) + (x>=parforX(j) & x < parforX(j+1)) .* (parforFunc2s{j}(x) + parforFluxs(j));
-            end
-            priElectronConcentration = @(x) priElectronConcentration(x) + (x>=parforX(N) & x <= parforX(N+1)) .* (parforFunc2s{N}(x) + parforFluxs(N));
 
         end
     end
@@ -257,7 +270,7 @@ classdef Mesh
                     T3 = T3 + 0.139219332249189 * Cellj.auxrl;
                     T3 = T3 * Cellj.basisFunctionsBoundaryValues(l,2);
                     
-                    T4 = 0.75 * (max(E(mesh(j+1)),0)*Cellj.lr + min(E(mesh(j)),0)*Cellj.ll);
+                    T4 = 0.75 * (max(E(mesh(j)),0)*Cellj.lr + min(E(mesh(j)),0)*Cellj.ll);
                     T4 = T4 + 0.139219332249189 * Cellj.auxll;
                     T4 = T4 * Cellj.basisFunctionsBoundaryValues(l,1);
                     
