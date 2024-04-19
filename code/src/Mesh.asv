@@ -126,7 +126,7 @@ classdef Mesh
                 Y = FNow(obj.Xc);
                 TV = [TV sum(abs(Y(2:end)-Y(1:end-1)))];
                 obj.save('workspace');
-                save('workspace', 'FNow', 'Time', 'TV', '-append');
+                save('workspace','FNow','Time','TV');
             end
             disp('over');
         end
