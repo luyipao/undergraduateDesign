@@ -10,15 +10,3 @@ mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
 mesh = mesh.DDModelDGFunction();
 
 
-
-
-% [dopingProj,dopingProjCoeffVec] = piecewiseL2Projection(@(x) dopingFunction(x),n,a,b,N);
-% [dopingProj] = getElectronConcentration(dopingProjCoeffVec, mesh, n);
-% [auxq,auxiliaryVarCoeffVec] = auxiliaryDDModelDGFunction(mesh,@(x) dopingFunction(x),n);
-
-% epsilon = 0.001;
-% CFL =1/(2*n+1);
-% [C, Q, X, T] = DDModelDGFunction(dopingProjCoeffVec,@(x) sqrt(THETA * RELAXATION_PARAMETER) * diffDopingFunction(x), mesh, n, epsilon, CFL);
-% 
-
-% %

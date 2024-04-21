@@ -19,6 +19,8 @@ classdef Mesh
         CFL = 1;
         epsilon = 1;
         priLegendreFunctions
+        PnDPm
+        CellBasisFunctionsBoundaryValues
     end
     methods
         %% generate function
@@ -52,21 +54,37 @@ classdef Mesh
             end
             %get primitive doping function
             [~,dopingCoeffs] = piecewiseL2Projection(@(x) dopingFunction(x),obj.degree,obj.xa,obj.xb,obj.CellsNum);
-			fluxs1 = zeros(N,1);
-			fluxs2 = zeros(N,1);
-			for j = 1:N
-				func  = @(x) 0*x;
-				for i = 1:degree+1
-					func = @(x) func(x) + dopingCoeffs((j-1)*(degree+1)+i) * sqrt((2*i-1)*obj.meshSize)/2 * obj.priLegendreFunctions{i}((2*x - 2*obj.Xc(j))/obj.meshSize);
-				end
-				fluxs1(j) = func(obj.X(j+1)) - func(obj.X(j));
-				fluxs2(j) = func(obj.X(j));
-			end
-			fluxs1 = [0;fluxs1];
-			fluxs1 = cumsum(fluxs1);
-			fluxs1 = fluxs1(1:end-1) - fluxs2;
+            fluxs1 = zeros(N,1);
+            fluxs2 = zeros(N,1);
+            for j = 1:N
+                func  = @(x) 0*x;
+                for i = 1:degree+1
+                    func = @(x) func(x) + dopingCoeffs((j-1)*(degree+1)+i) * sqrt((2*i-1)*obj.meshSize)/2 * obj.priLegendreFunctions{i}((2*x - 2*obj.Xc(j))/obj.meshSize);
+                end
+                fluxs1(j) = func(obj.X(j+1)) - func(obj.X(j));
+                fluxs2(j) = func(obj.X(j));
+            end
+            fluxs1 = [0;fluxs1];
+            fluxs1 = cumsum(fluxs1);
+            fluxs1 = fluxs1(1:end-1) - fluxs2;
             dopingCoeffs = reshape(dopingCoeffs,degree+1,length(obj.X)-1);
             obj.initialPriFunction = LegendrePoly(obj.X,dopingCoeffs,degree,fluxs1);
+            % get integration of Pn and DPm
+            obj.PnDPm = zeros(degree+1,degree+1);
+            for i = 1:degree+1
+                for k = 0:degree+1
+                    idx = 1 + k * 2;
+                    if (i+idx <= degree+1)
+                        obj.PnDPm(i,i+idx) = 2 * sqrt((2*i-1)*(2*i+2*idx-1)) / obj.meshSize;
+                    else
+                        break;
+                    end
+                end
+            end
+            % cell basis function in boundary value;
+            obj.CellBasisFunctionsBoundaryValues = [sqrt(1/obj.meshSize) sqrt(3/obj.meshSize) sqrt(5/obj.meshSize) sqrt(7/obj.meshSize)];
+            obj.CellBasisFunctionsBoundaryValues = obj.CellBasisFunctionsBoundaryValues(1:degree+1);
+            obj.CellBasisFunctionsBoundaryValues = [obj.CellBasisFunctionsBoundaryValues .* (-1).^(0:degree); obj.CellBasisFunctionsBoundaryValues]';
         end
         %% save
         function [] =  save(obj,filename,varargin)
@@ -120,8 +138,8 @@ classdef Mesh
                 FNow = Func;
                 Y = FNow(obj.Xc);
                 TV = [TV sum(abs(Y(2:end)-Y(1:end-1)))];
-%                 obj.save('workspace');
-%                 save('workspace', 'FNow', 'Time', 'TV', '-append');
+                %                 obj.save('workspace');
+                %                 save('workspace', 'FNow', 'Time', 'TV', '-append');
             end
             disp('over');
         end
@@ -154,61 +172,17 @@ classdef Mesh
             CellFuncs = cell(N,1);
             CellValues = zeros(N,4);%[ll lr rl rr]
             
-            parforFunc2s = cell(N);
-            parforFluxs = zeros(N,1);
-            parforCells = obj.Cells;
-            parfor (j = 1:N,0)
-                % get electron concentration and cell values
-                coeffsj = parforCoeffs(:,j);
-                Cellj = parforCells(j);
-                a = Cellj.a;
-                b = Cellj.b;
-                fProj = @(x) 0 * x;
-                for i = 1:n+1
-                    fProj = @(x) fProj(x) + coeffsj(i) * Cellj.basisFunctions{i,1}(x);
-                end
-                CellFuncs{j} = fProj;
-                
-                fa = fProj(a);
-                fb = fProj(b);
-                CellValues(j,:) = [0 fa fb 0];
-                % get primitive electron concentration
-                % input: obj.coeffs parforX
-                % ouput: primitive electron concentration
-                
-                func2 = @(x) 0*x;
-                for i = 1:n+1
-                    func2 = @(x) func2(x) + coeffsj(i) * sqrt((2*i-1)*h)/2 * obj.priLegendreFunctions{i}((2*x - 2*parforXc(j))/h);
-                end
-                parforFluxs(j) = func2(b) - func2(a);
-                parforFunc2s{j} = @(x) func2(x);
-            end
+            electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
+            CellValues(:,2:3) = electronConcentration.getNodeValues';
+            
             % get cell values
-            %
             CellValues(2:N-1, 1) = CellValues(1:N-2, 3);
             CellValues(2:N-1, 4) = CellValues(3:N, 2);
-            
             % boundary
             CellValues(1, 1) = CellValues(N, 3);
             CellValues(1, 4) = CellValues(2, 2);
             CellValues(N, 1) = CellValues(N-1, 3);
             CellValues(N, 4) = CellValues(1, 2);
-            
-            
-            % get primitive electron concentration
-            parforFluxs = [0; parforFluxs];
-            parforFluxs = cumsum(parforFluxs);
-            for j = 1:N
-                parforFluxs(j) = -parforFunc2s{j}(parforX(j)) + parforFluxs(j);
-            end
-			electronConcentration = LegendrePoly(parforX, parforCoeffs,n,parforFluxs);
-			
-%             priElectronConcentration = @(x) 0*x;
-%             for j = 1:N-1
-%                 priElectronConcentration = @(x) priElectronConcentration(x) + (x>=parforX(j) & x < parforX(j+1)) .* (parforFunc2s{j}(x) + parforFluxs(j));
-%             end
-%             priElectronConcentration = @(x) priElectronConcentration(x) + (x>=parforX(N) & x <= parforX(N+1)) .* (parforFunc2s{N}(x) + parforFluxs(N));
-%             
             
             % get electric field
             T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+electronConcentration.priSolve(0.6),0,0.4);
@@ -219,33 +193,48 @@ classdef Mesh
             
             % get auxiliary function
             % input: Cellj.func
-            auxCellValues = zeros(N,4); % [ll lr rl rr]
-            auxCellFuncs = cell(N,1);
-            auxCoeffs = zeros(n+1,N);
-            parfor (j = 1:N,0)
-                Cellj = parforCells(j);
-                temp = zeros(n+1,1);
-                a = Cellj.a;
-                b = Cellj.b;
-                CellValuej = CellValues(j,:);
-                for i = 1:n+1
-                    tempf = @(x) Cellj.basisFunctions{i,2}(x) .* CellFuncs{j}(x);
-                    temp(i) = - gaussLegendre(tempf,a,b);
-                end
-                
-                Fj = CellValuej(4) * Cellj.basisFunctionsBoundaryValues(:,2) - CellValuej(2) * Cellj.basisFunctionsBoundaryValues(:,1) + temp;
-                Fj =  0.139219332249189 * Fj;
-                auxCoeffs(:,j) = Fj;
-                
-                auxq = @(x) 0*x;
-                for i = 1:n+1
-                    auxq = @(x) auxq(x) + Fj(i) * Cellj.basisFunctions{i,1}(x);
-                end
-                auxCellFuncs{j} = auxq;
-                
-                auxCellValues(j,:) = [0 auxq(a) auxq(b) 0];
-            end
             
+            %             tic
+            %             auxCellValues = zeros(N,4); % [ll lr rl rr]
+            %             auxCellFuncs = cell(N,1);
+            %             auxCoeffs = zeros(n+1,N);
+            %             parfor (j = 1:N,0)
+            %                 Cellj = parforCells(j);
+            %                 temp = zeros(n+1,1);
+            %                 a = Cellj.a;
+            %                 b = Cellj.b;
+            %                 CellValuej = CellValues(j,:);
+            %                 for i = 1:n+1
+            %                     tempf = @(x) Cellj.basisFunctions{i,2}(x) .* CellFuncs{j}(x);
+            %                     temp(i) = - gaussLegendre(tempf,a,b);
+            %                 end
+            %
+            %                 Fj = CellValuej(4) * Cellj.basisFunctionsBoundaryValues(:,2) - CellValuej(2) * Cellj.basisFunctionsBoundaryValues(:,1) + temp;
+            %                 Fj =  0.139219332249189 * Fj;
+            %                 auxCoeffs(:,j) = Fj;
+            %
+            %                 auxq = @(x) 0*x;
+            %                 for i = 1:n+1
+            %                     auxq = @(x) auxq(x) + Fj(i) * Cellj.basisFunctions{i,1}(x);
+            %                 end
+            %                 auxCellFuncs{j} = auxq;
+            %                 auxCellValues(j,:) = [0 auxq(a) auxq(b) 0];
+            %             end
+            %             toc
+            I = eye(obj.CellsNum);
+            B = kron(I, obj.PnDPm');
+            index = repmat(1:obj.CellsNum,obj.degree+1,1);
+            index = reshape(index,[],1);
+            tempCellValues = CellValues(index,:);
+            tic
+            F = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            F = tempCellValues(:,4) .* F(:,2) - tempCellValues(:,2) .* F(:,1) - B * obj.coeffs;
+            obj.auxCoeffs = 0.139219332249189 * F;
+            
+            auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
+            x = linspace(0,0.6,1000);plot(x,auxq.solve(x));
+            auxCellValues(:,2:3) = auxq.getNodeValues';
+            toc
             %
             auxCellValues(2:N-1, 1) = auxCellValues(1:N-2, 3);
             auxCellValues(2:N-1, 4) = auxCellValues(3:N, 2);
@@ -257,29 +246,56 @@ classdef Mesh
             % input: parforCells,CellValues, auxCellValues
             % L output F very slow
             % temp var: Cellj CellValuej auxCellValuej Fj
+            tic
             F = zeros(n+1,N);
             for j = 1:N
-                Cellj = parforCells(j);
+                Cellj = obj.Cells(j);
                 a = Cellj.a;
                 b = Cellj.b;
                 CellValuej = CellValues(j,:);
                 auxCellValuej = auxCellValues(j,:);
                 Eb = E(b);
-                T3 = 0.75 * (max(Eb,0) * CellValuej(4) + min(Eb,0) * CellValuej(3));
-                T3 = T3 + 0.139219332249189 * auxCellValuej(3);
+                T3(j) = 0.75 * (max(Eb,0) * CellValuej(4) + min(Eb,0) * CellValuej(3));
+                T3(j) = T3(j) + 0.139219332249189 * auxCellValuej(3);
                 Ea = E(a);
                 T4 = 0.75 * (max(Ea,0) * CellValuej(2) + min(Ea,0) * CellValuej(1));
                 T4 = T4 + 0.139219332249189 * auxCellValuej(1);
                 Fj = zeros(n+1,1);
                 for l = 1:n+1
-                    T1 = gaussLegendre(@(x) 0.75 * E(x) .* CellFuncs{j}(x) .* Cellj.basisFunctions{l,2}(x), a, b);
-                    T2 = gaussLegendre(@(x) 0.139219332249189 * auxCellFuncs{j}(x) .* Cellj.basisFunctions{l,2}(x), a, b);
-                    Fj(l) = -T1-T2+T3 * Cellj.basisFunctionsBoundaryValues(l,2) - T4 * Cellj.basisFunctionsBoundaryValues(l,1);
+                    T1 = gaussLegendre(@(x) 0.75 * E(x) .* electronConcentration.solve(x) .* Cellj.basisFunctions{l,2}(x), a, b);
+                    T2((j-1)*(n+1)+l) = gaussLegendre(@(x) 0.139219332249189 * auxq.solve(x) .* Cellj.basisFunctions{l,2}(x), a, b);
+                    Fj(l) = -T1-T2((j-1)*(n+1)+l)+T3(j) * Cellj.basisFunctionsBoundaryValues(l,2) - T4 * Cellj.basisFunctionsBoundaryValues(l,1);
                 end
                 F(:,j) = Fj;
                 % free
             end
-            F = reshape(F,[],1);
+            F1 = reshape(F,[],1);
+            toc
+            disp('next')
+            tic
+            tbv = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            I = eye(obj.CellsNum);
+            B = kron(I, obj.PnDPm');
+            index = repmat(1:obj.CellsNum,obj.degree+1,1);
+            index = reshape(index,[],1);
+            Eb = E(parforX(2:end));
+            Ea = E(parforX(1:end-1));
+            T3 = 0.75 * (max(Eb,0) .* CellValues(:,4) + min(Eb,0) .* CellValues(:,3)) + 0.139219332249189 * auxCellValues(:,3);
+            T4 = 0.75 * (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + 0.139219332249189 * auxCellValues(:,1);
+            T3 = T3(index);
+            T4 = T4(index);
+            T1 = zeros(N*(n+1),1);
+            tic% this loop cost 99% time in the nh loop
+            for j = 1:N
+                Cellj = obj.Cells(j);
+                for l = 1:n+1
+                    T1((j-1)*(n+1)+l) = gaussLegendre(@(x) 0.75 * E(x) .* electronConcentration.solve(x) .* Cellj.basisFunctions{l,2}(x), Cellj.a, Cellj.b);
+                end
+            end
+            toc
+            T2 = 0.139219332249189 * B * obj.auxCoeffs;
+            F = T3.*tbv(:,2) - T4.*tbv(:,1) -T2 - T1;
+            toc
         end
     end
     methods (Access = private)

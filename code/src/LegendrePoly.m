@@ -2,6 +2,7 @@ classdef LegendrePoly
     properties
         X (:,1) double
         coeffs (:,:) double
+        degree (1,1) 
         C
         basisFuncs
         priBasisFuncs
@@ -15,6 +16,7 @@ classdef LegendrePoly
                 error('input error: size ');
             end
             obj.X = mesh;
+            obj.degree = degree;
             f0 = @(x) 0*x + 1;
             f1 = @(x) x;
             f2 = @(x) 1.5 * x.^2 - 0.5;
@@ -34,27 +36,37 @@ classdef LegendrePoly
             obj.priNormalCoeffs = obj.priNormalCoeffs(1:degree+1)';
             obj.coeffs = coeffs;
             if nargin == 4
-                if ~isrow(C)
-                    obj.C = C';
-                end
+                obj.C = obj.getPriNodeValues;
             end
         end
 		% output: Cells value in both side, y(1,j)=Celljfunc(a), y(2,j) = Celljfunc(b) 
 		function y = getNodeValues(obj)
-			normalizeCoeffs = [obj.normalCoeffs; obj.normalCoeffs .*(-1).^(0:degree)]
-			normalizeCoeffs = repmat(normalizeCoeffs,1,length(obj.X));
-			coeffs = repmat(obj.coeffs,2,1);
-			A = coeffs .* normalizeCoeffs;
+			normalizeCoeffs = [obj.normalCoeffs; obj.normalCoeffs .*(-1).^(0:obj.degree)'];
+			normalizeCoeffs = repmat(normalizeCoeffs,1,length(obj.X)-1);
+			A = repmat(obj.coeffs,2,1) .* normalizeCoeffs;
+            y(1,:) = sum(A(obj.degree+2:end,:),1);
+			y(2,:) = sum(A(1:obj.degree+1,:),1);
+        end
+		function y = getPriNodeValues(obj)
+            temp = [-1 1
+                0.5 0.5
+                0 0
+                -17/24 -17/24];
+            temp = temp(1:obj.degree+1,:);
+			normalizeCoeffs = [obj.priNormalCoeffs .* temp(:,1); obj.priNormalCoeffs .* temp(:,2)];
+			normalizeCoeffs = repmat(normalizeCoeffs,1,length(obj.X)-1);
+			A = repmat(obj.coeffs,2,1) .* normalizeCoeffs;
 			y(1,:) = sum(A(1:obj.degree+1,:),1);
 			y(2,:) = sum(A(obj.degree+2:end,:),1);
-		end
+            y = y(2,:) - y(1,:);
+        end
         function y = solve(obj, x)
             if isrow(x)
                 x = x';
             end
             index = discretize(x,obj.X);
             normalizeCoeffs = repmat(obj.normalCoeffs,1,length(x));
-            y = obj.coeffs(:,index) .* normalizeCoeffs .* cell2mat(cellfun(@(f) f((2*x-obj.X(index)-obj.X(index+1)) / (obj.h)), obj.priBasisFuncs, 'UniformOutput', false))';
+            y = obj.coeffs(:,index) .* normalizeCoeffs .* cell2mat(cellfun(@(f) f((2*x-obj.X(index)-obj.X(index+1)) / (obj.h)), obj.basisFuncs, 'UniformOutput', false))';
             y = sum(y,1)';
         end
         function y = priSolve(obj,x)
