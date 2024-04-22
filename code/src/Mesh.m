@@ -42,7 +42,7 @@ classdef Mesh
             temp = [sqrt(1/obj.meshSize) sqrt(3/obj.meshSize) sqrt(5/obj.meshSize) sqrt(7/obj.meshSize)];
             obj.diffBasisFuncs = {@(x) 0*x; @(x) 0*x + temp(2); @(x) 3*temp(3)*x; @(x) temp(4) *(7.5*x.^2 - 1.5)};
             obj.diffBasisFuncs = obj.diffBasisFuncs(1:degree+1);
-
+            
             obj.CellsNum = N;
             obj.degree = degree;
             obj.X = linspace(a, b, N+1);
@@ -213,7 +213,7 @@ classdef Mesh
             auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
             %x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
             auxCellValues(:,2:3) = auxq.getNodeValues';
-
+            
             %
             auxCellValues(2:N-1, 1) = auxCellValues(1:N-2, 3);
             auxCellValues(2:N-1, 4) = auxCellValues(3:N, 2);
@@ -225,7 +225,7 @@ classdef Mesh
             % input: parforCells,CellValues, auxCellValues
             % L output F very slow
             % temp var: Cellj CellValuej auxCellValuej Fj
-
+            
             tbv = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
             
             Eb = E(parforX(2:end));
@@ -234,56 +234,84 @@ classdef Mesh
             T4 = 0.75 * (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + 0.139219332249189 * auxCellValues(:,1);
             T3 = T3(index);
             T4 = T4(index);
-
+            
             TT1 = getGaussLegendreB(@(x) 0.75 * E(x),obj.X(1:end-1),obj.X(2:end));
             TT2  = getGaussLegendreB(@(x) electronConcentration.solve(x), obj.X(1:end-1), obj.X(2:end));
             TT3 = cellfun(@(f) 2/obj.meshSize * getGaussLegendreB(@(x) f((2*x - obj.X(1:end-1)-obj.X(2:end))/obj.meshSize), obj.X(1:end-1), obj.X(2:end)),obj.diffBasisFuncs, 'UniformOutput', false);
             [~,~,C] = gaussLegendre(@(x) 0*x,obj.X(1:end-1),obj.X(2:end));
-            preComp = TT1 .* TT2 .* C; 
+            preComp = TT1 .* TT2 .* C;
             result = cellfun(@(x) sum(preComp .* x , 1), TT3, 'UniformOutput', false);
             result = cell2mat(result); %  back to a matrix
             T1 = reshape(result,[],1);
             
             T2 = 0.139219332249189 * B * obj.auxCoeffs;
-
+            
             F = T3.*tbv(:,2) - T4.*tbv(:,1) -T2 - T1;
         end
     end
     methods (Access = private)
-		function ENO(obj,Y,m)
-			m = 2*m;
-			temp = obj.meshSize * ones(1,m);
-			temp = cumsum(temp);
-			X = [obj.Xc(1)-temp obj.Xc obj.Xc(end)+temp];
-			Y = [Y(end-m+1:end) Y Y(1:m)];
-			for j = 1+m:obj.CellsNum+m
-				a = zeros(2*m+1,1);
-				b = zeros(2*m+1,1);
-				c = zeros(2*m+1,1);
-				Q = zeros(2*m+1,1);
-				kmin = zeros(2*m+1,1);
-				kmax = zeros(2*m+1,1);
-				kmin(1) = j;
-				kmax(1) = j;
-				Q(1) = Y(j);
-				xj = obj.X(j+1);
-				for i = 2:m
-					[aX, aY] = [X(kmin(i-1),kmax(i-1)+1), Y(kmin(i-1),kmax(i-1)+1)];
-					a(i) = obj.dividedDiff(aX,aY);
-					[bX, bY] = [X(kmin(i-1)-1,kmax(i-1)), Y(kmin(i-1)-1,kmax(i-1))];
-					b(i) = obj.dividedDiff(bX,bY);
-					
-					temp = abs(a(i))+1 >= abs(b(i));
-					c(i) = b(i) * temp + a(i) * (1-temp);
-					kmin(i) = kmin(i-1) - temp;
-					kmax(i) = kmax(i-1) + (1-temp);
-					
-					stencil = X(kmin(i-1), kmax(i-1));
-					Q(i) = prod(stencil-xj);
-				end
-			end
-		end
-
+        function ENO(obj,Y,m)
+            m = 2*m;
+            temp = obj.meshSize * ones(1,m);
+            temp = cumsum(temp);
+            X = [obj.Xc(1)-temp obj.Xc obj.Xc(end)+temp];
+            Y = [Y(end-m+1:end) Y Y(1:m)];
+            result = zeros(obj.CellsNum,1);
+            for j = 1+m:obj.CellsNum+2*m
+                a = zeros(2*m+1,obj.CellsNum);
+                b = zeros(2*m+1,obj.CellsNum);
+                c = zeros(2*m+1,obj.CellsNum);
+                Q = zeros(2*m+1,obj.CellsNum);
+                kmin = zeros(2*m+1,obj.CellsNum);
+                kmax = zeros(2*m+1,obj.CellsNum);
+                kmin(1,:) = j;
+                kmax(1,:) = j;
+                Q(1,:) = Y(1+m:obj.CellsNum+m);
+                xj = obj.X(2:end)'; % cloumn vector
+                table = [];
+                for i = 2:m
+                    
+                    % aXs is cloumn cell with aXs(j) being aXj in i state
+                    aXs = arrayfun(@(a,b) X(a:b), kmin(i-1,:), kmax(i-1,:)+1, 'UniformOutput', false);
+                    aYs = arrayfun(@(a,b) Y(a:b), kmin(i-1,:), kmax(i-1,:)+1, 'UniformOutput', false);
+                    aTables = arrayfun(@(x,y,table) dividedDiff(x,y,table), aXs, aYs, table, 'UniformOutput',false);
+                    a(i,:) = cellfun(@(x) x(end,end), aTables);
+                    %                     aX = X(kmin(i-1,:),kmax(i-1,:)+1);
+                    %                     aY = Y(kmin(i-1),kmax(i-1)+1);
+                    %                     aTable = dividedDiff(aX,aY,table);
+                    %
+                    bXs = arrayfun(@(a,b) X(a:b), kmin(i-1,:)-1, kmax(i-1,:), 'UniformOutput', false);
+                    bYs = arrayfun(@(a,b) Y(a:b), kmin(i-1,:)-1, kmax(i-1,:), 'UniformOutput', false);
+                    bTables = arrayfun(@(x,y,table) dividedDiff(x,y,table), bXs, bYs, table, 'UniformOutput',false);
+                    b(i, :) = cellfun(@(x) x(end,end), bTables);
+                    %                     bX = X(kmin(i-1)-1,kmax(i-1));
+                    %                     bY = Y(kmin(i-1)-1,kmax(i-1));
+                    %                     bTable = dividedDiff(bX,bY,table);
+                    
+                    
+                    temp = abs(a(i,:))+1 >= abs(b(i,:));
+                    c(i,:) = b(i,:) * temp + a(i,:) * (1-temp);
+                    kmin(i,:) = kmin(i-1,:) - temp;
+                    kmax(i,:) = kmax(i-1,:) + (1-temp);
+                    table = aTables;
+                    idx = find(temp);
+                    for i=idx
+                        table{i} = bTables{i};
+                    end
+%                     if temp
+%                         table = aTable;
+%                     else
+%                         table = bTable;
+%                     end
+                    stencil = cellfun(@(a,b) X(a:b), kmin(i-1,:), kmax(i-1,:), 'UniformOutput', false);
+                    stencil = cell2mat(stencil');
+                    Q(i,:) = prod(stencil-xj,2);
+                end
+                result = sum(Q,1);
+            end
+        end
+        
+        
         % input obj.coeffs
         % output obj.func
         function [Func, obj] = getFunc(obj)
