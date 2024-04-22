@@ -1,3 +1,27 @@
+%
+% addpath('C:\Users\12192\OneDrive - zju.edu.cn\documents\homeworks\undergraduateDesign\code\src\functions');
+% setParameters
+% a = 0;
+% b = 0.6;
+% n = 2;
+% N = 100;
+%
+% mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
+% mesh = mesh.DDModelDGFunction();
+
+% f = @(x) sin(x);
+% mesh = [0 pi/2 pi 2*pi];
+% gaussLegendre(f,mesh(1:end-1),mesh(2:end))
+% gaussLegendre(f,0,pi)
+
+x = [0 1 2 3];
+y = [6 -3 -6 9];
+x3 =  x1(1:2);
+y3 = y1(1:2);
+table = dividedDiff(x,y);
+table3 = dividedDiff(x3,y3);
+table2 = dividedDiff([2 3],[-6 9],table3);
+e = table - table2;
 % This function expands an existing divided difference table by adding new interpolation points (x) and their corresponding values (y).
 % The function will automatically convert both to column vectors.
 

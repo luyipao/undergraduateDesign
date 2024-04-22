@@ -192,9 +192,12 @@ classdef Mesh
             % get electric field
             temp = electronConcentration.priSolve(0.6);
             T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+temp,0,0.4);
-            T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+obj.initialFunction.priSolve(0.6),0,0.4); % set in generate function
+            temp = obj.initialFunction.priSolve(0.6);
+            T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+temp,0,0.4); % set in generate function
             electricField0 = 0.0015 * (T1 - T2);
-            E = @(x) -0.0015 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) - electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
+            
+            temp = -0.0015 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
+            E = @(x) -0.0015 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
             
             % aux function
             I = eye(obj.CellsNum);
@@ -247,6 +250,40 @@ classdef Mesh
         end
     end
     methods (Access = private)
+		function ENO(obj,Y,m)
+			m = 2*m;
+			temp = obj.meshSize * ones(1,m);
+			temp = cumsum(temp);
+			X = [obj.Xc(1)-temp obj.Xc obj.Xc(end)+temp];
+			Y = [Y(end-m+1:end) Y Y(1:m)];
+			for j = 1+m:obj.CellsNum+m
+				a = zeros(2*m+1,1);
+				b = zeros(2*m+1,1);
+				c = zeros(2*m+1,1);
+				Q = zeros(2*m+1,1);
+				kmin = zeros(2*m+1,1);
+				kmax = zeros(2*m+1,1);
+				kmin(1) = j;
+				kmax(1) = j;
+				Q(1) = Y(j);
+				xj = obj.X(j+1);
+				for i = 2:m
+					[aX, aY] = [X(kmin(i-1),kmax(i-1)+1), Y(kmin(i-1),kmax(i-1)+1)];
+					a(i) = obj.dividedDiff(aX,aY);
+					[bX, bY] = [X(kmin(i-1)-1,kmax(i-1)), Y(kmin(i-1)-1,kmax(i-1))];
+					b(i) = obj.dividedDiff(bX,bY);
+					
+					temp = abs(a(i))+1 >= abs(b(i));
+					c(i) = b(i) * temp + a(i) * (1-temp);
+					kmin(i) = kmin(i-1) - temp;
+					kmax(i) = kmax(i-1) + (1-temp);
+					
+					stencil = X(kmin(i-1), kmax(i-1));
+					Q(i) = prod(stencil-xj);
+				end
+			end
+		end
+
         % input obj.coeffs
         % output obj.func
         function [Func, obj] = getFunc(obj)
@@ -273,19 +310,6 @@ classdef Mesh
             Func = @(x) Func(x) + (x>= parforX(N) & x <= parforX(N+1)) .* CellFuncs{N}(x);
             
             obj.func = Func;
-        end
-        %% dividedDiff
-        function result = dividedDiff(~, x, y)
-            n = length(x);
-            diff_table = zeros(n, n);
-            diff_table(:, 1) = y(:);
-            
-            for j = 2:n
-                for i = j:n
-                    diff_table(i, j) = (diff_table(i, j - 1) - diff_table(i - 1, j - 1)) / (x(i) - x(i - j + 1));
-                end
-            end
-            result = diff_table(n, n);
         end
         %% ENO reconstruction
         % accuracy: 2m+1
