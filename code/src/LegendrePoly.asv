@@ -42,7 +42,7 @@ classdef LegendrePoly
                 temp1 = temp(2,:) - temp(1,:);
                 temp1 =  [0 temp1];
                 temp1 = cumsum(temp1);
-                obj.C = temp1(1:end-1) - temp(1,:);
+                obj.C = temp1(1:end-1) - obj.nodeValues(1,:);
             end
         end
 		% output: Cells value in both side, y(1,j)=Celljfunc(a), y(2,j) = Celljfunc(b) 
@@ -65,6 +65,7 @@ classdef LegendrePoly
 			A = repmat(obj.coeffs,2,1) .* normalizeCoeffs;
 			y(1,:) = sum(A(1:obj.degree+1,:),1);
 			y(2,:) = sum(A(obj.degree+2:end,:),1);
+            y = y(2,:) - y(1,:);
         end
         function y = solve(obj, x)
             [m,n] = size(x);

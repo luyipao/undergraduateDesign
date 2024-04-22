@@ -132,20 +132,17 @@ classdef Mesh
             x = linspace(0,0.6,1000);
             Time = [];
             TV = [];
-            FLast = obj.initialFunction;
+            FLast = obj.getFunc;
             [obj, E, Func] = obj.GK3;
             FNow = Func;
-            while sqrt(gaussLegendre(@(x) (FLast.solve(x) - FNow.solve(x)).^2, obj.xa, obj.xb)) > obj.epsilon
+            while sqrt(gaussLegendre(@(x) (FLast(x) - FNow(x)).^2, obj.xa, obj.xb)) > obj.epsilon
                 tStart = cputime;
                 [obj, E, Func] = obj.GK3;
                 tEnd = cputime - tStart;
                 Time = [Time tEnd];
-                if length(Time) == 1000
-                    disp(sum(Time));
-                end
                 FLast = FNow;
                 FNow = Func;
-                Y = FNow.solve(obj.Xc);
+                Y = FNow(obj.Xc);
                 TV = [TV sum(abs(Y(2:end)-Y(1:end-1)))];
                 %                 obj.save('workspace');
                 %                 save('workspace', 'FNow', 'Time', 'TV', '-append');
@@ -164,7 +161,7 @@ classdef Mesh
             obj.coeffs = k2;
             [F,E] = L(obj);
             obj.coeffs = 1/3 * k0 + 2/3 * k2 + 2/3 * obj.t * F;
-            Func = LegendrePoly(obj.X,reshape(obj.coeffs,obj.degree+1,[]),obj.degree);
+            Func = obj.getFunc;
         end
         % input: obj
         % output: F, electric field E, electron concentration func;
@@ -190,8 +187,7 @@ classdef Mesh
             CellValues(N, 4) = CellValues(1, 2);
             
             % get electric field
-            temp = electronConcentration.priSolve(0.6);
-            T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+temp,0,0.4);
+            T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+electronConcentration.priSolve(0.6),0,0.4);
             T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+obj.initialFunction.priSolve(0.6),0,0.4); % set in generate function
             electricField0 = 0.0015 * (T1 - T2);
             E = @(x) -0.0015 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) - electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
@@ -201,14 +197,14 @@ classdef Mesh
             B = kron(I, obj.PnDPm');
             index = repmat(1:obj.CellsNum,obj.degree+1,1);
             index = reshape(index,[],1);
+            tempCellValues = CellValues(index,:);
             
             F = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
-            tempCellValues = CellValues(index,:);
             F = tempCellValues(:,4) .* F(:,2) - tempCellValues(:,2) .* F(:,1) - B * obj.coeffs;
             obj.auxCoeffs = 0.139219332249189 * F;
             
             auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
-            %x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
+            x = linspace(0,0.6,1000);plot(x,auxq.solve(x));
             auxCellValues(:,2:3) = auxq.getNodeValues';
 
             %
@@ -224,6 +220,10 @@ classdef Mesh
             % temp var: Cellj CellValuej auxCellValuej Fj
 
             tbv = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            I = eye(obj.CellsNum);
+            B = kron(I, obj.PnDPm');
+            index = repmat(1:obj.CellsNum,obj.degree+1,1);
+            index = reshape(index,[],1);
             
             Eb = E(parforX(2:end));
             Ea = E(parforX(1:end-1));
@@ -273,6 +273,7 @@ classdef Mesh
             Func = @(x) Func(x) + (x>= parforX(N) & x <= parforX(N+1)) .* CellFuncs{N}(x);
             
             obj.func = Func;
+            Func = poly
         end
         %% dividedDiff
         function result = dividedDiff(~, x, y)
