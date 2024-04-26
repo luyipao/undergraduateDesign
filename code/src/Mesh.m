@@ -134,21 +134,18 @@ classdef Mesh
     end
     methods
         %% deal with DD model
-        function [FNow, obj] = DDModelDGFunction(obj)
+        function [FNow, obj] = DDModelDGFunction(obj,n)
             x = linspace(0,0.6,10000);
             Time = [];
             TV = [];
             FLast = obj.initialFunction;
-            [obj, E, Func] = obj.GK3;
+            [obj, E, Func] = obj.GK(n);
             FNow = Func;
             e = sqrt(gaussLegendre(@(x) (FLast.solve(x) - FNow.solve(x)).^2, obj.xa, obj.xb));
             while  e(end) > obj.epsilon
                 tic
-                [obj, E, Func] = obj.GK3;
+                [obj, E, Func] = obj.GK(n);
                 Time = [Time toc];
-                if length(Time) == 10000
-                    disp(sum(Time));
-                end
                 FLast = FNow;
                 FNow = Func;
                 Y = FNow.solve(obj.Xc);
@@ -160,6 +157,16 @@ classdef Mesh
             disp('over');
         end
         %% GK
+        function [obj, E, Func] = GK(obj, n)
+            if n == 3
+                [obj, E, Func] = obj.GK3;
+            elseif n == 4
+                [obj, E, Func] = obj.GK4;
+            else
+                error('Invalid GK order. Please choose 3 or 4.');
+            end
+        end
+            
         function [obj, E, Func] = GK3(obj)
             x = linspace(0,0.6,1000);
             k0 = obj.coeffs;
@@ -192,8 +199,17 @@ classdef Mesh
         
         % input: obj
         % output: F, electric field E, electron concentration func;
+        function [F, E] = L(obj,model)
+            if strcmp(model,'DD')
+                [F,E] = obj.LDD;
+            elseif strcmp(model, 'HF')
+                [F,E] = obj.LHF;
+            else
+                error('Invalid model. Please choose either "DD" or "HF".');
+            end
+        end
         
-        function [F,E] = L(obj)
+        function [F,E] = LDD(obj)
             n = obj.degree;
             N = obj.CellsNum;
             parforX = obj.X;
