@@ -5,8 +5,8 @@ a = 0;
 b = 0.6;
 n = 3;
 N = 100;
-mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
-mesh = mesh.DDModelDGFunction;
+% mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
+% mesh = mesh.DDModelDGFunction();
 
 % k = 4;
 % Funcs = cell(k,1);

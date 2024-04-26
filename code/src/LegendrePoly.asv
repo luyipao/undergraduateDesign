@@ -83,14 +83,7 @@ classdef LegendrePoly
 			y(1,:) = sum(A(1:obj.degree+1,:),1);
 			y(2,:) = sum(A(obj.degree+2:end,:),1);
         end
-        function y = diffSolve(obj, x)
-            [m,n] = size(x);
-            x = x(:);
-            index = discretize(x,obj.X);
-            diffNormalizeCoeffs = repmat(obj.diffNormalCoeffs,1,length(x));
-            y = obj.coeffs(:,index) .* diffNormalizeCoeffs .* cell2mat(cellfun(@(f) f((2*x-obj.X(index)-obj.X(index+1)) / (obj.h)), obj.diffBasisFuncs, 'UniformOutput', false))'; 
-            y = reshape(sum(y,1), m, n);
-        end
+        function y = diff
         function y = solve(obj, x)
             [m,n] = size(x);
             x = x(:);

@@ -1,14 +1,14 @@
 clear;
 f = @(x) dopingFunction(x);
-a = 0; b = 0.6; n = 3;iterNum = 6;
+a = 0; b = 0.6; n = 2;iterNum = 5;
 
 L2Error = [];
-mesh = 12;
+mesh = 25;
 N = mesh;
 for i = 1:iterNum
      X = linspace(a,b,1000);
      fPiecewiseProj = piecewiseL2Projection(f,n,a,b,mesh * 2^(i-1));
-     L2Error = [L2Error sqrt(sum(abs(fPiecewiseProj(X) - f(X)).^2) )];
+     L2Error = [L2Error sqrt( sum(abs(fPiecewiseProj(X)' - f(X)).^2) )];
 end
 
 mesh = 12 .* 2.^(0:iterNum-1);
