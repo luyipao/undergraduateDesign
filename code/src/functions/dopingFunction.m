@@ -21,8 +21,10 @@ g = @(x) f(x) ./ (f(x) + f(1-x));
 
 transition1 = @(x) 498 * g((0.15-x)/(0.15-0.1)) +2;
 transition2 = @(x) 498 * g((x-0.45)/(0.5-0.45)) +2;
-y = zeros(length(x),1);
-for i=1:length(x)
+[m, n] = size(x);
+y = zeros(m,n);
+y = y(:);
+for i=1:m*n
     if (x(i)>=0 && x(i)<=0.1)
         y(i) = 500;
     elseif x(i) > 0.1 && x(i) < 0.15
@@ -35,4 +37,5 @@ for i=1:length(x)
         y(i) = 500;
     end
 end
+y = reshape(y,m,n);
 end
