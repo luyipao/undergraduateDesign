@@ -20,10 +20,12 @@ classdef Mesh
         epsilon = 0.001;
         priLegendreFunctions
         PnDPm
-        CellBasisFunctionsBoundaryValues
+        basisBoundaryValues
         diffBasisFuncs
         basisFuncs
         t
+        PPP
+        Ecoeffs
     end
     methods
         %% generate function
@@ -36,11 +38,12 @@ classdef Mesh
             f2 = @(x) 1/2 * (x.^3 - x);
             f3 = @(x) 5/8 * x.^4 - 3/4 * x.^2;
             obj.priLegendreFunctions = {f0 f1 f2 f3};
-                        f0 = @(x) 0*x + 1;
+            f0 = @(x) 0*x + 1;
             f1 = @(x) x;
             f2 = @(x) 1.5 * x.^2 - 0.5;
             f3 = @(x) 2.5 * x.^3 - 1.5 * x;
             obj.basisFuncs = {f0 f1 f2 f3};
+            obj.basisFuncs = obj.basisFuncs(1:degree+1);
             obj.xa = a;
             obj.xb = b;
             obj.meshSize = (obj.xb-obj.xa) / N;
@@ -65,6 +68,7 @@ classdef Mesh
             end
             %get primitive doping function
             [~,dopingCoeffs] = piecewiseL2Projection(@(x) dopingFunction(x),obj.degree,obj.xa,obj.xb,obj.CellsNum);
+            obj.initialCoeffs = dopingCoeffs;
             fluxs1 = zeros(N,1);
             fluxs2 = zeros(N,1);
             for j = 1:N
@@ -79,6 +83,7 @@ classdef Mesh
             fluxs1 = cumsum(fluxs1);
             fluxs1 = fluxs1(1:end-1) - fluxs2;
             dopingCoeffs = reshape(dopingCoeffs,degree+1,length(obj.X)-1);
+            
             obj.initialFunction = LegendrePoly(obj.X,dopingCoeffs,degree,fluxs1);
             % get integration of Pn and DPm
             obj.PnDPm = zeros(degree+1,degree+1);
@@ -93,9 +98,23 @@ classdef Mesh
                 end
             end
             % cell basis function in boundary value;
-            obj.CellBasisFunctionsBoundaryValues = [sqrt(1/obj.meshSize) sqrt(3/obj.meshSize) sqrt(5/obj.meshSize) sqrt(7/obj.meshSize)];
-            obj.CellBasisFunctionsBoundaryValues = obj.CellBasisFunctionsBoundaryValues(1:degree+1);
-            obj.CellBasisFunctionsBoundaryValues = [obj.CellBasisFunctionsBoundaryValues .* (-1).^(0:degree); obj.CellBasisFunctionsBoundaryValues]';
+            obj.basisBoundaryValues = [sqrt(1/obj.meshSize) sqrt(3/obj.meshSize) sqrt(5/obj.meshSize) sqrt(7/obj.meshSize)];
+            obj.basisBoundaryValues = obj.basisBoundaryValues(1:degree+1);
+            obj.basisBoundaryValues = [obj.basisBoundaryValues .* (-1).^(0:degree); obj.basisBoundaryValues]';
+            
+            % legendre polys integral
+            syms x
+            A = zeros(obj.degree+1, obj.degree+1, obj.degree+1);
+            P = legendreP(0:4,x);
+            for i = 1:5
+                for j = 1:5
+                    for k = 1:5
+                        f = P(i) * P(j) * P(k);
+                        A(i,j,k) = int(f, -1, 1);
+                    end
+                end
+            end
+            obj.PPP = A;
         end
         %% save
         function [] =  save(obj,filename,varargin)
@@ -139,12 +158,12 @@ classdef Mesh
             Time = [];
             TV = [];
             FLast = obj.initialFunction;
-            [obj, E, Func] = obj.GK(n);
+            [obj, E, Func] = obj.GK(n+1);
             FNow = Func;
             e = sqrt(gaussLegendre(@(x) (FLast.solve(x) - FNow.solve(x)).^2, obj.xa, obj.xb));
             while  e(end) > obj.epsilon
                 tic
-                [obj, E, Func] = obj.GK(n);
+                [obj, E, Func] = obj.GK(3);
                 Time = [Time toc];
                 FLast = FNow;
                 FNow = Func;
@@ -166,7 +185,7 @@ classdef Mesh
                 error('Invalid GK order. Please choose 3 or 4.');
             end
         end
-            
+        
         function [obj, E, Func] = GK3(obj)
             x = linspace(0,0.6,1000);
             k0 = obj.coeffs;
@@ -261,10 +280,10 @@ classdef Mesh
             T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+temp,0,0.4);
             temp = obj.initialFunction.priSolve(0.6);
             T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+temp,0,0.4); % set in generate function
-            electricField0 = 0.0015 * (T1 - T2);
+            electricField0 = 0.001546423010635 * (T1 - T2);
             
-            temp = -0.0015 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
-            E = @(x) -0.0015 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
+            temp = -0.001546423010635 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
+            E = @(x) -0.001546423010635 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
             
             % aux function
             I = eye(obj.CellsNum);
@@ -272,7 +291,7 @@ classdef Mesh
             index = repmat(1:obj.CellsNum,obj.degree+1,1);
             index = reshape(index,[],1);
             
-            F = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
             tempCellValues = CellValues(index,:);
             F = tempCellValues(:,4) .* F(:,2) - tempCellValues(:,2) .* F(:,1) - B * obj.coeffs;
             obj.auxCoeffs = 0.139219332249189 * F;
@@ -289,7 +308,7 @@ classdef Mesh
             % L output F very slow
             % temp var: Cellj CellValuej auxCellValuej Fj
             
-            tbv = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            tbv = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
             
             Eb = E(parforX(2:end));
             Ea = E(parforX(1:end-1));
@@ -316,7 +335,7 @@ classdef Mesh
             N = obj.CellsNum;
             coeffMatrix = reshape(obj.coeffs,n+1,N);
             
-
+            
             
             % get electron concentration
             electronConcentration = LegendrePoly(obj.X, coeffMatrix,n,'true');
@@ -332,9 +351,9 @@ classdef Mesh
             T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+temp,0,0.4);
             temp = obj.initialFunction.priSolve(0.6);
             T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+temp,0,0.4); % set in generate function
-            electricField0 = 0.0015 * (T1 - T2);
-            temp = -0.0015 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
-            E = @(x) -0.0015 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
+            electricField0 = 0.001546423010635 * (T1 - T2);
+            temp = -0.001546423010635 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
+            E = @(x) -0.001546423010635 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
             
             % get constant
             C = [8.027379234129259e-35 6.020534425596945e-35];
@@ -349,7 +368,7 @@ classdef Mesh
             B = kron(I, obj.PnDPm');
             index = repmat(1:obj.CellsNum,obj.degree+1,1);
             index = reshape(index,[],1);
-            F = repmat(obj.CellBasisFunctionsBoundaryValues,obj.CellsNum,1);
+            F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
             tempCellValues = CellValues(index,:);
             [~,~,W] = gaussLegendre(@(x) 0*x,obj.X(1:end-1),obj.X(2:end));
             
@@ -361,7 +380,7 @@ classdef Mesh
             result = cell2mat(result); %  back to a matrix
             T1 = reshape(result,[],1);
             
-            dE = @(x) -0.0015 * (electronConcentration.solve(x) - dopingFunction(x)');
+            dE = @(x) -0.001546423010635 * (electronConcentration.solve(x) - dopingFunction(x)');
             da = @(x) (0.019382022471910 + 2*1.108773408239700e-32* 0.75^2 * E(x) .* dE(x)) ./ (2*a(x));
             T21 = getGaussLegendreB(@(x) da(x),obj.X(1:end-1),obj.X(2:end));
             T22 = T12;
@@ -736,6 +755,140 @@ classdef Mesh
         end
         function drawError(obj)
             plot(linspace(0,0.6,1000),dopingFunction(linspace(0,0.6,1000)) - obj.func(linspace(0,0.6,1000)));
+        end
+    end
+    
+    methods
+        function IMEXGK(obj, n)
+            if n ~= 3
+                error('Invalid input, please choose 3');
+            else
+                electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree);
+                % get cell values
+                CellValues(:,2:3) = electronConcentration.getNodeValues';
+                CellValues(:,1) = circshift(CellValues(:,3),1);
+                CellValues(:,4) = circshift(CellValues(:,2),-1);
+                
+                [obj.Ecoeffs, ~] = getIMEXPotential(obj);
+                E = LegendrePoly(obj.X,  reshape(obj.Eoceffs,obj.degree+1,obj.CellsNum), obj.degree);
+                ECellValues(:,2:3) = E.getNodeValues';
+                ECellValues(:,1) = circshift(ECellValues(:,3),1);
+                ECellValues(:,4) = circshift(ECellValues(:,2),-1);
+                
+                [obj.Ecoeffs, obj.potentialCoeffs] = obj.getIMEXPotential;
+                H00 = obj.H(obj.Eoceffs, obj.coeffs, ECellValues, CellValues);
+                BPos = obj.Hpos;
+                BNeg = obj.HNeg;
+                c1 = obj.t * (0.5*BNeg*BPos*x + H00) + obj.coeffs;
+            end
+            
+        end
+        % output:
+        function y = H(obj, Ecoeffs, ncoeffs, EValues, nValues)
+            rbbv = repmat(obj.basisBoundaryValues, obj.CellsNum, 1);
+            
+            
+            EnFlux = 0.5 * (EValues(:,4) .* nValues(:,4) + EValues(:,3) .* nValues(:,3));
+            FEnv1 = mu * EnFlux .* rbbv(:,1);
+            
+            EnFlux = 0.5 * (EValues(:,2).*nValues(:,2) + EValues(:,1).*nValues(:,1));
+            FEnv2 = mu * EnFlux .* rbbv(:,1);
+            
+            for j = 1:N
+                Aj = zeros(obj.degree+1);
+                for i = 1:obj.degree+1
+                    for l = 1:obj.degree+1
+                        Aj(l,i) = obj.PPP(:,i,l) * Ecoeffs(:,j);
+                    end
+                end
+                A{j} = Aj;
+            end
+            A = - mu * blkdiag(A{:});
+            
+            y = A * ncoeffs + FEnv1 - FEnv2;
+        end
+        % B only depend on basis functions values at each Cells.
+        function B = Hpos(obj)
+            B = repmat({obj.PnDPm}, 1, obj.CellsNum);
+            B = blkdiag(B{:});
+            
+            D = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,2)';
+            D = repmat({D}, obj.CellsNum, 1);
+            D = blkdiag(D{:});
+            D = circshift(D,-obj.degree-1,1);
+            
+            E = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
+            E = repmat({E}, obj.CellsNum, 1);
+            E = blkdiag(E);
+            
+            B = B + D + E;
+        end
+        
+        function B = Hneg(obj)
+            B = repmat({obj.PnDPm}, 1, obj.CellsNum);
+            B = blkdiag(B{:});
+            
+            D = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,2)';
+            D = repmat({D}, obj.CellsNum, 1);
+            D = blkdiag(D{:});
+            
+            E = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,1)';
+            E = repmat({E}, obj.CellsNum, 1);
+            E = blkdiag(E);
+            E = circshift(E, obj.degree+1,1);
+            
+            B = B + D + E;
+        end
+        function [A, b] = IMEXPossionRelation(obj)
+            % get relationship bettween field and potential CE = B * CP + E;
+            I = eye(obj.CellsNum);
+            I = sparse(I);
+            B = kron(obj.PnDPm, I);
+            
+            temp = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,2)';
+            I(1,1) = 0;
+            D = kron(I,temp);
+            D = circshift(D, -obj.degree-1, 1);
+            
+            E = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
+            E = kron(I,E);
+            
+            temp = zeros(obj.CellsNum,1);
+            temp = sparse(temp);
+            temp(end) = 1;
+            b = -kron(temp,1.5*obj.basisBoundaryValues(:,2));
+            
+            A = B - D + E;
+        end
+        
+        function [z, x] = getIMEXPotential(obj)
+            % get relationship
+            [A, b] = IMEXPossionRelation(obj);
+            
+            % get electric field z and electric potential  x
+            I = eye(obj.CellsNum);
+            I = sparse(I);
+            D = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,2)';
+            G = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,1)';
+            F = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
+            
+            AE = kron(I,-obj.PnDPm+D);
+            BE = kron(diag(sparse(ones(obj.CellsNum-1,1)), -1), G);
+            BE(1:obj.degree+1, 1:obj.degree+1) = F;
+            EA = AE - BE;
+            
+            AP = kron(sparse(diag(ones(obj.CellsNum-1,1), 1)),G');
+            BP = kron(I,D+F);
+            CP = kron(sparse(diag(ones(obj.CellsNum-1,1), -1)),G);
+            PA = AP - BP + CP;
+            
+            Pb = zeros(obj.CellsNum*(obj.degree+1),1);
+            Pb(1:obj.degree+1) = 1.5 * obj.basisBoundaryValues(:,2);
+            
+            temp1 = EA * A + PA;
+            temp2 = -Pb - EA*b - 0.001546423010635 * (obj.coeffs - obj.initialCoeffs);
+            x = temp1 \ temp2;
+            z = A*x + b;
         end
     end
 end

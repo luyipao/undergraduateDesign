@@ -38,7 +38,6 @@ classdef LegendrePoly
             
             obj.h = abs(mesh(2) - mesh(1));
             normalCoeffs = [sqrt(1/obj.h) sqrt(3/obj.h) sqrt(5/obj.h) sqrt(7/obj.h)];
-
             
             obj.diffNormalCoeffs = 2 * normalCoeffs .* [1/obj.h 3/obj.h 5/obj.h 7/obj.h ];
             obj.priNormalCoeffs = [sqrt(obj.h) sqrt(3*obj.h) sqrt(5*obj.h) sqrt(7*obj.h)] / 2;
