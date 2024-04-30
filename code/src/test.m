@@ -5,7 +5,9 @@ a = 0;
 b = 0.6;
 n = 2;
 N = 100;
-mesh = Mesh(a,b,N,@(x) dopingFunction(x),n);
+mesh = Mesh2(a,b,N,@(x) dopingFunction(x),n);
+% f = basisPolys(mesh.X, reshape(mesh.coeffs,mesh.degree+1,[]),mesh.degree, mesh.basisFuncs, mesh.basisInterval);
+% x = linspace(0, 0.6, 1000);plot(x, f.solve(x));
 mesh.IMEXGK(3);
 
 % k = 4;
@@ -24,10 +26,10 @@ mesh.IMEXGK(3);
 
 
 %test L2 projection
-f = piecewiseL2Projection(@(x) dopingFunction(x) ,n,a,b,N);
-x = linspace(0,0.6,1000);
-scatter(x,dopingFunction(x)-f(x)');
-plot(x,dopingFunction(x), x,f(x),'--');
-legend('exact', 'projection');
+% f = piecewiseL2Projection(@(x) dopingFunction(x) ,n,a,b,N);
+% x = linspace(0,0.6,1000);
+% scatter(x,dopingFunction(x)-f(x)');
+% plot(x,dopingFunction(x), x,f(x),'--');
+% legend('exact', 'projection');
 
 

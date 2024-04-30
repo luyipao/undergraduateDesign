@@ -2,30 +2,29 @@ classdef Mesh
     properties
         xa (1,1) double {mustBeNumeric, mustBeReal}
         xb (1,1) double {mustBeNumeric, mustBeReal}
+        degree (1,1) double {mustBeInteger}
         meshSize (1,1) double
         CellsNum (1,1) double {mustBeInteger, mustBeFinite}
         X (1,:) double {mustBeNumeric}
         Xc (1,:) double
         coeffs (:,1) double {mustBeNumeric}
         auxCoeffs (:,1) double
+        Ecoeffs	(:,1) double
         initialCoeffs (:,1) double
         func
         auxFunction
         initialFunction
-        degree (1,1) double {mustBeInteger}
+		
+		classicalLegendrePolys
+		priLegendreFunctions
+		diffBasisFuncs
+		basisBoundaryValues
+		PnDPm
+        PPDP
         Cells (:,1) Cell
-        YR (1,:) double {mustBeNumeric}
-        YL (1,:) double {mustBeNumeric}
         CFL = 0.2;
         epsilon = 0.001;
-        priLegendreFunctions
-        PnDPm
-        basisBoundaryValues
-        diffBasisFuncs
-        classicalLegendrePolys
-        t
-        PPDP
-        Ecoeffs
+        t        
     end
     methods
         %% generate function
@@ -104,7 +103,7 @@ classdef Mesh
             obj.basisBoundaryValues = obj.basisBoundaryValues(1:degree+1);
             obj.basisBoundaryValues = [obj.basisBoundaryValues .* (-1).^(0:degree); obj.basisBoundaryValues]';
             
-            % classical legendre polys integral
+            % scaled orthonormal legendre polys integral
             syms x
             A = zeros(obj.degree+1, obj.degree+1, obj.degree+1);
             P = legendreP(0:obj.degree+1,x);
@@ -113,11 +112,11 @@ classdef Mesh
                 for j = 1:obj.degree+1
                     for k = 1:obj.degree+1
                         f = P(i) * P(j) * DP(k);
-                        A(i,j,k) = int(f, -1, 1);
+                        A(i,j,k) = (2*i-1) * (2*j-1) * (2*k-1) * int(f, -1, 1);
                     end
                 end
             end
-            obj.PPDP = A;
+            obj.PPDP = A / sqrt(obj.meshSize^3);
         end
         %% save
         function [] =  save(obj,filename,varargin)
@@ -763,7 +762,7 @@ classdef Mesh
     
     methods
         function IMEXGK(obj, n)
-            obj.t = 1.2e-3;
+            obj.t = 2.0797e-06;
             if n ~= 3
                 error('Invalid input, please choose 3');
             else
@@ -785,30 +784,7 @@ classdef Mesh
                 BPos = obj.Hpos;
                 BNeg = obj.Hneg;
                 I = sparse(eye(obj.CellsNum*(obj.degree+1)));
-                c1 = (I-obj.t * BNeg*BPos) \ (obj.coeffs + obj.t * H00);
-                electronConcentration = LegendrePoly(obj.X, reshape(c1,obj.degree+1,obj.CellsNum), obj.degree);
-                x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-
-                obj.coeffs = c1;
-                electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree);
-                % get cell values
-                CellValues(:,2:3) = electronConcentration.getNodeValues';
-                CellValues(:,1) = circshift(CellValues(:,3),1);
-                CellValues(:,4) = circshift(CellValues(:,2),-1);
-                
-                [obj.Ecoeffs, ~] = obj.getIMEXPotential;
-                E = LegendrePoly(obj.X,  reshape(obj.Ecoeffs,obj.degree+1,obj.CellsNum), obj.degree);
-                x = linspace(0,0.6,1000);plot(x,E.solve(x));
-                ECellValues(:,2:3) = E.getNodeValues';
-                ECellValues(:,1) = circshift(ECellValues(:,3),1);
-                ECellValues(:,4) = circshift(ECellValues(:,2),-1);
-                
-                
-                H00 = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                BPos = obj.Hpos;
-                BNeg = obj.Hneg;
-                I = sparse(eye(obj.CellsNum*(obj.degree+1)));
-                c1 = (I-obj.t * BNeg*BPos) \ (obj.coeffs + obj.t * H00);
+                c1 = (I-obj.t/2 * BNeg*BPos) \ (obj.coeffs + obj.t/2 * H00);
                 electronConcentration = LegendrePoly(obj.X, reshape(c1,obj.degree+1,obj.CellsNum), obj.degree);
                 x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
             end
@@ -931,5 +907,5 @@ classdef Mesh
             potential = LegendrePoly(obj.X, reshape(x,obj.degree+1,obj.CellsNum), obj.degree);
             x = linspace(0,0.6,10000); plot(x,potential.solve(x))
         end
-    end
+	end
 end

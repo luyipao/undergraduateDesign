@@ -104,7 +104,7 @@ classdef Mesh
             obj.basisBoundaryValues = obj.basisBoundaryValues(1:degree+1);
             obj.basisBoundaryValues = [obj.basisBoundaryValues .* (-1).^(0:degree); obj.basisBoundaryValues]';
             
-            % classical legendre polys integral
+            % scaled orthonormal legendre polys integral
             syms x
             A = zeros(obj.degree+1, obj.degree+1, obj.degree+1);
             P = legendreP(0:obj.degree+1,x);
@@ -113,11 +113,11 @@ classdef Mesh
                 for j = 1:obj.degree+1
                     for k = 1:obj.degree+1
                         f = P(i) * P(j) * DP(k);
-                        A(i,j,k) = int(f, -1, 1);
+                        A(i,j,k) = (2*i-1) * (2*j-1) * (2*k-1) * int(f, -1, 1);
                     end
                 end
             end
-            obj.PPDP = A;
+            obj.PPDP = A / sqrt(obj.meshSize^3);
         end
         %% save
         function [] =  save(obj,filename,varargin)
@@ -763,6 +763,7 @@ classdef Mesh
     
     methods
         function IMEXGK(obj, n)
+            obj.t = 1.2e-3;
             if n ~= 3
                 error('Invalid input, please choose 3');
             else
@@ -783,7 +784,10 @@ classdef Mesh
                 H00 = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
                 BPos = obj.Hpos;
                 BNeg = obj.Hneg;
-                
+                I = sparse(eye(obj.CellsNum*(obj.degree+1)));
+                c1 = (I-obj.t * BNeg*BPos) \ (obj.coeffs + obj.t * 0.6*H00);
+                electronConcentration = LegendrePoly(obj.X, reshape(c1,obj.degree+1,obj.CellsNum), obj.degree);
+                x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
             end
             
         end
