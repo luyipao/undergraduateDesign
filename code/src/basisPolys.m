@@ -29,9 +29,10 @@ classdef basisPolys
             end
         end
         function y = getNodeValues(obj)
-			A = repmat(obj.coeffs,2,1);
-			y(1,:) = sum(A(obj.degree+2:end,:),1);
-			y(2,:) = sum(A(1:obj.degree+1,:),1);
+			A = repmat(obj.coeffs,2,1).*obj.basisBoundaryValues(:);
+			y(1,:) = sum(A(1:obj.degree+1,:),1);
+            y(2,:) = sum(A(obj.degree+2:end,:),1);
+			
 		end
         function y = solve(obj, x)
             [m,n] = size(x);

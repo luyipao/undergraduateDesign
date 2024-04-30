@@ -7,6 +7,7 @@ classdef basisPolys
         degree (1,1)
         basisFuncs
         basisInterval
+		basisBoundaryValues
     end
     methods
         function obj = basisPolys(mesh, coeffs, degree, basisFuncs, interval)
@@ -18,18 +19,25 @@ classdef basisPolys
                 obj.degree = degree;
                 obj.basisFuncs = basisFuncs;
                 obj.basisInterval = interval;
-                obj.h = abs(mesh(2) - mesh(1));
+				obj.basisBoundaryValues = zeros(obj.degree+1, 2);
+				for j = 1:obj.degree+1
+					obj.basisBoundaryValues(j,:) = obj.basisFuncs{j}(obj.basisInterval);
+				end
+				obj.h = abs(mesh(2) - mesh(1));
                 
                 obj.coeffs = coeffs;
             end
         end
+        function y = getNodeValues(obj)
+			A = repmat(obj.coeffs,2,1).*obj.basisBoundaryValues(:);
+			y(2,:) = sum(A(obj.degree+2:end,:),1);
+			y(1,:) = sum(A(1:obj.degree+1,:),1);
+		end
         function y = solve(obj, x)
             [m,n] = size(x);
             x = x(:);
-            
-            index = discretize(x,obj.X);
 			% scale
-			x = scale(obj, x);
+			[x, index] = transform(obj, x);
 			
             y = obj.coeffs(:,index) .* cell2mat(cellfun(@(f) f(x), obj.basisFuncs, 'UniformOutput', false))';
             
@@ -39,9 +47,7 @@ classdef basisPolys
         % transform function: Projects x onto the equivalent points on the support interval of the basis functions
         % Input: x is the vector of points to be transformed
         % Output: x is the vector of transformed points
-        function x = scale(obj, x)
-            [m,n] = size(x);
-            x = x(:);
+        function [x, index] = transform(obj, x)
             index = discretize(x,obj.X);
             x = (x-obj.Xc(index))/obj.h;
         end

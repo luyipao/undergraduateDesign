@@ -32,23 +32,17 @@ classdef Mesh2
             obj = obj.setBasisFuncs;
             obj = obj.setBasisBoundaryValues;
             obj = obj.setMassMatrix;
+            obj = obj.setPDP;
+            obj = obj.setPPDP;
             
             obj = obj.L2projection(f);
             obj = obj.setInitialCoeffs;
+            f = obj.getBasisPolys(obj.coeffs);
+            x = linspace(0,0.6,1000);plot(x,f.solve(x));
             
-            obj = obj.setPDP;
-            obj = obj.setPPDP;
+
         end
-        function obj = setMassMatrix(obj)
-            A = zeros(obj.degree+1);
-            for i = 1:obj.degree+1
-                for j = 1:obj.degree+1
-                    g = @(x) obj.basisFuncs{i}(x).*obj.basisFuncs{j}(x);
-                    A(i,j) = gaussLegendre(@(x) g((x-obj.Xc(j))/obj.meshSize), obj.X(j), obj.X(j+1));
-                end
-            end
-            obj.massMatrix = A;
-        end
+
         function obj = setInitialCoeffs(obj)
             c = obj.coeffs;
             obj.initialCoeffs = c;
@@ -79,7 +73,7 @@ classdef Mesh2
                     b(idx) = gaussLegendre(@(x) f(x) .* obj.basisFuncs{i}((x-obj.Xc(j))/obj.meshSize), obj.X(j), obj.X(j+1));
                 end
             end
-            obj.coeffs = A \ b;
+            obj.coeffs = (obj.meshSize * A) \ b;
         end
         function obj = setPDP(obj)
             syms x
@@ -92,6 +86,7 @@ classdef Mesh2
                     obj.PDP(i,j) = int(f,obj.basisInterval(1),obj.basisInterval(2));
                 end
             end
+            obj.PDP = obj.PDP;
         end
         function obj = setPPDP(obj)
             syms x
@@ -108,18 +103,32 @@ classdef Mesh2
             end
             obj.PPDP = A;
         end
+        function obj = setMassMatrix(obj)
+            A = zeros(obj.degree+1);
+            for i = 1:obj.degree+1
+                for j = i
+                    g = @(x) obj.basisFuncs{i}(x).*obj.basisFuncs{j}(x);
+                    A(i,j) = gaussLegendre(@(x) g(x), obj.basisInterval(1), obj.basisInterval(2));
+                end
+            end
+            obj.massMatrix = A;
+        end
         function obj = setBasisBoundaryValues(obj)
             obj.basisBoundaryValues = zeros(obj.degree+1, 2);
             for j = 1:obj.degree+1
                 obj.basisBoundaryValues(j,:) = obj.basisFuncs{j}(obj.basisInterval);
             end
         end
+        
+        function f = getBasisPolys(obj,c)
+            f = basisPolys(obj.X, reshape(c,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
+        end
         function IMEXGK(obj, n)
             obj.t = 1.2e-3;
             if n ~= 3
                 error('Invalid input, please choose 3');
             else
-                electronConcentration = basisPolys(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
+                electronConcentration = obj.getBasisPolys(obj.coeffs);
                 % get cell values
                 CellValues(:,2:3) = electronConcentration.getNodeValues';
                 CellValues(:,1) = circshift(CellValues(:,3),1);
@@ -132,13 +141,22 @@ classdef Mesh2
                 ECellValues(:,1) = circshift(ECellValues(:,3),1);
                 ECellValues(:,4) = circshift(ECellValues(:,2),-1);
                 
-                
-                H00 = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
+                I = sparse(eye(obj.CellsNum*(obj.degree+1)));
                 BPos = obj.Hpos;
                 BNeg = obj.Hneg;
-                I = sparse(eye(obj.CellsNum*(obj.degree+1)));
-                c1 = (I-obj.t * BNeg*BPos) \ (obj.coeffs + obj.t * H00);
-                electronConcentration = basisPolys(obj.X, reshape(c1,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
+                
+                massMatrix = kron(eye(obj.CellsNum),obj.massMatrix);
+                
+                H = cell(4,1);
+                HPos = cell(4,1);
+                HNeg = cell(4,1);
+                c = cell(4,1);
+                c{1} = obj.coeffs;
+                H{1} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
+
+                c1 = ((obj.meshSize * massMatrix) -obj.t * BNeg*BPos) \ ((obj.meshSize * massMatrix) * c{1} + obj.t * H{1});
+                
+                electronConcentration = obj.getBasisPolys(c1);
                 x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
             end
             
@@ -200,8 +218,7 @@ classdef Mesh2
             A = 0.139219332249189 * A;
         end
         function [A, b] = IMEXPossionRelation(obj)
-            % get relationship bettween field and potential obj.Ecoeffs= A
-            % * obj.Pcoeffs + b
+            % get relationship bettween field and potential obj.meshSize * massMatrix * obj.Ecoeffs= A * obj.Pcoeffs + b
             I = eye(obj.CellsNum);
             I = sparse(I);
             B = kron(I, obj.PDP');
@@ -248,17 +265,17 @@ classdef Mesh2
             Pb = zeros(obj.CellsNum*(obj.degree+1),1);
             Pb(end-obj.degree:end) = 1.5 * obj.basisBoundaryValues(:,2);
             
-            temp1 = EA * A + PA;
+            temp1 = EA * inv(obj.meshSize * massMatrix) * A + PA;
             
             %electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree);
             temp = cellfun(@(r) gaussLegendre(@(x) dopingFunction(x) .* r((x - obj.Xc(1:end))/obj.meshSize),obj.X(1:end-1), obj.X(2:end)), obj.basisFuncs,'UniformOutput', false);
             temp = cell2mat(temp');
             temp = reshape(temp,[],1);
-            temp = massMatrix \ temp;
-            temp2 = -Pb - EA*b - 0.001546423010635 * (obj.coeffs- temp);
+            temp = (obj.meshSize * massMatrix) \ temp;
+            temp2 = -Pb - EA*(obj.meshSize * massMatrix \ b) - 0.001546423010635 * obj.meshSize * massMatrix * (obj.coeffs- temp);
             
             x =  (temp1 \ temp2);
-            z = massMatrix \ (A*x + b);
+            z =  (obj.meshSize * massMatrix) \ (A*x + b);
             potential = basisPolys(obj.X, reshape(x,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
             x = linspace(0,0.6,10000); plot(x,potential.solve(x))
         end
