@@ -135,7 +135,7 @@ classdef Mesh2
         end
         function obj = setAssMatrix(obj)
             A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
-            obj.assMatrix = A - obj.t/2 * obj.BNeg*diag(1/diag(A))*obj.BPos;
+            obj.assMatrix = A - obj.t/2 * obj.BNeg*diag(1./diag(A))*obj.BPos;
         end
         function obj = setTimeStep(obj, timeStep)
             obj.t = timeStep;
@@ -173,8 +173,8 @@ classdef Mesh2
                 obj.auxCoeffs = M \ (obj.BPos*obj.coeffs);
                 figure(2);
                 q = obj.getBasisPolys(obj.auxCoeffs);
-                x = linspace(0,0.6,1000);plot(x,diffDopingFunction(x), x,q.solve(x),'--');
-                %                 x = linspace(0,0.6,1000);plot(x,diffDopingFunction(x), x,q.solve(x)/0.139219332249189,'--');
+                x = linspace(0,0.6,1000);plot(x,0.139219332249189*diffDopingFunction(x), x,q.solve(x),'--');
+                %                 x = linspace(0,0.6,1000);plot(x,diffDopingFunction(x), x,q.solve(x)/,'--');
                 
                 [obj, CellValues, ECellValues] = obj.getCellValues;
                 H{2} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
@@ -326,7 +326,7 @@ classdef Mesh2
             Pb = zeros(obj.CellsNum*(obj.degree+1),1);
             Pb(end-obj.degree:end) = 1.5 * obj.basisBoundaryValues(:,2);
             
-            temp1 = EA * inv(M) * A + PA;
+            temp1 = EA * diag(1./diag(M)) * A + PA;
             
             %             temp = cellfun(@(r) gaussLegendre(@(x) dopingFunction(x) .* r((x - obj.Xc(1:end))/obj.meshSize),obj.X(1:end-1), obj.X(2:end)), obj.basisFuncs,'UniformOutput', false);
             %             temp = cell2mat(temp');
