@@ -3,16 +3,13 @@ addpath('C:\Users\12192\OneDrive - zju.edu.cn\documents\homeworks\undergraduateD
 setParameters
 a = 0;
 b = 0.6;
-n = 3;
+n = 2;
 N = 100;
 mesh = Mesh2(a,b,N,@(x) dopingFunction(x),n);
 % f = basisPolys(mesh.X, reshape(mesh.coeffs,mesh.degree+1,[]),mesh.degree, mesh.basisFuncs, mesh.basisInterval);
 % x = linspace(0, 0.6, 1000);plot(x, f.solve(x));
-for i = 1:1000
-    mesh = mesh.IMEXGK(3);
-                    electronConcentration = mesh.getBasisPolys(mesh.coeffs);
-                x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-end
+fo
+mesh.IMEXGK(3);
 
 % k = 4;
 % Funcs = cell(k,1);
