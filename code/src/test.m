@@ -4,16 +4,17 @@ setParameters
 a = 0;
 b = 0.6;
 n = 3;
-N = 100;
+N = 200;
 mesh = Mesh2(a,b,N,@(x) dopingFunction(x),n);
 % f = basisPolys(mesh.X, reshape(mesh.coeffs,mesh.degree+1,[]),mesh.degree, mesh.basisFuncs, mesh.basisInterval);
 % x = linspace(0, 0.6, 1000);plot(x, f.solve(x));
 for i = 1:1000
     mesh = mesh.IMEXGK(3);
+end
                     electronConcentration = mesh.getBasisPolys(mesh.coeffs);
                 x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-end
-
+                E = mesh.getBasisPolys(mesh.Ecoeffs);
+                x = linspace(0,0.6,1000);plot(x,E.solve(x));
 % k = 4;
 % Funcs = cell(k,1);
 % L2Error = [];

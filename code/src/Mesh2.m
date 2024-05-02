@@ -166,14 +166,14 @@ classdef Mesh2
                 obj.coeffs = obj.assMatrix \ (M*c{1} + obj.t/2*H{1});
                 c{2} = obj.coeffs;
                 
-                figure(1);
-                electronConcentration = obj.getBasisPolys(obj.coeffs);
-                x = linspace(0,0.6,1000);plot(x,dopingFunction(x), x, electronConcentration.solve(x),'--');
-                
-                obj.auxCoeffs = M \ (obj.BPos*obj.coeffs);
-                figure(2);
-                q = obj.getBasisPolys(obj.auxCoeffs);
-                x = linspace(0,0.6,1000);plot(x,0.139219332249189*diffDopingFunction(x), x,q.solve(x),'--');
+%                 figure(1);
+%                 electronConcentration = obj.getBasisPolys(obj.coeffs);
+%                 x = linspace(0,0.6,1000);plot(x,dopingFunction(x), x, electronConcentration.solve(x),'--');
+%                 
+%                 obj.auxCoeffs = M \ (obj.BPos*obj.coeffs);
+%                 figure(2);
+%                 q = obj.getBasisPolys(obj.auxCoeffs);
+%                 x = linspace(0,0.6,1000);plot(x,0.139219332249189*diffDopingFunction(x), x,q.solve(x),'--');
                 %                 x = linspace(0,0.6,1000);plot(x,diffDopingFunction(x), x,q.solve(x)/,'--');
                 
                 [obj, CellValues, ECellValues] = obj.getCellValues;
@@ -193,10 +193,10 @@ classdef Mesh2
                 b = (M*c{1}+obj.t*((H{1}+7*H{2}+3*H{3}-7*H{4})/4 + BNegBPos*(3*(c{2}-c{3})+c{4})/2));
                 obj.coeffs = obj.assMatrix \ b;
                 obj.auxCoeffs = obj.BPos*obj.coeffs;
-                electronConcentration = obj.getBasisPolys(obj.coeffs);
-                x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-                q = obj.getBasisPolys(obj.auxCoeffs);
-                x = linspace(0,0.6,1000);plot(x,q.solve(x));
+%                 electronConcentration = obj.getBasisPolys(obj.coeffs);
+%                 x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
+%                 q = obj.getBasisPolys(obj.auxCoeffs);
+%                 x = linspace(0,0.6,1000);plot(x,q.solve(x));
             end
         end
         function [obj, CellValues, ECellValues] = getCellValues(obj)
