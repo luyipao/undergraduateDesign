@@ -1,41 +1,29 @@
 
-addpath('functions');
+addpath('src\functions');
 setParameters
+DD = Model('input.json');
 a = 0;
 b = 0.6;
-n = 3;
+n = 2;
 nSteps = zeros(2,5);
 N = [100 200];
-t = [1.2e-3, 1.8e-3, 2.4e-3, 3.0e-3, 3.6e-3]/3;
+t = [1.2e-5];
 for i = 1:2
-    for j = 1:5
-        mesh = Mesh2(a,b,N(i),@(x) dopingFunction(x),n);
+    for j = 1:1
+        mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD);
         mesh.t = t(j);
-        [mesh, nSteps(i,j)] = mesh.IMEXGK(3);
+        [f, mesh] = mesh.DDModelDGFunction(n);
         x = linspace(0,0.6,1000);
-        electronConcentration = mesh.getBasisPolys(mesh.coeffs);
-        plot(x,electronConcentration.solve(x));
-        
-        % Generate a filename with N and t
-        filename1 = sprintf('DDIMEXRK3Degree3meshCells%dElectronConcentration_t%g.pdf', N(i), t(j));
-        print('-dpdf',fullfile('..\docs\images', filename1));
-        
-        E = mesh.getBasisPolys(mesh.Ecoeffs);
-        plot(x,E.solve(x));
-        
-        % Generate another filename with N and t
-        filename2 = sprintf('DDIMEXRK3Degree3meshCells%d_E_t%g.pdf', N(i), t(j));
-        print('-dpdf',fullfile('..\docs\images', filename2));
     end
 end
-% figure(1)
-% x = linspace(0,0.6,1000);
-% electronConcentration = obj.getBasisPolys(obj.coeffs);
-% plot(x,electronConcentration.solve(x));
-% figure(2)
-% % Generate a filename with N and t
-% E = obj.getBasisPolys(obj.Ecoeffs);
-% plot(x,E.solve(x));
+figure(1)
+x = linspace(0,0.6,1000);
+electronConcentration = obj.getBasisPolys(obj.coeffs);
+plot(x,electronConcentration.solve(x));
+figure(2)
+% Generate a filename with N and t
+E = obj.getBasisPolys(obj.Ecoeffs);
+plot(x,E.solve(x));
 
 % k = 4;
 % Funcs = cell(k,1);

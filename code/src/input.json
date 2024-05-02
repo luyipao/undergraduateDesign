@@ -1,0 +1,11 @@
+{
+	"name": "DD",
+	"electronCharge" : 0.1602,
+	"mobility": "@(x) 0.0088 * (1+14.2273./(1+dopingFunction(x)/143200))", 
+	"latticeTemperature" : 300,
+	"dielectricPermittivity":1.035939060000000e+02,
+	"dopingFunction": "@(x) dopingFunction(x)",
+	"BoltzmannConstant":0.138e-4,
+	"electronEffectiveMass":0.236834e-31,
+	"voltageDrop":1.5
+}

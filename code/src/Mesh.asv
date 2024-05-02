@@ -183,11 +183,11 @@ classdef Mesh
             disp('over');
         end
         %% GK
-        function [obj, E, Func] = GK(obj, n)
+        function [obj, E, Func] = GK(obj, n,model)
             if n == 3
-                [obj, E, Func] = obj.GK3;
+                [obj, E, Func] = obj.GK3(model);
             elseif n == 4
-                [obj, E, Func] = obj.GK4;
+                [obj, E, Func] = obj.GK4(model);
             else
                 error('Invalid GK order. Please choose 3 or 4.');
             end
@@ -296,9 +296,8 @@ classdef Mesh
             E = @(x) -0.001546423010635 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
             
             % aux function
-sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')];
-            if isa(obj.semiModel.mobility, 'function_handle')
-                            
+            sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')];
+            if ise(obj.semiModel.mobility, 'function_handle')
             TT1 = getGaussLegendreB(@(x) sqrtTauTheta(x) .* electronConcentration.solve(x), obj.X(1:end-1), obj.X(2:end));
             TT3 = cellfun(@(f) getGaussLegendreB(@(x) f((2*x - obj.X(1:end-1)-obj.X(2:end))/obj.meshSize), obj.X(1:end-1), obj.X(2:end)),obj.diffBasisFuncs, 'UniformOutput', false);
             [~,~,C] = gaussLegendre(@(x) 0*x,obj.X(1:end-1),obj.X(2:end));
@@ -343,8 +342,8 @@ sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')]
             Eb = E(parforX(2:end));
             Ea = E(parforX(1:end-1));
             if isa(obj.semiModel.mobility, 'function_handle')
-                T3 = obj.semiModel.mobility(obj.X(2:end)) .* (max(Eb,0) .* CellValues(:,4) + min(Eb,0) .* CellValues(:,3)) + sqrtTauThetaValues(:,2) .* auxCellValues(:,3);
-                T4 = obj.semiModel.mobility(obj.X(1:end-1)) .* (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + sqrtTauThetaValues(:,1) .* auxCellValues(:,1);
+                T3 = obj.semiModel.mobility(obj.X(2:end)) .* (max(Eb,0) .* CellValues(:,4) + min(Eb,0) .* CellValues(:,3)) + 0.139219332249189 * auxCellValues(:,3);
+                T4 = obj.semiModel.mobility(obj.X(1:end-1)) .* (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + 0.139219332249189 * auxCellValues(:,1);
             else
                 T3 = 0.75 * (max(Eb,0) .* CellValues(:,4) + min(Eb,0) .* CellValues(:,3)) + 0.139219332249189 * auxCellValues(:,3);
                 T4 = 0.75 * (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + 0.139219332249189 * auxCellValues(:,1);
@@ -364,15 +363,8 @@ sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')]
             result = cellfun(@(x) sum(preComp .* x , 1), TT3, 'UniformOutput', false);
             result = cell2mat(result); %  back to a matrix
             T1 = reshape(result,[],1);
-            if isa(obj.semiModel.mobility, 'function_handle')
-                TT1 = getGaussLegendreB(@(x) sqrtTauTheta(x) .* auxq.solve(x), obj.X(1:end-1), obj.X(2:end));
-                preComp = TT1 .* C;
-                result = cellfun(@(x) sum(preComp .* x , 1), TT3, 'UniformOutput', false);
-                result = cell2mat(result); %  back to a matrix
-                T2 = reshape(result,[],1);
-            else
-                T2 = 0.139219332249189 * B * obj.auxCoeffs;
-            end
+            
+            T2 = 0.139219332249189 * B * obj.auxCoeffs;
             
             F = T3.*tbv(:,2) - T4.*tbv(:,1) -T2 - T1;
         end
