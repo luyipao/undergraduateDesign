@@ -22,7 +22,7 @@ classdef Mesh2
         assMatrix
         
         CFL
-        epsilon
+        epsilon = 0.001
         t
     end
     methods
@@ -45,10 +45,6 @@ classdef Mesh2
             
             obj = obj.L2projection(f);
             obj = obj.setInitialCoeffs;
-            f = obj.getBasisPolys(obj.coeffs);
-            x = linspace(0,0.6,1000);plot(x,f.solve(x));
-            
-            
         end
         
         function obj = setInitialCoeffs(obj)
@@ -143,7 +139,7 @@ classdef Mesh2
         function f = getBasisPolys(obj,c)
             f = basisPolys(obj.X, reshape(c,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
         end
-        function obj = IMEXGK(obj, n)
+        function [obj, nSteps] = IMEXGK(obj, n)
             
             if n ~= 3
                 error('Invalid input, please choose 3');
@@ -152,52 +148,74 @@ classdef Mesh2
                 M = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
                 temp = diag(1./diag(M));
                 BNegBPos = obj.BNeg*temp*obj.BPos;
-                
-                H = cell(4,1);
-                c = cell(4,1);
-                c{1} = obj.coeffs;
-                electronConcentration = obj.getBasisPolys(obj.coeffs);
-                x = linspace(0,0.6,1000);plot(x,dopingFunction(x), x, electronConcentration.solve(x),'--');
-                
-                [obj, CellValues, ECellValues] = obj.getCellValues;
-                %check point
-                H{1} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                % check
-                obj.coeffs = obj.assMatrix \ (M*c{1} + obj.t/2*H{1});
-                c{2} = obj.coeffs;
-                
-%                 figure(1);
-%                 electronConcentration = obj.getBasisPolys(obj.coeffs);
-%                 x = linspace(0,0.6,1000);plot(x,dopingFunction(x), x, electronConcentration.solve(x),'--');
-%                 
-%                 obj.auxCoeffs = M \ (obj.BPos*obj.coeffs);
-%                 figure(2);
-%                 q = obj.getBasisPolys(obj.auxCoeffs);
-%                 x = linspace(0,0.6,1000);plot(x,0.139219332249189*diffDopingFunction(x), x,q.solve(x),'--');
-                %                 x = linspace(0,0.6,1000);plot(x,diffDopingFunction(x), x,q.solve(x)/,'--');
-                
-                [obj, CellValues, ECellValues] = obj.getCellValues;
-                H{2} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                b = (M*c{1} +(11*H{1}+H{2})*obj.t/18 + BNegBPos*(obj.t/6*c{2}));
-                obj.coeffs = obj.assMatrix \ b;
-                c{3} = obj.coeffs;
-                
-                [obj, CellValues, ECellValues] = obj.getCellValues;
-                H{3} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                b = M*c{1}+obj.t*((5*H{1}-5*H{2}+3*H{3})/6 + BNegBPos*(-c{2}+c{3})/2);
-                obj.coeffs = obj.assMatrix \ b;
-                c{4} = obj.coeffs;
-                
-                [obj, CellValues, ECellValues] = obj.getCellValues;
-                H{4} = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                b = (M*c{1}+obj.t*((H{1}+7*H{2}+3*H{3}-7*H{4})/4 + BNegBPos*(3*(c{2}-c{3})+c{4})/2));
-                obj.coeffs = obj.assMatrix \ b;
-                obj.auxCoeffs = obj.BPos*obj.coeffs;
-%                 electronConcentration = obj.getBasisPolys(obj.coeffs);
-%                 x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-%                 q = obj.getBasisPolys(obj.auxCoeffs);
-%                 x = linspace(0,0.6,1000);plot(x,q.solve(x));
+                FLast = obj.getBasisPolys(zeros(obj.CellsNum*(obj.degree+1),1));
+                FNow = obj.getBasisPolys(obj.coeffs);
+                nSteps = 0;
+                filename1 = sprintf('DDIMEXRK3Degree3meshCells%dElectronConcentration_t%g.gif', obj.CellsNum, obj.t);
+                filename2 = sprintf('DDIMEXRK3Degree3meshCells%d_E_t%g.gif', obj.CellsNum, obj.t);
+                fig1 = figure('Visible', 'off');
+                fig2 = figure('Visible', 'off');
+                while gaussLegendre(@(x) (FLast.solve(x) - FNow.solve(x)).^2, obj.X(1), obj.X(end)) > (obj.epsilon)^2
+                    obj = L(obj, M, BNegBPos);
+                    FLast = FNow;
+                    FNow = obj.getBasisPolys(obj.coeffs);
+                    nSteps = nSteps + 1;
+                    
+                    % save the change of electron concentration and electric field gif
+                    figure(fig1)
+                    x = linspace(0,0.6,1000);
+                    electronConcentration = obj.getBasisPolys(obj.coeffs);
+                    plot(x,electronConcentration.solve(x));
+                    imind1 = frame2im(getframe(gcf));
+                    [imind1, colormap1] = rgb2ind(imind1, 256);
+                    if nSteps == 1
+                        imwrite(imind1, colormap1,  fullfile('..\docs\images',filename1), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
+                    else
+                        imwrite(imind1, colormap1, fullfile('..\docs\images',filename1), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
+                    end
+                    
+                    figure(fig2)
+                    E = obj.getBasisPolys(obj.Ecoeffs);
+                    plot(x,E.solve(x));
+                    imind2 = frame2im(getframe(gcf));
+                    [imind2, colormap2] = rgb2ind(imind2, 256);
+                    if nSteps == 1
+                        imwrite(imind2, colormap2,  fullfile('..\docs\images',filename2), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
+                    else
+                        imwrite(imind2, colormap2, fullfile('..\docs\images',filename2), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
+                    end
+                end
             end
+        end
+        function obj = L(obj, M, BNegBPos)
+            H = cell(4,1);
+            c = cell(4,1);
+            c{1} = obj.coeffs;
+            %                 electronConcentration = obj.getBasisPolys(obj.coeffs);
+            %                 x = linspace(0,0.6,1000);plot(x,dopingFunction(x), x, electronConcentration.solve(x),'--');
+            
+            obj = obj.getIMEXPotential;
+            H{1} = obj.H;
+            obj.coeffs = obj.assMatrix \ (M*c{1} + obj.t/2*H{1});
+            c{2} = obj.coeffs;
+            
+            obj = obj.getIMEXPotential;
+            H{2} =  obj.H;
+            b = (M*c{1} +(11*H{1}+H{2})*obj.t/18 + BNegBPos*(obj.t/6*c{2}));
+            obj.coeffs = obj.assMatrix \ b;
+            c{3} = obj.coeffs;
+            
+            obj = obj.getIMEXPotential;
+            H{3} = obj.H;
+            b = M*c{1}+obj.t*((5*H{1}-5*H{2}+3*H{3})/6 + BNegBPos*(-c{2}+c{3})/2);
+            obj.coeffs = obj.assMatrix \ b;
+            c{4} = obj.coeffs;
+            
+            obj = obj.getIMEXPotential;
+            H{4} = obj.H;
+            b = (M*c{1}+obj.t*((H{1}+7*H{2}+3*H{3}-7*H{4})/4 + BNegBPos*(3*(c{2}-c{3})+c{4})/2));
+            obj.coeffs = obj.assMatrix \ b;
+            obj.auxCoeffs = obj.BPos*obj.coeffs;
         end
         function [obj, CellValues, ECellValues] = getCellValues(obj)
             electronConcentration = obj.getBasisPolys(obj.coeffs);
@@ -213,7 +231,17 @@ classdef Mesh2
             ECellValues(:,4) = circshift(ECellValues(:,2),-1);
         end
         % output:
-        function y = H(obj, Ecoeffs, ncoeffs, EValues, nValues)
+        function y = H(obj)
+            electronConcentration = obj.getBasisPolys(obj.coeffs);
+            nValues(:,2:3) = electronConcentration.getNodeValues';
+            nValues(:,1) = circshift(nValues(:,3),1);
+            nValues(:,4) = circshift(nValues(:,2),-1);
+            
+            E = obj.getBasisPolys(obj.Ecoeffs);
+            EValues(:,2:3) = E.getNodeValues';
+            EValues(:,1) = circshift(EValues(:,3),1);
+            EValues(:,4) = circshift(EValues(:,2),-1);
+            
             rbbv = repmat(obj.basisBoundaryValues, obj.CellsNum, 1);
             
             index = repmat(1:obj.CellsNum, obj.degree+1, 1);
@@ -229,21 +257,10 @@ classdef Mesh2
             for j = 1:obj.CellsNum
                 for l = 1:obj.degree+1
                     x = (j-1)*(1+obj.degree)+1:(j-1)*(1+obj.degree)+obj.degree+1;
-                    A = obj.PPDP(:,:,l) .* (Ecoeffs(x) * ncoeffs(x)');
+                    A = obj.PPDP(:,:,l) .* (obj.Ecoeffs(x) * obj.coeffs(x)');
                     result((j-1)*(1+obj.degree)+l) = sum(A,'all');
                 end
             end
-            % temp = result
-            %             df0 = @(x) 0+0*x;
-            %             df1 = @(x) 1+0*x;
-            %             df2 = @(x) 2 * x;
-            %             df3 = @(x) 3 * x.^2 - 3/20;
-            %             basisDerivs = {df0 df1 df2 df3};
-            %             electronConcentration = obj.getBasisPolys(ncoeffs);
-            %             E = obj.getBasisPolys(Ecoeffs);
-            %             temp = cellfun(@(f) gaussLegendre(@(x) E.solve(x) .* electronConcentration.solve(x) .* f((x- obj.Xc(1:end))/obj.meshSize)/obj.meshSize, obj.X(1:end-1), obj.X(2:end)),basisDerivs , 'UniformOutput', false);
-            %             temp = cell2mat(temp');
-            %             temp = reshape(temp, [], 1);
             y = -result + FEnv1 - FEnv2;
             y = 0.75 * y;
         end
@@ -301,7 +318,7 @@ classdef Mesh2
             A = B - D + E;
         end
         
-        function [z, x] = getIMEXPotential(obj)
+        function [obj, z, x] = getIMEXPotential(obj)
             % get relationship
             [A, b] = obj.IMEXPossionRelation;
             
@@ -327,15 +344,15 @@ classdef Mesh2
             Pb(end-obj.degree:end) = 1.5 * obj.basisBoundaryValues(:,2);
             
             temp1 = EA * diag(1./diag(M)) * A + PA;
-            
-            %             temp = cellfun(@(r) gaussLegendre(@(x) dopingFunction(x) .* r((x - obj.Xc(1:end))/obj.meshSize),obj.X(1:end-1), obj.X(2:end)), obj.basisFuncs,'UniformOutput', false);
-            %             temp = cell2mat(temp');
-            %             temp = reshape(temp,[],1);
-            %             temp = (M) \ temp;
+%             electronConcentration = obj.getBasisPolys(obj.coeffs);
+%             temp = cellfun(@(r) gaussLegendre(@(x) (electronConcentration.solve(x) - dopingFunction(x)) .* r((x - obj.Xc(1:end))/obj.meshSize),obj.X(1:end-1), obj.X(2:end)), obj.basisFuncs,'UniformOutput', false);
+%             temp = cell2mat(temp');
+%             temp = reshape(temp,[],1);
+%             temp2 = -Pb - EA*(M \ b) - 0.001546423010635 * temp ;
             temp2 = -Pb - EA*(M \ b) - 0.001546423010635 * M * (obj.coeffs- obj.initialCoeffs);
-            
             x =  temp1 \ temp2;
             z =  M \ (A*x + b);
+            obj.Ecoeffs = z;
         end
     end
 end
