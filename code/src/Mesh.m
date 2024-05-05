@@ -23,7 +23,7 @@ classdef Mesh
         PPDP
         Cells (:,1) Cell
         CFL = 0.2;
-        epsilon = 0.001;
+        epsilon = 0.1;
         t
         
         semiModel Model

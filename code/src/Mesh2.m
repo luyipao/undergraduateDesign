@@ -147,14 +147,16 @@ classdef Mesh2
                 % 1
                 M = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
                 temp = diag(1./diag(M));
+                M = sparse(M);
                 BNegBPos = obj.BNeg*temp*obj.BPos;
+                BNegBPos = sparse(BNegBPos);
                 FLast = obj.getBasisPolys(zeros(obj.CellsNum*(obj.degree+1),1));
                 FNow = obj.getBasisPolys(obj.coeffs);
                 nSteps = 0;
-                filename1 = sprintf('DDIMEXRK3Degree3meshCells%dElectronConcentration_t%g.gif', obj.CellsNum, obj.t);
-                filename2 = sprintf('DDIMEXRK3Degree3meshCells%d_E_t%g.gif', obj.CellsNum, obj.t);
-                fig1 = figure('Visible', 'off');
-                fig2 = figure('Visible', 'off');
+%                 filename1 = sprintf('DDIMEXRK3Degree3meshCells%dElectronConcentration_t%g.gif', obj.CellsNum, obj.t);
+%                 filename2 = sprintf('DDIMEXRK3Degree3meshCells%d_E_t%g.gif', obj.CellsNum, obj.t);
+%                 fig1 = figure('Visible', 'off');
+%                 fig2 = figure('Visible', 'off');
                 while gaussLegendre(@(x) (FLast.solve(x) - FNow.solve(x)).^2, obj.X(1), obj.X(end)) > (obj.epsilon)^2
                     obj = L(obj, M, BNegBPos);
                     FLast = FNow;
@@ -162,28 +164,28 @@ classdef Mesh2
                     nSteps = nSteps + 1;
                     
                     % save the change of electron concentration and electric field gif
-                    figure(fig1)
-                    x = linspace(0,0.6,1000);
-                    electronConcentration = obj.getBasisPolys(obj.coeffs);
-                    plot(x,electronConcentration.solve(x));
-                    imind1 = frame2im(getframe(gcf));
-                    [imind1, colormap1] = rgb2ind(imind1, 256);
-                    if nSteps == 1
-                        imwrite(imind1, colormap1,  fullfile('..\docs\images',filename1), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
-                    else
-                        imwrite(imind1, colormap1, fullfile('..\docs\images',filename1), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
-                    end
-                    
-                    figure(fig2)
-                    E = obj.getBasisPolys(obj.Ecoeffs);
-                    plot(x,E.solve(x));
-                    imind2 = frame2im(getframe(gcf));
-                    [imind2, colormap2] = rgb2ind(imind2, 256);
-                    if nSteps == 1
-                        imwrite(imind2, colormap2,  fullfile('..\docs\images',filename2), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
-                    else
-                        imwrite(imind2, colormap2, fullfile('..\docs\images',filename2), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
-                    end
+%                     figure(fig1)
+%                     x = linspace(0,0.6,1000);
+%                     electronConcentration = obj.getBasisPolys(obj.coeffs);
+%                     plot(x,electronConcentration.solve(x));
+%                     imind1 = frame2im(getframe(gcf));
+%                     [imind1, colormap1] = rgb2ind(imind1, 256);
+%                     if nSteps == 1
+%                         imwrite(imind1, colormap1,  fullfile('..\docs\images',filename1), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
+%                     else
+%                         imwrite(imind1, colormap1, fullfile('..\docs\images',filename1), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
+%                     end
+%                     
+%                     figure(fig2)
+%                     E = obj.getBasisPolys(obj.Ecoeffs);
+%                     plot(x,E.solve(x));
+%                     imind2 = frame2im(getframe(gcf));
+%                     [imind2, colormap2] = rgb2ind(imind2, 256);
+%                     if nSteps == 1
+%                         imwrite(imind2, colormap2,  fullfile('..\docs\images',filename2), 'gif', 'Loopcount', inf, 'DelayTime', 0.1);
+%                     else
+%                         imwrite(imind2, colormap2, fullfile('..\docs\images',filename2), 'gif', 'WriteMode', 'append', 'DelayTime', 0.1);
+%                     end
                 end
             end
         end

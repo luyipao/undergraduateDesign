@@ -1,0 +1,8 @@
+%define theorem environment
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\renewcommand{\thetheorem}{\arabic{section}.\arabic{theorem}}
+% lose \qedhere keyword function
+\renewenvironment{proof}{{\bfseries 证明}}{}
+% more powerful format
+% \renewenvironment{proof}[1][\proofname]{{\bfseries #1.}}{*something*}

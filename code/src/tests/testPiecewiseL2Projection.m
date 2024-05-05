@@ -23,4 +23,3 @@ plot(X,f(X),'-',X,fPiecewiseProj(X),'--');
 legend('exact','piece wise projection');
 
 % 
-T
