@@ -357,6 +357,9 @@ classdef Mesh
             
             F = T3.*tbv(:,2) - T4.*tbv(:,1) -T2 - T1;
         end
+        function f = getLegendrePoly(obj, c)
+            f = LegendrePoly(obj.X,reshape(c,obj.degree+1,[]),obj.degree);
+        end
         function [F, E] = LHF(obj)
             n = obj.degree;
             N = obj.CellsNum;

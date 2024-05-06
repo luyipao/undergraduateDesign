@@ -74,7 +74,7 @@ LDG方法的起点是引入一个辅助变量，将包含高阶空间导数的�
 \end{equation*}
 我们可以很容易验证$\phi=\tilde{\phi}+v_{\text {bias }} x, E=\tilde{E}-v_{bias}=-\tilde{\phi}{x}-v_{\text {bias}}$。由于$\tilde{\phi}$是周期性的，我们有$\tilde{E}$也是周期性的，于是$E$也是周期性的。
 
-分别将~\eqref{eq:DDaReforma} - ~\eqref{eq:DDaReformb}乘以测试函数$v, w \in V_{h}^{k}$，并对涉及空间导数的所有项进行形式上的分部积分，可得
+分别将~\eqref{eq:DDaReforma} - ~\eqref{eq:DDaReformb}乘以测试函数$v, w \in V_{h}^{k}$，并对涉及空间导数的所有项分部积分，可得
 \begin{align}
      & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                                                             \\
      & \quad-(\mu E n+\sqrt{\tau \theta} q)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+(\mu E n+\sqrt{\tau \theta} q)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,                                        \\
@@ -89,7 +89,7 @@ LDG方法的起点是引入一个辅助变量，将包含高阶空间导数的�
      & E_{x}^{h}=\tilde{E}_{x}^{h}=-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right),   \label{eq:DDaReformLDGc}                                                                                                                                                    \\
      & E^{h}=\tilde{E}^{h}-v_{\text {bias }}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDaReformLDGd}
 \end{align}
-其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“hat”表示数值通量。我们选择交替通量来计算$\hat{n}^{h}$和$\hat{q}^{h}$，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
+其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“hat”项表示数值通量。我们选择交替通量来计算$\hat{n}^{h}$和$\hat{q}^{h}$，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
 注意到辅助变量$q^{h}$可以通过~\eqref{eq:DDaReformLDGb}在局部得到解，并代入~\eqref{eq:DDaReformLDGa}中。这就是该方法被称为“局部”不连续Galerkin方法的原因，也是LDG方法与传统的混合有限元方法不同的地方，传统方法中辅助变量$q^{h}$必须从一个全局系统中求解。
 \paragraph{误差估计}
 假设$n, q$是问题~\eqref{eq:DDaReforma}-\eqref{eq:DDaReformb}足够光滑的精确解，且导数有界。假设$n^{h}, q^{h}$是半离散LDG方案~\eqref{eq:DDaReformLDGa}-\eqref{eq:DDaReformLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}$ $(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：

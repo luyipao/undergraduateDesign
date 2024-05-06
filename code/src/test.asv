@@ -14,19 +14,19 @@ for i = 1:length(N)
     for j = 1:length(t)
         mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD);
         mesh.t = t(j);
-        [f, M{i,j}] = mesh.DDModelDGFunction(2);
+        [f, M(i,j)] = mesh.DDModelDGFunction(2);
+
     end
 end
+
+figure(1)
 x = linspace(0,0.6,1000);
-        
-% figure(1)
-% x = linspace(0,0.6,1000);
-% electronConcentration = obj.getBasisPolys(obj.coeffs);
-% plot(x,electronConcentration.solve(x));
-% figure(2)
-% % Generate a filename with N and t
-% E = obj.getBasisPolys(obj.Ecoeffs);
-% plot(x,E.solve(x));
+electronConcentration = obj.getBasisPolys(obj.coeffs);
+plot(x,electronConcentration.solve(x));
+figure(2)
+% Generate a filename with N and t
+E = obj.getBasisPolys(obj.Ecoeffs);
+plot(x,E.solve(x));
 
 % k = 4;
 % Funcs = cell(k,1);

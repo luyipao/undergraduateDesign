@@ -49,8 +49,53 @@
     \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson},
 \end{align}
 其中$x\in(0,1)$，第一个电子浓度方程取周期边界条件，第二个电势方程取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
-系统\ref{eq:DD}-\eqref{eq:poisson}，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
+在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
 \subsection{弱形式和LDG格式}
+有时PDE很难通过纯粹数学方法求出，但如果弱化要求，求得对于测试函数满足我们真正关心的性质的弱解则比较简单。为了得到这样的弱解，我们需要得到\eqref{eq:DD}-\eqref{eq:poisson}的弱形式。得到弱形式的想法是在方程两边乘上测试函数并积分。
 
-% \sectionnonum[none]{同一页上的章标题}
+DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任意的测试函数，弱形式都成立。但是由于DG难以处理高阶问题，因此我们需要考虑局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDE。
+取$q = \sqrt{\tau \theta }n_x$，那么\autoref{eq:DD}可以写作
+\begin{align}
+    n_t - (\mu E n)_x - \sqrt{\tau \theta}q_x & = 0, \label{eq:DD:electronConcentration} \\
+    q - \sqrt{\tau \theta}n_x                 & = 0. \label{eq:DD:auxiliaryFunction}
+\end{align}
+而对于泊松方程，本文直接通过积分得到。
+
+令$E = -\phi_x$表示电势，通过引入辅助变量易证$E$具有周期性\cite{liu2010errorc}。
+
+在方程\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}两边分别乘以测试函数$v,w\in V_h^k$，分部积分得到
+\begin{align}
+     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                               \nonumber                     \\
+     & \quad-(\mu E n+\sqrt{\tau \theta} q)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+(\mu E n+\sqrt{\tau \theta} q)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,                                        \\
+     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta} n w_{x} d x-\sqrt{\tau \theta} n_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} n_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0, \\
+     & E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right) .
+\end{align}
+将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n^{h}, q^{h}$。由于数值解$n^{h}$和$q^{h}$在单元边界上不连续性，将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
+\begin{align}
+     & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x      \nonumber                                                                                                                \\
+     & \quad-\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDLDGn} \\
+     & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta} n^{h} w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
+     & E^{h}=\tilde{E}^{h}-v_{\text {bias }}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
+\end{align}
+其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“$\hat{}$”项表示数值通量。$\hat{n}^{h}$和$\hat{q}^{h}$选择交替通量，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
+
+从LDG格式可知，只要有m时间层的信息，我们可以仅从\eqref{eq:DDLDGq}求得辅助变量$q$，进而求得$m+1$时间层的数值解。这种只需要系统中一个方程求得辅助变量，因此我们这种方法为“局部”间断伽辽金法。这也是与过去需要全局系统才能求出$q$的方法的不同之处。
+
+对于时间离散，我们采用三阶全变差不增（TVD）龙格库塔法。
+\begin{align}
+    u^{(1)} & = u^n + \Delta t L(u^n),                                                \\
+    u^{(2)} & = \frac{3}{4}u^n + \frac{1}{4}u^{(1)} + \frac{1}{4}\Delta t L(u^{(1)}), \\
+    u^{n+1} & = \frac{1}{3}u^n + \frac{2}{3}u^{(2)} + \frac{2}{3}\Delta t L(u^{(2)}).
+\end{align}
+该方法保证$TV(u^{n+1})\leq TV(u^n)$，其中$TV(u) = \sum_j |u_{j+1}-u_j|$。
+
+\subsection{数值模拟}
+我们取$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.008(1+14.2273/(1+n_d/143200))$。边界条件$\phi=\phi_0=kT/e ln(n_d/n_i)$在左边界，$\phi = \phi_0+v_{bias}, v_{bias}=1.5$在右边界。在两个边界都有$T=300, n = 5\times 10^5$。
+
+基函数选择放缩的正交归一化的勒让德多项式基，它的好处是质量矩阵恰好为单位阵，从而简化运算。初始函数$n_d$的图像如图
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figure/dopingFunctionandL2projection.emf}
+    \caption{\small 100网格单元是掺杂函数以及它在$V_h^2$上的$L^2$投影}
+\end{figure}
