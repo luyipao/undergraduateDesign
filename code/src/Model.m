@@ -22,8 +22,8 @@ classdef Model
             obj.latticeTemperature = data.latticeTemperature;
             obj.dopingFunction = str2func(data.dopingFunction);
             
-            if isa(data.mobility, 'double')
-                obj.mobility = data.mobility;
+            if strcmp(data.mobility, '0.75')
+                obj.mobility = str2double(data.mobility);
                 obj.relaxationParameter = obj.electronEffectiveMass/obj.electronCharge * obj.mobility;
             else
                 obj.mobility = str2func(data.mobility);

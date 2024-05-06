@@ -1,18 +1,18 @@
 
-addpath('src\functions');
+addpath('scripts');
 setParameters
 DD = Model('input.json');
 a = 0;
 b = 0.6;
-n = 2;
+n = 1;
 nSteps = zeros(2,5);
 N = [100 200];
-t = [1.2e-5];
-for i = 1:2
+t = [1.6e-5];
+for i = 1:length(N)
     for j = 1:1
         mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD);
         mesh.t = t(j);
-        [f, mesh] = mesh.DDModelDGFunction(n);
+        [f, mesh] = mesh.DDModelDGFunction(2);
         x = linspace(0,0.6,1000);
     end
 end

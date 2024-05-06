@@ -1,85 +1,56 @@
 \cleardoublepage
 
-\section{Overleaf 使用注意事项}
+\section{预备知识}
+在本节，我们将给出一些符号和定义。在之后的部分，我们会直接使用这些符号和结论。
+\subsection{基础符号}
+首先定义计算域$[a,b]$的一个剖分
+\begin{align*}
+    I_{j} = (x_{j-1/2}, x_{j+1/2}), \ j = 1, 2, ..., N
+\end{align*}
+其中$a=x_{1/2} < x_{3/2}< ...< x_{N+1/2}=b$，N表示网格数。接着定义
+\begin{align*}
+    \Delta x_j = x_{j+1/2}-x_{j-1/2}, \quad h = \max{\sup_j{\Delta x_j}}, \quad x_j = (x_{j+1/2}+x_{j-1/2})/{2},
+\end{align*}
+其中$\Delta x_j$表示网格大小，$h$表示网格长度，$x_j$表示网格中点。
 
-如果你在Overleaf上编译本模板，请注意如下事项~\cite{zjuthesis}：
+网格上有限维计算空间$V_h^k = \{v:v|_{I_j}\in P^k(I_j); 1\leq j\leq N\}$，其中$P^k(I_j)$表示$I_j$上次数不大于$k$的多项式集合。我们的数值解和测试函数都将从$V_h^k$中取得。需要注意的是，$V_h^k$中的函数在单元边界节点处不一定是连续的，可以出现跳跃。
 
-\begin{itemize}
-    \item 删除根目录的 ``.latexmkrc'' 文件，否则编译失败且不报任何错误
-    \item 字体有版权所以本模板不能附带字体，请务必手动上传字体文件，并在各个专业模板下手动指定字体。
-        具体方法参照 GitHub 主页的说明。
-    \item 当前（2019年9月2日）的Overleaf使用TexLive 2017进行编译，但一些伪粗体复制乱码的问题需要TexLive 2019版本来解决。
-        所以各位同学可以在Overleaf上编写论文，但务必使用本地的TexLive 2019来进行最终编译，以免产生查重相关问题。
-        具体说明参照 GitHub 主页。
-\end{itemize}
+为了简化标记，我们分别定义$(u_h)^+_{j+1/2}=u_h(x^+_{j+1/2})$和$(u_h)^-_{j+1/2}=u_h(x^-_{j+1/2})$。此外我们定义$u_h$在单元边界节点$x_{j+1/2}$的跳跃$[u_h]_{j+1/2}=(u_h)^+_{j+1/2}-(u_h)^-_{j+1/2}$和均值$(\overline{u}_h)_{j+1/2}=((u_h)_{j+1/2}^++(u_h)_{j+1/2}^-)/2$。
+\subsection{初值的处理}
+我们的初值函数就是定义在$[0, 0.6]$的掺杂函数$n_d$，它满足
+\begin{align*}
+    n_d(x) = \begin{cases}
+                 5\times 10^{17}, \quad x \in [0, 0.1] \cup [0.5, 0.6] \\
+                 2\times 10^{15}, \quad x \in [0.15,0.45]
+             \end{cases}
+\end{align*}
+在中间过渡区域选择光滑的函数连接。在本文中我们考虑光滑过渡函数$g(x)$，满足
+\begin{align*}
+    f(x)               & ={\begin{cases}
+                               e^{-{\frac {1}{x}}}, \quad x>0 \\
+                               0, \quad x\leq 0\end{cases}} ,                     \\
+    \displaystyle g(x) & :={\frac {f(x)}{f(x)+f(1-x)}}\quad x\in \mathbb {R}.
+\end{align*}
+为了得到区间$[a,b]$上的光滑过渡，我们只需要考虑函数
+\begin{align*}
+    g(\frac{x-a}{b-a}).
+\end{align*}
+注意到它任意阶导函数在$[a,b]$外都为零，结合掺杂函数我们容易得到一个任意阶连续导函数的初值函数。这不是唯一可选择的过渡函数，但由于初值函数的光滑性与计算空间的维数有关，选择这样一个绝对光滑的初值函数可以简化后续分析。
 
-\subsection{节标题}
+为了让初值函数落在我们的计算空间中，我们需要对其进行处理。本文选择的是向计算空间$V_h^k$的分段$L^2$投影，表示为$\mathcal{P}$。对于任意函数$u\in C^{k+1}$，它满足
+\begin{align}
+    \int_{I_j}(\mathcal{P}u(x)-u(x)v(x)) \rm{d}x = 0, \quad \forall v \in P^k(I_j).
+\end{align}
 
-\subsubsection{小节标题}
+\section{DD模型}
+本文采用的DD模型表示为
+\begin{align}
+    n_t - (\mu En)_x = \tau \theta n_{xx}, \label{eq:DD} \\
+    \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson},
+\end{align}
+其中$x\in(0,1)$，第一个电子浓度方程取周期边界条件，第二个电势方程取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
+系统\ref{eq:DD}-\eqref{eq:poisson}，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
-\par 我们可以用includegraphics来插入现有的jpg等格式的图片，如\autoref{fig:zju-logo}。
+\subsection{弱形式和LDG格式}
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=.4\linewidth]{logo/zju}
-    \caption{\label{fig:zju-logo}浙江大学LOGO}
-\end{figure}
-
-\par 如\autoref{tab:sample}所示，这是一张自动调节列宽的表格。
-
-\begin{table}[ht]
-    \caption{\label{tab:sample}自动调节列宽的表格}
-    \begin{tabularx}{\linewidth}{|c|X<{\centering}|}
-        \hline
-        第一列 & 第二列 \\ \hline
-        xxx & xxx \\ \hline
-        xxx & xxx \\ \hline
-        xxx & xxx \\ \hline
-    \end{tabularx}
-\end{table}
-
-\par 如\autoref{equ:sample}，这是一个公式
-
-\begin{equation}
-    \label{equ:sample}
-    A=\overbrace{(a+b+c)+\underbrace{i(d+e+f)}_{\text{虚数}}}^{\text{复数}}
-\end{equation}
-
-\par 如\autoref{code:sample}所示，这是一段代码。
-计算机学院的代码样式可能与其他专业不同，
-如有需要，可以从计算机学院专业模板中复制相关的代码样式设定。
-
-\begin{lstlisting}[%
-    language={C},
-    caption={simple.c},
-    label={code:sample}
-]
-#include <stdio.h>
-
-int main(int argc, char *argv[])
-{
-    printf("Hello, zjuthesis\n");
-    return 0;
-}
-\end{lstlisting}
-
-\subsection{关于字体}
-
-英文字体通常提供了粗体和斜体的组合，中文字体通常没有粗体或斜体，本模板使用了 `AutoFakeBold' 来实现中文伪粗体，但不提供中文斜体，如\autoref{tab:font-examples}所示。
-
-\begin{table}
-    \centering
-    \caption{一些字体示例}
-    \label{tab:font-examples}
-    \begin{tabular}{|c|c|c|c|c|}
-        \hline
-        字体            & 常规             & 粗体                       & 斜体                      & 粗斜体                                \\ \hline
-        Times New Roman & Regular         & {\bfseries          Bold} & {\itshape         Italic} & {\bfseries \itshape      BoldItalic} \\ \hline
-        仿宋            & {\fangsong 常规} & {\fangsong \bfseries 粗体} & {\fangsong \itshape 斜体} & {\fangsong \bfseries \itshape 粗斜体} \\ \hline
-        宋体            & {\songti   常规} & {\songti   \bfseries 粗体} & {\songti   \itshape 斜体} & {\songti   \bfseries \itshape 粗斜体} \\ \hline
-        黑体            & {\heiti    常规} & {\heiti    \bfseries 粗体} & {\heiti    \itshape 斜体} & {\heiti    \bfseries \itshape 粗斜体} \\ \hline
-        楷体            & {\kaishu   常规} & {\kaishu   \bfseries 粗体} & {\kaishu   \itshape 斜体} & {\kaishu   \bfseries \itshape 粗斜体} \\ \hline
-    \end{tabular}
-\end{table}
-
-\sectionnonum[none]{同一页上的章标题}
+% \sectionnonum[none]{同一页上的章标题}

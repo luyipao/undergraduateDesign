@@ -138,26 +138,6 @@ classdef Mesh
             x = obj.X(i);
         end
     end
-    methods (Access = public)
-        %% getNodesValues
-        function obj = getNodesValues(obj)
-            for j = 1:obj.CellsNum
-                fProj = @(x) obj.Cells(j).func(x);
-                obj.Cells(j).rl = fProj(obj.X(j+1));
-                obj.Cells(j).lr = fProj(obj.X(j));
-                if j == 1
-                    obj.Cells(obj.CellsNum).rr = obj.Cells(j).lr;
-                    obj.Cells(j+1).ll = obj.Cells(j).rl;
-                elseif j == obj.CellsNum
-                    obj.Cells(1).ll = obj.Cells(j).rl;
-                    obj.Cells(j-1).rr = obj.Cells(j).lr;
-                else
-                    obj.Cells(j+1).ll = obj.Cells(j).rl;
-                    obj.Cells(j-1).rr = obj.Cells(j).lr;
-                end
-            end
-        end
-    end
     methods
         %% deal with DD model
         function [FNow, obj] = DDModelDGFunction(obj,n)
@@ -296,35 +276,35 @@ classdef Mesh
             E = @(x) -0.001546423010635 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
             
             % aux function
-sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')];
+            
             if isa(obj.semiModel.mobility, 'function_handle')
-                            
-            TT1 = getGaussLegendreB(@(x) sqrtTauTheta(x) .* electronConcentration.solve(x), obj.X(1:end-1), obj.X(2:end));
-            TT3 = cellfun(@(f) getGaussLegendreB(@(x) f((2*x - obj.X(1:end-1)-obj.X(2:end))/obj.meshSize), obj.X(1:end-1), obj.X(2:end)),obj.diffBasisFuncs, 'UniformOutput', false);
-            [~,~,C] = gaussLegendre(@(x) 0*x,obj.X(1:end-1),obj.X(2:end));
-            preComp = TT1 .* C;
-            result = cellfun(@(x) sum(preComp .* x , 1), TT3, 'UniformOutput', false);
-            result = cell2mat(result); %  back to a matrix
-            result = reshape(result,[],1);
-            
-            index = repmat(1:obj.CellsNum,obj.degree+1,1);
-            index = reshape(index,[],1);
-            F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
-            tempCellValues = CellValues(index,:);
-            tempSqrtTauThetaValues = sqrtTauThetaValues(index,:);
-            
-            obj.auxCoeffs  =tempSqrtTauThetaValues(:,2) .*tempCellValues(:,4) .* F(:,2) -tempSqrtTauThetaValues(:,1).* tempCellValues(:,2) .* F(:,1) - result;
-            else 
+                sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')];
+                TT1 = getGaussLegendreB(@(x) sqrtTauTheta(x) .* electronConcentration.solve(x), obj.X(1:end-1), obj.X(2:end));
+                TT3 = cellfun(@(f) getGaussLegendreB(@(x) f((2*x - obj.X(1:end-1)-obj.X(2:end))/obj.meshSize), obj.X(1:end-1), obj.X(2:end)),obj.diffBasisFuncs, 'UniformOutput', false);
+                [~,~,C] = gaussLegendre(@(x) 0*x,obj.X(1:end-1),obj.X(2:end));
+                preComp = TT1 .* C;
+                result = cellfun(@(x) sum(preComp .* x , 1), TT3, 'UniformOutput', false);
+                result = cell2mat(result); %  back to a matrix
+                result = reshape(result,[],1);
                 
-            I = eye(obj.CellsNum);
-            B = kron(I, obj.PnDPm');
-            index = repmat(1:obj.CellsNum,obj.degree+1,1);
-            index = reshape(index,[],1);
-            
-            F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
-            tempCellValues = CellValues(index,:);
-            F = tempCellValues(:,4) .* F(:,2) - tempCellValues(:,2) .* F(:,1) - B * obj.coeffs;
-            obj.auxCoeffs = 0.139219332249189 * F;
+                index = repmat(1:obj.CellsNum,obj.degree+1,1);
+                index = reshape(index,[],1);
+                F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
+                tempCellValues = CellValues(index,:);
+                tempSqrtTauThetaValues = sqrtTauThetaValues(index,:);
+                
+                obj.auxCoeffs  =tempSqrtTauThetaValues(:,2) .*tempCellValues(:,4) .* F(:,2) -tempSqrtTauThetaValues(:,1).* tempCellValues(:,2) .* F(:,1) - result;
+            else
+                
+                I = eye(obj.CellsNum);
+                B = kron(I, obj.PnDPm');
+                index = repmat(1:obj.CellsNum,obj.degree+1,1);
+                index = reshape(index,[],1);
+                
+                F = repmat(obj.basisBoundaryValues,obj.CellsNum,1);
+                tempCellValues = CellValues(index,:);
+                F = tempCellValues(:,4) .* F(:,2) - tempCellValues(:,2) .* F(:,1) - B * obj.coeffs;
+                obj.auxCoeffs = 0.139219332249189 * F;
             end
             auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
             %x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
@@ -343,6 +323,7 @@ sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')]
             Eb = E(parforX(2:end));
             Ea = E(parforX(1:end-1));
             if isa(obj.semiModel.mobility, 'function_handle')
+                sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')];
                 T3 = obj.semiModel.mobility(obj.X(2:end)) .* (max(Eb,0) .* CellValues(:,4) + min(Eb,0) .* CellValues(:,3)) + sqrtTauThetaValues(:,2) .* auxCellValues(:,3);
                 T4 = obj.semiModel.mobility(obj.X(1:end-1)) .* (max(Ea,0) .* CellValues(:,2) + min(Ea,0) .* CellValues(:,1)) + sqrtTauThetaValues(:,1) .* auxCellValues(:,1);
             else
@@ -779,175 +760,7 @@ sqrtTauThetaValues = [sqrtTauTheta(obj.X(1:end-1)') sqrtTauTheta(obj.X(2:end)')]
         end
     end
     
-    methods
-        function draw(obj)
-            XX = linspace(obj.xa,obj.xb,1000);
-            Y = zeros(1,1000);
-            YY = zeros(1,1000);
-            for j = 1:obj.CellsNum
-                Cellj = obj.Cells(j);
-                Y = Y + (XX>=Cellj.a & XX<Cellj.b) .* Cellj.auxFunction(XX);
-                YY = YY + (XX>=Cellj.a & XX<Cellj.b) .* Cellj.func(XX);
-            end
-            Y = Y + (XX == obj.xb) .* obj.Cells(end).auxFunction(XX);
-            YY  = YY + (XX == obj.xb) .* obj.Cells(end).func(XX);
-            hold on;
-            plot(XX,Y,'--');
-            plot(XX,YY);
-            hold off;
-            legend('auxiliray','aimed function');
-        end
-        function drawError(obj)
-            plot(linspace(0,0.6,1000),dopingFunction(linspace(0,0.6,1000)) - obj.func(linspace(0,0.6,1000)));
-        end
-    end
     
-    methods
-        function IMEXGK(obj, n)
-            obj.t = 2.0797e-06;
-            if n ~= 3
-                error('Invalid input, please choose 3');
-            else
-                electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree);
-                % get cell values
-                CellValues(:,2:3) = electronConcentration.getNodeValues';
-                CellValues(:,1) = circshift(CellValues(:,3),1);
-                CellValues(:,4) = circshift(CellValues(:,2),-1);
-                
-                [obj.Ecoeffs, ~] = obj.getIMEXPotential;
-                E = LegendrePoly(obj.X,  reshape(obj.Ecoeffs,obj.degree+1,obj.CellsNum), obj.degree);
-                x = linspace(0,0.6,1000);plot(x,E.solve(x));
-                ECellValues(:,2:3) = E.getNodeValues';
-                ECellValues(:,1) = circshift(ECellValues(:,3),1);
-                ECellValues(:,4) = circshift(ECellValues(:,2),-1);
-                
-                
-                H00 = obj.H(obj.Ecoeffs, obj.coeffs, ECellValues, CellValues);
-                BPos = obj.Hpos;
-                BNeg = obj.Hneg;
-                I = sparse(eye(obj.CellsNum*(obj.degree+1)));
-                c1 = (I-obj.t/2 * BNeg*BPos) \ (obj.coeffs + obj.t/2 * H00);
-                electronConcentration = LegendrePoly(obj.X, reshape(c1,obj.degree+1,obj.CellsNum), obj.degree);
-                x = linspace(0,0.6,1000);plot(x,electronConcentration.solve(x));
-            end
-            
-        end
-        % output:
-        function y = H(obj, Ecoeffs, ncoeffs, EValues, nValues)
-            rbbv = repmat(obj.basisBoundaryValues, obj.CellsNum, 1);
-            
-            index = repmat(1:obj.CellsNum, obj.degree+1, 1);
-            index = reshape(index, [], 1);
-            
-            EnFlux = 0.5 * (EValues(:,4) .* nValues(:,4) + EValues(:,3) .* nValues(:,3));
-            FEnv1 = EnFlux(index) .* rbbv(:,2);
-            
-            EnFlux = 0.5 * (EValues(:,2).*nValues(:,2) + EValues(:,1).*nValues(:,1));
-            FEnv2 = EnFlux(index) .* rbbv(:,1);
-            
-            result = zeros(obj.CellsNum*(1+obj.degree),1);
-            for j = 1:obj.CellsNum
-                for l = 1:obj.degree+1
-                    x = (j-1)*(1+obj.degree)+1:(j-1)*(1+obj.degree)+obj.degree+1;
-                    A = obj.PPDP(:,:,l) .* (Ecoeffs(x) * ncoeffs(x)');
-                    result((j-1)*(1+obj.degree)+l) = sum(A,'all');
-                end
-            end
-            
-            y = -result + FEnv1 - FEnv2;
-            y = 0.75 * y;
-        end
-        % B only depend on basis functions values at each Cells.
-        function A = Hpos(obj)
-            I = eye(obj.CellsNum);
-            I = sparse(I);
-            B = kron(I, obj.PnDPm');
-            
-            D = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,1)';
-            D = kron(I, D);
-            D = circshift(D,-obj.degree-1,1);
-            
-            E = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
-            E = kron(I, E);
-            A = -B + D - E;
-            A = 0.139219332249189 * A;
-        end
-        
-        function A = Hneg(obj)
-            I = eye(obj.CellsNum);
-            I = sparse(I);
-            B = kron(I, obj.PnDPm');
-            
-            D = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,2)';
-            D = kron(I, D);
-            
-            E = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,2)';
-            E = kron(I, E);
-            E = circshift(E, obj.degree+1,1);
-            
-            A = -B + D - E;
-            A = 0.139219332249189 * A;
-        end
-        function [A, b] = IMEXPossionRelation(obj)
-            % get relationship bettween field and potential obj.Ecoeffs= A
-            % * obj.Pcoeffs + b
-            I = eye(obj.CellsNum);
-            I = sparse(I);
-            B = kron(I, obj.PnDPm');
-            
-            temp = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,1)';
-            I(1,1) = 0;
-            D = kron(I,temp);
-            D = circshift(D, -obj.degree-1, 1);
-            
-            E = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
-            I(1,1) = 0;
-            E = kron(I,E);
-            
-            temp = zeros(obj.CellsNum,1);
-            temp = sparse(temp);
-            temp(end) = 1;
-            b = -kron(temp,1.5*obj.basisBoundaryValues(:,2));
-            
-            A = B - D + E;
-        end
-        
-        function [z, x] = getIMEXPotential(obj)
-            % get relationship
-            [A, b] = obj.IMEXPossionRelation;
-            
-            % get electric field z and electric potential  x
-            I = eye(obj.CellsNum);
-            I = sparse(I);
-            D = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,2)';
-            G = obj.basisBoundaryValues(:,2) * obj.basisBoundaryValues(:,1)';
-            F = obj.basisBoundaryValues(:,1) * obj.basisBoundaryValues(:,1)';
-            
-            AE = kron(I,-obj.PnDPm'+D);
-            BE = kron(diag(sparse(ones(obj.CellsNum-1,1)), -1), G');
-            BE(1:obj.degree+1, 1:obj.degree+1) = F;
-            EA = AE - BE;
-            
-            AP = kron(sparse(diag(ones(obj.CellsNum-1,1), 1)),G);
-            BP = kron(I,-D-F);
-            CP = kron(sparse(diag(ones(obj.CellsNum-1,1), -1)),G');
-            PA = AP + BP + CP;
-            
-            Pb = zeros(obj.CellsNum*(obj.degree+1),1);
-            Pb(end-obj.degree:end) = 1.5 * obj.basisBoundaryValues(:,2);
-            
-            temp1 = EA * A + PA;
-            
-            %electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum), obj.degree);
-            temp = cellfun(@(r) gaussLegendre(@(x) dopingFunction(x) .* r((2*x - obj.X(1:end-1)-obj.X(2:end))/obj.meshSize),obj.X(1:end-1), obj.X(2:end)), obj.classicalLegendrePolys,'UniformOutput', false);
-            temp = cell2mat(temp');
-            temp = [sqrt(1/obj.meshSize) sqrt(3/obj.meshSize) sqrt(5/obj.meshSize)]' .* temp;
-            temp = reshape(temp,[],1);
-            temp2 = -Pb - EA*b - 0.001546423010635 * (obj.coeffs- temp);
-            x = temp1 \ temp2;
-            z = A*x + b;
-            potential = LegendrePoly(obj.X, reshape(x,obj.degree+1,obj.CellsNum), obj.degree);
-            x = linspace(0,0.6,10000); plot(x,potential.solve(x))
-        end
-    end
+    
 end
+
