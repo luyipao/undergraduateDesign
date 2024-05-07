@@ -1,0 +1,11 @@
+{
+	"name": "HF",
+	"electronCharge" : 0.1602,
+	"mobility": "0.75", 
+	"latticeTemperature" : 300,
+	"dielectricPermittivity":1.035939060000000e+02,
+	"dopingFunction": "@(x) dopingFunction(x)",
+	"BoltzmannConstant":0.138e-4,
+	"electronEffectiveMass":0.236834e-31,
+	"voltageDrop":1.5
+}

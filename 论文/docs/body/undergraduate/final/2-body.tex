@@ -52,9 +52,17 @@
 在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
 \subsection{弱形式和LDG格式}
-有时PDE很难通过纯粹数学方法求出，但如果弱化要求，求得对于测试函数满足我们真正关心的性质的弱解则比较简单。为了得到这样的弱解，我们需要得到\eqref{eq:DD}-\eqref{eq:poisson}的弱形式。得到弱形式的想法是在方程两边乘上测试函数并积分。
+我们有以下事实\cite{sullivan2020brief}：
+\begin{itemize}
+    \item 许多PDEs没有强解但有弱解
+    \item 弱解更容易在线性代数表示
+    \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
+\end{itemize}
+而我们的DD模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的简便。
 
-DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任意的测试函数，弱形式都成立。但是由于DG难以处理高阶问题，因此我们需要考虑局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDE。
+为了得到这样的弱解，我们想法是在方程\eqref{eq:DD}-\eqref{eq:poisson}两边乘上测试函数并积分得到弱形式，利用数值方法求解弱形式。
+
+而DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任意的测试函数，弱形式都成立。但是由于DG难以处理高阶问题，因此我们需要考虑局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，进而可以在这些一阶PDEs上应用DG法。
 取$q = \sqrt{\tau \theta }n_x$，那么\autoref{eq:DD}可以写作
 \begin{align}
     n_t - (\mu E n)_x - \sqrt{\tau \theta}q_x & = 0, \label{eq:DD:electronConcentration} \\
@@ -76,7 +84,7 @@ DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任�
      & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x      \nonumber                                                                                                                \\
      & \quad-\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDLDGn} \\
      & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta} n^{h} w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
-     & E^{h}=\tilde{E}^{h}-v_{\text {bias }}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
+     & E^{h}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
 \end{align}
 其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“$\hat{}$”项表示数值通量。$\hat{n}^{h}$和$\hat{q}^{h}$选择交替通量，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
 
@@ -96,6 +104,19 @@ DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任�
 基函数选择放缩的正交归一化的勒让德多项式基，它的好处是质量矩阵恰好为单位阵，从而简化运算。初始函数$n_d$的图像如图
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figure/dopingFunctionandL2projection.emf}
+    \includegraphics[width=\linewidth]{figure/dopingFunctionandL2projection.jpg}
     \caption{\small 100网格单元是掺杂函数以及它在$V_h^2$上的$L^2$投影}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75Nn.pdf}
+    \end{minipage}
+    \begin{minipage}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75NE.pdf}
+    \end{minipage}
+    \caption{DD模型三阶TVDRK网格数N为100和200计算空间$V^2$。左：电子浓度n；右：电势E}
 \end{figure}

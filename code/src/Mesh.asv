@@ -214,18 +214,8 @@ classdef Mesh
                 error('Invalid model. Please choose either "DD" or "HF".');
             end
         end
-        % input mesh info and electron concentration coeffs
-        % output electronConcentration, E
-        function [electronConcentration, E] = getFuncs(obj)
-            electronConcentration = LegendrePoly(obj.X, reshape(obj.coeffs,obj.degree+1,obj.CellsNum),obj.degree,'true');
-            temp = electronConcentration.priSolve(0.6);
-            T1 = gaussLegendre(@(x) electronConcentration.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) electronConcentration.priSolve(x)+temp,0,0.4);
-            temp = obj.initialFunction.priSolve(0.6);
-            T2 = gaussLegendre(@(x) obj.initialFunction.priSolve(x), 0, 0.6)  + gaussLegendre(@(x) obj.initialFunction.priSolve(x)+temp,0,0.4); % set in generate function
-            electricField0 = 0.001546423010635 * (T1 - T2);
-            
-            temp = -0.001546423010635 * (-electronConcentration.priSolve(0) + obj.initialFunction.priSolve(0)) + electricField0 -  1.5;
-            E = @(x) -0.001546423010635 * (electronConcentration.priSolve(x) - obj.initialFunction.priSolve(x) ) + temp;
+        function f = getE(obj)
+            electronConcentration = LegendrePoly(parforX, reshape(obj.coeffs,obj.degree+1,obj.),n,'true');
         end
         function [F,E] = LDD(obj)
             n = obj.degree;
