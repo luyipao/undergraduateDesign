@@ -2,7 +2,6 @@
 addpath('scripts');
 addpath('functions');
 setParameters
-DD = Model('mobilityEqConst.json');
 a = 0;
 b = 0.6;
 n = 2;
@@ -10,56 +9,56 @@ nSteps = zeros(2,5);
 N = [100 200];
 t = [1.6e-5 4.2e-6];
 nmodel = 3;
-f = cell(length(N), length(t), nmodel);
-E = cell(length(N), length(t), nmodel);
-M = cell(length(N), length(t), nmodel);
-TV = cell(length(N), length(t), nmodel);
-e = cell(length(N), length(t), nmodel);
+% f = cell(length(N), length(t), nmodel);
+% E = cell(length(N), length(t), nmodel);
+% M = cell(nmodel,1);
+% TV = cell(length(N), length(t), nmodel);
+% e = cell(length(N), length(t), nmodel);
+DD = Model('mobilityEqConst.json');
 for i = 1:length(N)
     for j = i
         mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD);
         mesh.t = t(j);
-        [M{i,j}, TV{i,j}, e{i,j}] = mesh.DDModelDGFunction(2);
+        [tempM{i,j}, TV{i,j,1}, e{i,j,1}] = mesh.DDModelDGFunction(2);
     end
 end
-x = linspace(0, 0.6);
-[f{1,1,1}, E{1,1,1}] = M{1}{1,1}.getFuncs;
-[f{2,2,1}, E{2,2,1}] = M{1}{2,2}.getFuncs;
-%
-figure(1)
-plot(x, f{1,1,1}.solve(x), x, f{2,2,1}.solve(x), 'o', 'LineWidth', 1);
-legend('N=100', 'N=200', 'Location', 'north', 'FontSize', 11);
-xlabel('x');
-ylabel('n');
+M{1} = tempM;
+clear tempM;
 
-gca.XMinorTick = 'on';
-gca.YMinorTick = 'on';
-figure(2)
-plot(x, E{1,1,1}(x), x, f{2,2,1}(x), 'o', 'LineWidth', 1);
-legend('N=100', 'N=200', 'Location', 'north', 'FontSize', 11);
-xlabel('x');
-ylabel('E');
+N = 100;
 
-gca.XMinorTick = 'on';
-gca.YMinorTick = 'on';
-% 
-[f{1,1,2}, E{1,1,2}] = M{2}{1,1}.getFuncs;
-[f{2,2,2}, E{2,2,2}] = M{2}{2,2}.getFuncs;
+DD2 = Model('mobilityDpDopingFunction.json');
+for i = 1:length(N)
+    for j = i
+        mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD2);
+        mesh.t = t(j);
+        [tempM{i,j}, TV{i,j,2}, e{i,j,2}] = mesh.DDModelDGFunction(2);
+    end
+end
+M{2} = tempM;
+clear tempM;
 
-figure(3)
-legend('\mu = 0.75', '\mu = \mu(n_d)', 'Location', 'north', 'FontSize', 11);
-xlabel('x');
-ylabel('n');
-gca.XMinorTick = 'on';
-gca.YMinorTick = 'on';
+HF = Model('HFmobilityEqConst.json');
+for i = 1:length(N)
+    for j = i
+        mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, HF);
+        mesh.t = t(j);
+        [tempM{i,j}, TV{i,j,3}, e{i,j,3}] = mesh.DDModelDGFunction(2);
+    end
+end
+M{3} = tempM;
+clear tempM;
 
-figure(4)
-plot(x, E{1,1,1}(x), x, E{1,1,2}(x), 'o', 'LineWidth', 1);
-legend('\mu = 0.75', '\mu = \mu(n_d)', 'Location', 'north', 'FontSize', 11);
-xlabel('x');
-ylabel('E');
-gca.XMinorTick = 'on';
-gca.YMinorTick = 'on';
+DD = Model('mobilityEqConst.json');
+for i = 1:length(N)
+    for j = i
+        mesh = Mesh(a,b,N(i),@(x) dopingFunction(x),n, DD);
+        mesh.t = t(j);
+        [tempM{i,j}, TV{i,j,4}, e{i,j,4}] = mesh.DDModelDGFunction(2);
+    end
+end
+M{4} = tempM;
+clear tempM;
 
 % figure(1)
 % x = linspace(0,0.6,1000);

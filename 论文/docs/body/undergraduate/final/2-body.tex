@@ -99,24 +99,128 @@
 该方法保证$TV(u^{n+1})\leq TV(u^n)$，其中$TV(u) = \sum_j |u_{j+1}-u_j|$。
 
 \subsection{数值模拟}
-我们取$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.008(1+14.2273/(1+n_d/143200))$。边界条件$\phi=\phi_0=kT/e ln(n_d/n_i)$在左边界，$\phi = \phi_0+v_{bias}, v_{bias}=1.5$在右边界。在两个边界都有$T=300, n = 5\times 10^5$。
+DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T=300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}，简洁起见，后文中我们也将省略这些物理参数的单位。
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{cccccccc}
+        \hline
+        参数名 & $n_d$        & $m$  & $e$         & $k_b$              & $\epsilon$        & $vbias$ & $E$           \\
+        \hline
+        单位   & $\mu m^{-3}$ & $Kg$ & $10^{-18}C$ & $10^{-18}J/Kelvin$ & $10^{-18}F/\mu m$ & $V$     & $volts/\mu m$ \\
+        \hline
+    \end{tabular}
+    \caption{物理模型参数单位}
+    \label{tab:units}
+\end{table}
 
-基函数选择放缩的正交归一化的勒让德多项式基，它的好处是质量矩阵恰好为单位阵，从而简化运算。初始函数$n_d$的图像如图
+基函数选择$I_j = (x_{j-1/2}, x_{j+1/2})$上的正交归一化的勒让德多项式基
+\begin{align*}
+    \varphi_0^{(j)}(x) = \sqrt{\frac{1}{\Delta x_j}}, \varphi_1^{(j)}(x) = 2\sqrt{\frac{3}{\Delta x_j}}\frac{x-x_j}{\Delta x_j}, \varphi_2^{(j)} =\frac{1}{2}\sqrt{\frac{5}{\Delta x_j}}(12(\frac{x-x_j}{\Delta x_j})^2 - 1 ), \cdots,
+\end{align*}
+这样选的好处是质量矩阵恰好为单位阵，从而简化运算。在具体的代码实现中，我们选择经典的正交归一化勒让德多项式基
+\begin{align*}
+    \varphi_0^{(j)}(x) = \sqrt{\frac{1}{2}}, \varphi_1^{(j)}(x) = \sqrt{\frac{3}{2}}\xi, \varphi_2^{(j)} =\sqrt{\frac{5}{8}}(3\xi^2- 1 ), \cdots,
+\end{align*}
+其中$\xi = (2x-2x_j)/\Delta x_j$。此时我们的数值解可以写作
+\begin{align*}
+    u_h(x,t) = \sum_{l=0}^k c_{j,l}(t)\varphi_{l}(\xi), \forall x \in I_j , j= 1,2,...,N, \quad (u = n,q), \\
+    \xi = (2x-2x_j)/\Delta x_j.
+\end{align*}
+
+在算法中，本文也用到了一个勒让德多项式基不常见的二级结论
+\begin{formula}
+    令$P_k$表示经典勒让德多项式，定义$I(n,m):= \int  P_{n}P_{m}' \, dx$。那么我们有
+    \begin{align*}
+        I(n,n+1+2k) = 2, \forall n\geq 0, k \geq 0.
+    \end{align*}
+\end{formula}
+\begin{proof}
+    由罗德里格公式，我们有
+    $$
+        p_{n}(x) = \frac{1}{2^n n!} \frac{d^n}{dx^n}(x^2-1)^n.
+    $$
+    对于任意光滑函数$f(x)$，
+    $$
+        \int _{-1}^1 P_{n}f \, dx = \left[ \frac{1}{2^n n!} \frac{d^n}{dx^n}(x^2-1)^n f(x) \right]_{-1}^1 - \int _{-1}^1 \frac{1}{2^n n!} \frac{d^n}{dx^n}(x^2-1)^n f^{(1)}(x) \, dx.
+    $$
+    首项等于零而第二项可以再次分部积分，最后可以得到
+    $$
+        \int P_{n}(x) f(x) \, dx  = \frac{1}{2^n n!}\int f^{(n)}(x) (1-x^2)^n \, dx
+    $$
+    现在取$f(x) = P'_m(x), m\leq n$，那么 $p_m^{(n+1)} = 0$，所以积分为零。另外当$m-n$是奇数，$p_m^{(n+1)}$是一个奇函数。因此，
+    $$
+        \int  P_{n}(x)P'_{m}(x) \, dx =0.
+    $$
+    如果注意到$P_{n+1}^{(n+1)}=\frac{(2n+2)!}{2^{n+1}(n+1)!}$。因此我们有
+    \begin{align*}
+        I(n,n+1) = \frac{(2n+2)!}{2^{2n+1}n!(n+1)!}\int (x^2 - 1)^n \, dx  = 2.
+    \end{align*}
+    下面我们证明$I(n,n+1+2k) = 2, \  k\geq 1$。
+
+    由
+    \begin{align*}
+        \frac{d}{dx}p_{n+1}(x) = (n+1)p_n(x) + x \frac{d}{dx}p_n(x).
+    \end{align*}
+    我们得到
+    \begin{align*}
+        I(n,n+1+2k) & = \int P_{n}((n+1+2k)P_{n+2k}+xP_{n+2k}) \, dx                \\
+                    & = \int xP_{n}P'_{n+2k} \, dx                                  \\
+                    & = xP_{n}P_{n+2k}|_{-1}^1 - \int P_{n+2k}(P_{n}+xP_{n}') \, dx \\
+    \end{align*}
+    又由于$P_n(1) = 1, P_n(-1) = (-1)^n$以及$xP'_n$可以由$P_0, ..., P_n$表示，我们得到
+    \begin{align*}
+        I(n, n+1+2k)=2, \quad k\geq 1.
+    \end{align*}
+\end{proof}
+我们通过相邻时间层电子浓度的变化量来判断算法是否已经收敛，即如果满足
+\begin{align*}
+    ||n^m - n^{m+1}||_{L^2} < \epsilon,
+\end{align*}
+其中$\epsilon$是一个足够小的数，那么我们认为这时算法已经收敛。在此处的数值模拟中，$\epsilon = 0.01$。
+\autoref{fig:TVDRK}给出了DD模型和HF模型的数值模拟结果。最上方的两图比较DD模型关于网格数N等于100和200的数值模拟结果。中间两幅图比较DD模型关于迁移率$\mu=0.75$和$\mu = \mu(n_d)$的模拟结果。最下方的两幅图比较了DD模型和HF模型的结果。在我们的收敛条件下，\autoref{fig:TVDRK}中所有图对应的模型都基本符合TVD，且数值解逐渐收敛。由于篇幅限制这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figure/dopingFunctionandL2projection.jpg}
-    \caption{\small 100网格单元是掺杂函数以及它在$V_h^2$上的$L^2$投影}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75Nn.pdf}
     \end{minipage}
-    \begin{minipage}[b]{0.48\textwidth}
+    \begin{minipage}{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75NE.pdf}
     \end{minipage}
-    \caption{DD模型三阶TVDRK网格数N为100和200计算空间$V^2$。左：电子浓度n；右：电势E}
+
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mun.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100muE.pdf}
+    \end{minipage}
+
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75modeln.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75modelE.pdf}
+    \end{minipage}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。参数：上，网格数N；中，迁移率$\mu$；下，模型类型。}
+    \label{fig:TVDRK}
+\end{figure}
+\begin{figure}
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/TVDRKN100.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/TVDRKN200.pdf}
+    \end{minipage}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。nt:时间层；TV：全变差。}
+    \label{fig:TVDRKTV}
 \end{figure}

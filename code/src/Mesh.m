@@ -23,7 +23,7 @@ classdef Mesh
         PPDP
         Cells (:,1) Cell
         CFL = 0.2;
-        epsilon = 0.1;
+        epsilon = 0.01;
         t
         
         semiModel Model
@@ -252,30 +252,30 @@ classdef Mesh
             CellValues(:,4) = circshift(CellValues(:,2),-1);
             
             % minmod limiter
-            %             CellAverages = zeros(obj.CellsNum,1);
-            %             for j = 1:obj.CellsNum
-            %                 CellAverages(j) = gaussLegendre(@(x) electronConcentration.solve(x), obj.X(j), obj.X(j+1));
-            %             end
-            %             CellAverages = CellAverages(:) / obj.meshSize;
-            %             M = 2/3 * 2 * 10^7 * obj.meshSize^2;
-            %             ur = CellValues(:,3) - CellAverages;
-            %             ul = CellAverages - CellValues(:,2);
-            %             CellAveragesP = circshift(CellAverages,-1) - CellAverages;
-            %             CellAveragesN = CellAverages - circshift(CellAverages,1);
-            %             Ar = [ur CellAveragesP CellAveragesN];
-            %             Al = [ul CellAveragesP CellAveragesN];
-            %             urmod = CellAverages + minmod(Ar,M)';
-            %             ulmod = CellAverages - minmod(Al,M)';
-            %             index = (abs(urmod-CellValues(:,3)) < 1 ) .* (abs(ulmod - CellValues(:,2)) < 1);
-            %             index = ~index;
-            %             parforCoeffs(1,index) = sqrt(obj.meshSize) * CellAverages(index)';
-            %             parforCoeffs(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
-            %             parforCoeffs(3,index) = urmod(index) - parforCoeffs(1,index)' / sqrt(obj.meshSize) - parforCoeffs(2,index)' * sqrt(3/obj.meshSize);
-            %             % regenerate
-            %             electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
-            %             CellValues(:,2:3) = electronConcentration.getNodeValues';
-            %             CellValues(:,1) = circshift(CellValues(:,3),1);
-            %             CellValues(:,4) = circshift(CellValues(:,2),-1);
+%                         CellAverages = zeros(obj.CellsNum,1);
+%                         for j = 1:obj.CellsNum
+%                             CellAverages(j) = gaussLegendre(@(x) electronConcentration.solve(x), obj.X(j), obj.X(j+1));
+%                         end
+%                         CellAverages = CellAverages(:) / obj.meshSize;
+%                         M = 2/3 * 2 * 10^7 * obj.meshSize^2;
+%                         ur = CellValues(:,3) - CellAverages;
+%                         ul = CellAverages - CellValues(:,2);
+%                         CellAveragesP = circshift(CellAverages,-1) - CellAverages;
+%                         CellAveragesN = CellAverages - circshift(CellAverages,1);
+%                         Ar = [ur CellAveragesP CellAveragesN];
+%                         Al = [ul CellAveragesP CellAveragesN];
+%                         urmod = CellAverages + minmod(Ar,M)';
+%                         ulmod = CellAverages - minmod(Al,M)';
+%                         index = (abs(urmod-CellValues(:,3)) < 1 ) .* (abs(ulmod - CellValues(:,2)) < 1);
+%                         index = ~index;
+%                         parforCoeffs(1,index) = sqrt(obj.meshSize) * CellAverages(index)';
+%                         parforCoeffs(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
+%                         parforCoeffs(3,index) = urmod(index) - parforCoeffs(1,index)' / sqrt(obj.meshSize) - parforCoeffs(2,index)' * sqrt(3/obj.meshSize);
+%                         % regenerate
+%                         electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
+%                         CellValues(:,2:3) = electronConcentration.getNodeValues';
+%                         CellValues(:,1) = circshift(CellValues(:,3),1);
+%                         CellValues(:,4) = circshift(CellValues(:,2),-1);
             
             % get electric field
             temp = electronConcentration.priSolve(0.6);
@@ -319,7 +319,7 @@ classdef Mesh
                 obj.auxCoeffs = 0.139219332249189 * F;
             end
             auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
-            %x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
+            x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
             auxCellValues(:,2:3) = auxq.getNodeValues';
             
             
