@@ -41,6 +41,85 @@
 \begin{align}
     \int_{I_j}(\mathcal{P}u(x)-u(x)v(x)) \rm{d}x = 0, \quad \forall v \in P^k(I_j).
 \end{align}
+\subsection{间断伽辽金方法基本理论}
+
+我们有以下事实\cite{sullivan2020brief}：
+\begin{itemize}
+    \item 许多PDEs没有强解但有弱解
+    \item 弱解更容易在线性代数表示
+    \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
+\end{itemize}
+而我们的DD模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的简便。
+
+为了得到这样的弱解，我们想法是在方程两边乘上测试函数并积分得到弱形式，利用数值方法求解弱形式。以
+\begin{align}
+    u_t + f_x = 0\label{eq:SDG}
+\end{align}
+为例，我们在\eqref{eq:SDG}两边乘以测试函数v并积分整理得到
+\begin{equation}
+    \int_{I_i}u_t v_h\mathrm{d}x - \int_{I_i}f(u)(v_h)_x\mathrm{d}x+v_hf\bigg|^{x_{i+\frac{1}{2}}}_{x_{i-\frac{1}{2}}}.
+\end{equation}
+这里f需要用的隔壁单元的值，为了处理这一问题，需要采用数值通量
+\begin{equation*}
+    \hat{f}_{i+\frac{1}{2}}=\hat{f}(u_h(x^-_{i+\frac{1}{2}},t),u_h(x^+_{i+\frac{1}{2}},t))
+\end{equation*}
+来代替f。具体来说，数值通量$\hat{f}$需要满足下列要求：
+\begin{enumerate}
+    \item 一致性：$\hat{f}(u,u)=f(u)$。
+    \item 连续性：$\hat{f}$关于两个变量都是Lipschitz连续的。
+    \item 单调性：$\hat{f}$关于第一个变量单增，关于第二个单减。可以记作$\hat{f}(\uparrow,\downarrow)$。
+\end{enumerate}
+这些性质将保证间断伽辽金法（DGM）的稳定性。
+现在我们得到弱形式。
+\begin{equation}
+    \int_{I_i}u_t v_h\mathrm{d}x - \int_{I_i}f(u)(v_h)_x\mathrm{d}x+\hat{f}_{i+\frac{1}{2}}v_h(x^-_{i+\frac{1}{2}})-\hat{f}_{i-\frac{1}{2}}v_h(x^+_{i-\frac{1}{2}}) = 0. \label{DG:weakSolution}
+\end{equation}
+间断伽辽金法的想法就是找到独一无二的数值解$u_h^k\in V_h^k$使得对于任意的测试函数，弱形式\eqref{DG:weakSolution}都成立。但是对于高阶PDEs，按照上述流程无法整理为形如\eqref{DG:weakSolution}的弱形式，因此我们需要考虑改进DGM来解决这样的PDEs。
+\subsubsection{局部间断伽辽金法}
+改进的方法有多种，在本文我们采用的是局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，然后在这些一阶PDEs上应用DG法。
+\begin{equation}
+    u_t = u_{xx}
+\end{equation}
+令$v = u_x$得到
+\begin{align}
+    u_t - v_x = 0, \\
+    v - u_x = 0.
+\end{align}
+现在我们可以利用DGM来处理该高阶PDE了。
+\subsubsection{限制器}
+当但DG法依然存在数值振荡，特别是对于包含强离散的问题，因此我们使用限制器来限制震荡，同时保证全变差稳定性。限制器的想法是先对当前时间层的数值解进行一个预处理，然后再更新至下一个时间层。本文将采用一种实际中常用的满足全变差有界（TVB）的改进后的minmod限制器\cite{cockburn1989tvb2}。
+
+对于$I_j$上的解$u_h$，首先定义它的平均值
+$$
+    \overline{u}_j = \frac{1}{\Delta x_j}\int_{I_j}u_h dx,
+$$
+然后我们定义
+\begin{align}
+    \tilde{u}_j = m(u_h(x^-_{j+1/2})-\overline{u}_j, \Delta_+\overline{u}_j, \Delta_-\overline{u}_j), \quad \tilde{\tilde{u}}_j = m(\overline{u}_j-u_h(x^+_{j-1/2}), \Delta_+\overline{u}_j, \Delta_-\overline{u}_j),
+\end{align}
+其中$\Delta_+$和$\Delta_-$是差分算子，定义为
+\begin{align}
+    \Delta_+\overline{u}_j = \overline{u}_{j+1}-\overline{u}_{j}, \quad \Delta_-\overline{u}_j = \overline{u}_{j}-\overline{u}_{j-1},
+\end{align}
+minmod函数$m$定义为
+\begin{align}
+    m(a_1, ..., a_l) & =
+    \begin{cases}
+        a_1,                         & |a_1| \leq M                                              \\
+        s \min_{1\leq i\leq l}|a_i|, & |a_1| \leq M \text{且}s = sign(a_1) = \cdots = sign(a_l), \\
+        0 ,                          & \text{其他},
+    \end{cases}
+\end{align}
+这里面的TVB参数M选择有多种选择方式，本文采用相对简便的一种\cite{cockburn1989tvb3}
+\begin{align}
+    M = \frac{2}{3}\max_{\Omega}u_{xx},
+\end{align}
+其中$\Omega$表示$u$所有驻点的附近的集合。
+最后我们有
+\begin{align}
+    u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
+\end{align}
+上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
 
 \section{DD模型}
 本文采用的DD模型表示为
@@ -52,17 +131,6 @@
 在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
 \subsection{弱形式和LDG格式}
-我们有以下事实\cite{sullivan2020brief}：
-\begin{itemize}
-    \item 许多PDEs没有强解但有弱解
-    \item 弱解更容易在线性代数表示
-    \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
-\end{itemize}
-而我们的DD模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的简便。
-
-为了得到这样的弱解，我们想法是在方程\eqref{eq:DD}-\eqref{eq:poisson}两边乘上测试函数并积分得到弱形式，利用数值方法求解弱形式。
-
-而DGM的想法就是找到独一无二的数值解$n_h^k\in V_h^k$使得对于任意的测试函数，弱形式都成立。但是由于DG难以处理高阶问题，因此我们需要考虑局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，进而可以在这些一阶PDEs上应用DG法。
 取$q = \sqrt{\tau \theta }n_x$，那么\autoref{eq:DD}可以写作
 \begin{align}
     n_t - (\mu E n)_x - \sqrt{\tau \theta}q_x & = 0, \label{eq:DD:electronConcentration} \\
@@ -71,7 +139,6 @@
 而对于泊松方程，本文直接通过积分得到。
 
 令$E = -\phi_x$表示电势，通过引入辅助变量易证$E$具有周期性\cite{liu2010errorc}。
-
 在方程\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}两边分别乘以测试函数$v,w\in V_h^k$，分部积分得到
 \begin{align}
      & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                               \nonumber                     \\
@@ -79,14 +146,14 @@
      & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta} n w_{x} d x-\sqrt{\tau \theta} n_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} n_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0, \\
      & E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right) .
 \end{align}
-将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n^{h}, q^{h}$。由于数值解$n^{h}$和$q^{h}$在单元边界上不连续性，将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
+将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n_h, q_h$。由于数值解$n_h$和$q_h$在单元边界上不连续性，将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
 \begin{align}
-     & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x      \nonumber                                                                                                                \\
-     & \quad-\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDLDGn} \\
-     & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta} n^{h} w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
-     & E^{h}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
+     & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                    \\
+     & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDLDGn}     \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
+     & E_h=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n_h-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
 \end{align}
-其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“$\hat{}$”项表示数值通量。$\hat{n}^{h}$和$\hat{q}^{h}$选择交替通量，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
+其中，$E_{0}=E_h(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n_h-n_{d}\right) d s\right) d x$。这里的“$\hat{}$”项表示数值通量。$\hat{n}_{h}$和$\hat{q}_{h}$选择交替通量，即$\hat{n}_{h}=\left(n_h\right)^{+}$，$\hat{q}_{h}=\left(q_h\right)^{-}$，$\widehat{E_h n_h}$采用上风通量，即$\widehat{E_h n_h}=\max \left(E_h, 0\right)\left(n_h\right)^{+}+\min \left(E_h, 0\right)\left(n_h\right)^{-}$。
 
 从LDG格式可知，只要有m时间层的信息，我们可以仅从\eqref{eq:DDLDGq}求得辅助变量$q$，进而求得$m+1$时间层的数值解。这种只需要系统中一个方程求得辅助变量，因此我们这种方法为“局部”间断伽辽金法。这也是与过去需要全局系统才能求出$q$的方法的不同之处。
 
@@ -97,16 +164,68 @@
     u^{n+1} & = \frac{1}{3}u^n + \frac{2}{3}u^{(2)} + \frac{2}{3}\Delta t L(u^{(2)}).
 \end{align}
 该方法保证$TV(u^{n+1})\leq TV(u^n)$，其中$TV(u) = \sum_j |u_{j+1}-u_j|$。
+\section{HF模型}
+高场模型由以下方程以及带有周期边界条件的Poisson电场方程~\eqref{eq:poisson}表示
+\begin{equation}
+    n_{t}+J_{x}=0, \quad x \in(0,1) \label{eq:HF}
+\end{equation}
+其中
+$$
+    J=J_{h y p}+J_{v i s}
+$$
 
+$$
+    \begin{gathered}
+        J_{h y p}=-\mu n E+\tau \mu\left(\frac{e}{\varepsilon}\right) n(-\mu n E+\omega) \\
+        J_{v i s}=-\tau\left(n\left(\theta+2 \mu^{2} E^{2}\right)\right)_{x}+\tau \mu E(\mu n E)_{x} .
+    \end{gathered}
+$$
+这里，$\omega=\left.(\mu n E)\right|_{x=0}$取常数。未知量与DD模型中相同：电子浓度$n$和电势$\phi$。由于
+$$
+    -2\left(n E^{2}\right)_{x}+E(n E)_{x}=-3 n E E_{x}-E^{2} n_{x}
+$$
+上述方程可以写作
+\begin{equation}
+    n_{t}+\left(-\mu n E-\tau \mu^{2} \frac{e}{\varepsilon} n^{2} E+\tau \mu \frac{e}{\varepsilon} \omega n-3 \tau \mu^{2} E n E_{x}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0.\label{eq:HFRewritten}
+\end{equation}
+利用$E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right)$，定义$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，方程~\eqref{eq:HFRewritten}可以简写为
+\begin{equation}
+    n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 .  \label{eq:HFRewrittenc}
+\end{equation}
+设$q=\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n_{x}=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n$，我们可以将方程$~\eqref{eq:HFRewrittenc}$按照LDG的方法改写为更大的一阶PDE系统
+\begin{align}
+     & n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}-\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{x}=0, \label{eq:HFRewrittenca} \\
+     & q=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n.\label{eq:HFRewrittencb}
+\end{align}
+分别用测试函数$v, w \in V_{h}^{k}$乘以方程~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}，并对所有涉及空间导数的项分部积分，得到以下弱形式
+\begin{align}
+     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n v_{x} d x                                                                          \nonumber                                              \\
+     & -\left(3 C_{2} E n_{d} n+\mu E n-C_{3} n\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}                                                                                       \nonumber                                     \\
+     & +\left(3 C_{2} E n_{d} n+\mu E n-C_{3} n\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}                                                                                      \nonumber                                      \\
+     & -\int_{I_{j}} 2 C_{2} E n^{2} v_{x} d x+2 C_{2}\left(E n^{2}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E n^{2}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}           \nonumber                           \\
+     & +\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2} E^{2}} q v_{x} d x                                                                                               \nonumber                                                   \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0  \label{eq:HFRewrittenWeakForma} \\
+     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2} E^{2}} n w_{x} d x+\int_{I_{j}}\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n w d x    \nonumber                                               \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenWeakFormb}
+\end{align}
+将上述方程中的精确解$n, q$替换为它们在$V_{h}^{k}$中的数值近似$n_h, q_h$。注意到数值解$n_h$和$q_h$在单元边界上不连续，我们需要将单元边界上的项替换为合适的数值通量。为了简化，我们定义$a_h:=\sqrt{\tau \theta+\tau \mu^{2}\left(E_h\right)^{2}}$，$b_h:=3 C_{2} E_h n_{d}+\mu E_h-C_{3}$，最终得到LDG格式：
+\begin{align}
+     & \int_{I_{j}} n_{t}^{h} v d x+\int_{I_{j}}\left(b_h\right) n_h v_{x} d x                                                                    -\left(b_h\right)_{j+\frac{1}{2}} \hat{n}_{j+\frac{1}{2}}^{h} v_{j+\frac{1}{2}}^{-}  +\left(b_h\right)_{j-\frac{1}{2}} \hat{n}_{j-\frac{1}{2}}^{h} v_{j-\frac{1}{2}}^{+}                                                                                                                                   \nonumber \\
+     & -\int_{I_{j}} 2 C_{2} E_h\left(n_h\right)^{2} v_{x} d x+2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+} \nonumber                                                                                                                                                                                                     \\
+     & +\int_{I_{j}} a_h q_h v_{x} d x -\left(a_h \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(a_h \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,             \label{eq:HFRewrittenLDGa}                                                                                                                                                                                                                                                \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} a_h n_h w_{x} d x+\int_{I_{j}}\left(a_h\right)_{x} n_h w d x                        \nonumber                                                                                                                                                                                                                                                                                                                               \\
+     & -\left(a_h \hat{n}_{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(a_h \hat{n}_{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
+\end{align}
+数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{}$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
 \subsection{数值模拟}
-DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T=300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}，简洁起见，后文中我们也将省略这些物理参数的单位。
+DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T=T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}，简洁起见，后文中我们也将省略这些物理参数的单位。
 \begin{table}[htbp]
     \centering
-    \begin{tabular}{cccccccc}
+    \begin{tabular}{ccccccccc}
         \hline
-        参数名 & $n_d$        & $m$  & $e$         & $k_b$              & $\epsilon$        & $vbias$ & $E$           \\
+        参数名 & $n_d$        & $m$  & $e$         & $k$                & $\epsilon$        & $vbias$ & $E$           & $T_0$      \\
         \hline
-        单位   & $\mu m^{-3}$ & $Kg$ & $10^{-18}C$ & $10^{-18}J/Kelvin$ & $10^{-18}F/\mu m$ & $V$     & $volts/\mu m$ \\
+        单位   & $\mu m^{-3}$ & $Kg$ & $10^{-18}C$ & $10^{-18}J/Kelvin$ & $10^{-18}F/\mu m$ & $V$     & $volts/\mu m$ & $^\circ K$ \\
         \hline
     \end{tabular}
     \caption{物理模型参数单位}
@@ -127,7 +246,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \xi = (2x-2x_j)/\Delta x_j.
 \end{align*}
 
-在算法中，本文也用到了一个勒让德多项式基不常见的二级结论
+在算法中，本文用到了一个勒让德多项式基不常见的二级结论，下给出证明
 \begin{formula}
     令$P_k$表示经典勒让德多项式，定义$I(n,m):= \int  P_{n}P_{m}' \, dx$。那么我们有
     \begin{align*}
@@ -177,7 +296,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     ||n^m - n^{m+1}||_{L^2} < \epsilon,
 \end{align*}
 其中$\epsilon$是一个足够小的数，那么我们认为这时算法已经收敛。在此处的数值模拟中，$\epsilon = 0.01$。
-\autoref{fig:TVDRK}给出了DD模型和HF模型的数值模拟结果。最上方的两图比较DD模型关于网格数N等于100和200的数值模拟结果。中间两幅图比较DD模型关于迁移率$\mu=0.75$和$\mu = \mu(n_d)$的模拟结果。最下方的两幅图比较了DD模型和HF模型的结果。在我们的收敛条件下，\autoref{fig:TVDRK}中所有图对应的模型都基本符合TVD，且数值解逐渐收敛。由于篇幅限制这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
+\autoref{fig:TVDRK}给出了DD模型和HF模型的数值模拟结果。最上方的两图比较DD模型关于网格数N等于100和200的数值模拟结果。中间两幅图比较DD模型关于迁移率$\mu=0.75$和$\mu = \mu(n_d)$的模拟结果。最下方的两幅图比较了DD模型和HF模型的结果。在我们的收敛条件下，\autoref{fig:TVDRK}中所有图对应的模型都基本符合TVD，且数值解逐渐收敛。
 \begin{figure}
     \centering
     \begin{minipage}{0.48\textwidth}
@@ -211,6 +330,8 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。参数：上，网格数N；中，迁移率$\mu$；下，模型类型。}
     \label{fig:TVDRK}
 \end{figure}
+
+由于篇幅限制这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
 \begin{figure}
     \centering
     \begin{minipage}{0.48\textwidth}

@@ -236,10 +236,10 @@ classdef Mesh
             temp = sqrt(obj.semiModel.theta);
             sqrtTauTheta = @(x) temp*sqrt(obj.semiModel.relaxationParameter(x));
             
-            CellValues = zeros(N,4);%[ll lr rl rr]
+
             
-            electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
-            CellValues(:,2:3) = electronConcentration.getNodeValues';
+%             electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
+%             CellValues(:,2:3) = electronConcentration.getNodeValues';
             
             %            Y = electronConcentration.solve(obj.Xc);
             %             tempR = obj.ENO(Y,2,"right");
@@ -247,11 +247,10 @@ classdef Mesh
             %             CellValues(:,2) = [tempR(end) tempR(1:end-1)]';
             %             CellValues(:,3) = tempL';
             
-            % get cell values
-            CellValues(:,1) = circshift(CellValues(:,3),1);
-            CellValues(:,4) = circshift(CellValues(:,2),-1);
             
             % minmod limiter
+            M = 2/3 * 1.96e9 * obj.meshSize^2;
+            obj.coeffs = obj.minmodLimiter(obj.coeffs, M);
 %                         CellAverages = zeros(obj.CellsNum,1);
 %                         for j = 1:obj.CellsNum
 %                             CellAverages(j) = gaussLegendre(@(x) electronConcentration.solve(x), obj.X(j), obj.X(j+1));
@@ -271,11 +270,13 @@ classdef Mesh
 %                         parforCoeffs(1,index) = sqrt(obj.meshSize) * CellAverages(index)';
 %                         parforCoeffs(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
 %                         parforCoeffs(3,index) = urmod(index) - parforCoeffs(1,index)' / sqrt(obj.meshSize) - parforCoeffs(2,index)' * sqrt(3/obj.meshSize);
-%                         % regenerate
-%                         electronConcentration = LegendrePoly(parforX, parforCoeffs,n,'true');
-%                         CellValues(:,2:3) = electronConcentration.getNodeValues';
-%                         CellValues(:,1) = circshift(CellValues(:,3),1);
-%                         CellValues(:,4) = circshift(CellValues(:,2),-1);
+            % regenerate
+            electronConcentration = LegendrePoly(parforX, reshape(obj.coeffs,n+1,N),n,'true');
+            x = linspace(0,0.6,10000);plot(x,electronConcentration.solve(x));
+            CellValues = zeros(N,4);%[ll lr rl rr]
+            CellValues(:,2:3) = electronConcentration.getNodeValues';
+            CellValues(:,1) = circshift(CellValues(:,3),1);
+            CellValues(:,4) = circshift(CellValues(:,2),-1);
             
             % get electric field
             temp = electronConcentration.priSolve(0.6);
@@ -320,9 +321,14 @@ classdef Mesh
             end
             auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
             x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
+            % minimode
+            M = 2/3 * 4.4050e+11 * obj.meshSize^2;
+            obj.auxCoeffs = obj.minmodLimiter(obj.auxCoeffs, M);
+            
+            
+            auxq = LegendrePoly(parforX, reshape(obj.auxCoeffs,obj.degree+1,obj.CellsNum), n);
+            x = linspace(0,0.6,10000);plot(x,auxq.solve(x));
             auxCellValues(:,2:3) = auxq.getNodeValues';
-            
-            
             auxCellValues(:,1) = circshift(auxCellValues(:,3),1);
             auxCellValues(:,4) = circshift(auxCellValues(:,2),-1);
             
@@ -716,63 +722,36 @@ classdef Mesh
                 end
             end
         end
-        function obj = minmodLimiter(obj)
-            
+        function c = minmodLimiter(obj, c, M)
+            c = reshape(c,obj.degree+1,obj.CellsNum);
+            f = LegendrePoly(obj.X, c,obj.degree);
+            CellValues(:,2:3) = f.getNodeValues';
+            CellValues(:,1) = circshift(CellValues(:,3),1);
+            CellValues(:,4) = circshift(CellValues(:,2),-1);
+            CellAverages = zeros(obj.CellsNum,1);   
+            for j = 1:obj.CellsNum
+                CellAverages(j) = gaussLegendre(@(x) f.solve(x), obj.X(j), obj.X(j+1));
+            end
+            CellAverages = CellAverages(:) / obj.meshSize;
+            ur = CellValues(:,3) - CellAverages;
+            ul = CellAverages - CellValues(:,2);
+            CellAveragesP = circshift(CellAverages,-1) - CellAverages;
+            CellAveragesN = CellAverages - circshift(CellAverages,1);
+            Ar = [ur CellAveragesP CellAveragesN];
+            Al = [ul CellAveragesP CellAveragesN];
+            urmod = CellAverages + minmod(Ar,M)';
+            ulmod = CellAverages - minmod(Al,M)';
+%             index = (abs(urmod-CellValues(:,3)) < 1 ) .* (abs(ulmod - CellValues(:,2)) < 1);
+%             index = ~index;
+            index = 1:obj.CellsNum;
+            index = index(:);
+            c(1,index) =  CellAverages(index)' * sqrt(obj.meshSize);
+            c(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
+            c(3,index) = sqrt(obj.meshSize) * urmod(index) - c(1,index)' - c(2,index)' * sqrt(3);
+            c(3,index) = c(3,index)/sqrt(5);
+            c = reshape(c, [], 1);
         end
-        % limiter
-        % change coeffs not function
-        function obj = slopeLimiter(obj)
-            localAverages = zeros(obj.CellsNum,1);
-            for j = 1:obj.CellsNum
-                Cellj = obj.Cells(j);
-                localAverages(j) = gaussLegendre(Cellj.func, Cellj.a, Cellj.b) / obj.meshSize;
-            end
-            M = 6.553417322323334e+08 * obj.meshSize^2;
-            N = obj.CellsNum;
-            for j = 1:obj.CellsNum
-                Cellj = obj.Cells(j);
-                ur = Cellj.rl - localAverages(j);
-                ul = localAverages(j) - Cellj.lr;
-                urmod = localAverages(j) + obj.minmod([ur localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
-                ulmod =  localAverages(j) - obj.minmod([ul localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
-                if abs(urmod - Cellj.rl) < 1 && abs(ulmod - Cellj.lr) < 1
-                    continue;
-                end
-                Cj = zeros(obj.degree+1,1);
-                Cj(1) = sqrt(obj.meshSize) * localAverages(j);
-                Cj(2) = (urmod - ulmod) / (2*sqrt( 3/obj.meshSize ));
-                Cj(3) = urmod - Cj(1) / sqrt(obj.meshSize) - Cj(2) * sqrt(3/obj.meshSize);
-                obj.Cells(j).coeffs = Cj;
-                obj.coeffs((j-1)*(obj.degree+1)+1:j*(obj.degree+1)) = Cj;
-            end
-        end
-        % input: auxfunction
-        % output: auxcoeff
-        function obj = auxSlopeLimiter(obj)
-            localAverages = zeros(obj.CellsNum,1);
-            for j = 1:obj.CellsNum
-                Cellj = obj.Cells(j);
-                localAverages(j) = gaussLegendre(Cellj.auxFunction, Cellj.a, Cellj.b) / obj.meshSize;
-            end
-            M = 5.731745892056191e+09 * obj.meshSize^2;
-            N = obj.CellsNum;
-            for j = 1:obj.CellsNum
-                Cellj = obj.Cells(j);
-                ur = Cellj.auxrl - localAverages(j);
-                ul = localAverages(j) - Cellj.auxlr;
-                urmod = localAverages(j) + obj.minmod([ur localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
-                ulmod =  localAverages(j) - obj.minmod([ul localAverages(mod(j,N)+1)-localAverages(j) localAverages(j)-localAverages(mod(j-2+N,N)+1)], M);
-                if abs(urmod - Cellj.auxrl) < 1 && abs(ulmod - Cellj.auxlr) < 1
-                    continue;
-                end
-                Cj = zeros(obj.degree+1,1);
-                Cj(1) = sqrt(obj.meshSize) * localAverages(j);
-                Cj(2) = (urmod - ulmod) / (2*sqrt( 3/obj.meshSize ));
-                Cj(3) = urmod - Cj(1) / sqrt(obj.meshSize) - Cj(2) * sqrt(3/obj.meshSize);
-                obj.Cells(j).auxCoeffs = Cj;
-                obj.auxCoeffs((j-1)*(obj.degree+1)+1:j*(obj.degree+1)) = Cj;
-            end
-        end
+
     end
     
     

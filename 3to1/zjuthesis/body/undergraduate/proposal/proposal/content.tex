@@ -98,7 +98,7 @@ $$
 $$
 其中常数$C$依赖于最终时间$T$、$k$、$||n||_{L^{\infty}\left(0, T ; H^{k+1}\right)}$和$\left||n{x}\right||_{0, \infty}$。
 \subsubsection{HF模型弱形式及LDG格式}
-高场模型由以下方程以及带有周期边界条件的Poisson电场方程~\eqref{eq:DDb}表示
+高场模型由以下方程以及带有周期边界条件的Poisson电场方程\eqref{eq:DDb}表示
 \begin{equation}
     n_{t}+J_{x}=0, \quad x \in(0,1) \label{eq:HF}
 \end{equation}
@@ -117,24 +117,20 @@ $$
 $$
     -2\left(n E^{2}\right)_{x}+E(n E)_{x}=-3 n E E_{x}-E^{2} n_{x}
 $$
-~\eqref{eq:HF}可以被写作
+方程\eqref{eq:HF}可以写作
 \begin{equation}
     n_{t}+\left(-\mu n E-\tau \mu^{2} \frac{e}{\varepsilon} n^{2} E+\tau \mu \frac{e}{\varepsilon} \omega n-3 \tau \mu^{2} E n E_{x}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0.\label{eq:HFRewritten}
 \end{equation}
-利用$E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right)$，~\eqref{eq:HFRewritten}可以改写为
-\begin{equation}
-    n_{t}+\left(-\left(\frac{3 \tau \mu^{2} e}{\varepsilon} E n_{d} n+\mu E n-\frac{\tau \mu e \omega}{\varepsilon} n\right)+\frac{2 \tau \mu^{2} e}{\varepsilon} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 . \label{eq:HFRewrittenb}
-\end{equation}
-或者，通过定义$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，我们得到以下的高场（HF）模型
+因为$E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right)$，定义$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，改写方程~\eqref{eq:HFRewritten}，我们得到以下的HF模型
 \begin{equation}
     n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 .  \label{eq:HFRewrittenc}
 \end{equation}
-设$q=\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n_{x}=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right){x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right){x} n$，我们可以将方程$~\eqref{eq:HFRewrittenc}$改写为以下系统
+设$q=\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n_{x}=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n$，我们可以将方程~\eqref{eq:HFRewrittenc}改写为
 \begin{align}
      & n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}-\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{x}=0, \label{eq:HFRewrittenca} \\
      & q=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n.\label{eq:HFRewrittencb}
 \end{align}
-我们分别用测试函数$v, w \in V_{h}^{k}$乘以方程~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}，并对涉及空间导数的所有项进行形式上的分部积分，得到以下弱形式
+分别用测试函数$v, w \in V_{h}^{k}$乘以方程~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}，并对涉及空间导数的所有项进行分部积分，最终我们得到以下弱形式：
 \begin{align}
      & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n v_{x} d x                                                                          \nonumber                                              \\
      & -\left(3 C_{2} E n_{d} n+\mu E n-C_{3} n\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}                                                                                       \nonumber                                     \\
@@ -145,7 +141,7 @@ $$
      & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2} E^{2}} n w_{x} d x+\int_{I_{j}}\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n w d x    \nonumber                                               \\
      & -\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenWeakFormb}
 \end{align}
-将上述方程中的精确解$n, q$替换为它们在$V_{h}^{k}$中的数值近似$n^{h}, q^{h}$，注意到数值解$n^{h}$和$q^{h}$在单元边界上不连续，然后将单元边界上的项替换为合适的数值通量，我们得到LDG格式：
+将上述方程中的精确解$n, q$替换为$V_{h}^{k}$中的数值近似$n^{h}, q^{h}$。注意到数值解$n^{h}$和$q^{h}$在单元边界上的不连续性，我们需要将单元边界上的项替换为合适的数值通量，最终得到LDG格式：
 \begin{align}
      & \int_{I_{j}} n_{t}^{h} v d x+\int_{I_{j}}\left(3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}\right) n^{h} v_{x} d x                                                                   \nonumber                                                                                                \\
      & -\left(3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}\right)_{j+\frac{1}{2}} \hat{n}_{j+\frac{1}{2}}^{h} v_{j+\frac{1}{2}}^{-}                                                                                                                                    \nonumber                     \\
@@ -156,7 +152,7 @@ $$
      & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} n^{h} w_{x} d x+\int_{I_{j}}\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}}\right)_{x} n^{h} w d x                        \nonumber                                          \\
      & -\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{n}^{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{n}^{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
 \end{align}
-数值电场$E^{h}$的求解与之前一样。为了方便起见，我们记作$a^{h}:=\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}}$，$b^{h}:=3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}$在(4.9)-(4.10)中。这里的$\widehat{}$项表示数值通量。我们选择交替通量来计算$a^{h} \hat{n}^{h}$和$a^{h} \hat{q}^{h}$，即$a^{h} \hat{n}^{h}=a^{h}\left(n^{h}\right)^{+}$，$a^{h} \hat{q}^{h}=a^{h}\left(q^{h}\right)^{-}$；对于$b^{h} \hat{n}^{h}$，我们选择上风通量，即如果$b^{h}>0$，则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{+}$，否则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{-}$；对于通量$\widehat{\left(n^{h}\right)^{2}}$，我们有两种选择：$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n^{h}\right]$（如果$E^{h}>0$，则$\alpha=1$；否则$\alpha=-1$）。
+数值电场$E^{h}$的与之前一样直接通过积分来求解。为了简化，我们定义$a^{h}:=\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}}$，$b^{h}:=3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}$。这里的$\widehat{}$项表示数值通量。$a^{h} \hat{n}^{h}$和$a^{h} \hat{q}^{h}$选择交替通量，即$a^{h} \hat{n}^{h}=a^{h}\left(n^{h}\right)^{+}$，$a^{h} \hat{q}^{h}=a^{h}\left(q^{h}\right)^{-}$；对于$b^{h} \hat{n}^{h}$，我们选择上风通量，即如果$b^{h}>0$，则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{+}$，否则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{-}$；对于通量$\widehat{\left(n^{h}\right)^{2}}$，有两种选择：$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n^{h}\right]$（如果$E^{h}>0$，则$\alpha=1$；否则$\alpha=-1$）。
 \subsubsection{漂移-扩散DD模型和弱形式}
 \paragraph{DD模型}
 漂移-扩散模型由以下方程表示
