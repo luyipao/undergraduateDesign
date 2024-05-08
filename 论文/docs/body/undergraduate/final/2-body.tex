@@ -120,12 +120,36 @@ minmod函数$m$定义为
     u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
 \end{align}
 上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
+\subsection{龙格库塔法}
+龙格-库塔法(RK)是一种重要的迭代法。一般的显示龙格-库塔法可以表示为
+\begin{equation}
+    \begin{aligned}
+        u^{(i)} = \sum_{l=0}^{i-1}[\alpha_{i,l}u^{(l)} + \beta_{i,l}\Delta tL(u^{(l)})], \quad i = 1,...,m,
+        u^{(0)}=u^n,\quad u^{(m)} = u^{n+1}.
+    \end{aligned}
+    \label{eq:TVDRK}
+\end{equation}
+
+由\parencite{shu1998total}，我们有得到
+\begin{lemma}
+    当$a_{ik} \geq 0, \beta_{ik} \geq 0$时，在时间步长$\Delta t \leq \frac{\beta_{ik}}{\alpha_{ik}} \Delta t_1$的条件下，龙格-库塔法\eqref{eq:TVDRK}满足全变差不增。
+\end{lemma}
+
+特别地对于三阶TVD RK法，\parencite{shu1998total}给出了最优形式
+\begin{equation}
+    \begin{aligned}
+        u^{(1)} & = u^n + \Delta t L(u^n),                                                \\
+        u^{(2)} & = \frac{1}{2}u^n + \frac{1}{4}u^{(1)} + \frac{1}{4}\Delta L(u^{(1)})),  \\
+        u^{n+1} & = \frac{1}{3}u^n + \frac{2}{3}u^{(2)} + \frac{2}{3}\Delta t L(u^{(2)}), \\
+        CFL     & = 1.
+    \end{aligned}
+\end{equation}
 
 \section{DD模型}
 本文采用的DD模型表示为
 \begin{align}
     n_t - (\mu En)_x = \tau \theta n_{xx}, \label{eq:DD} \\
-    \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson},
+    \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson}
 \end{align}
 其中$x\in(0,1)$，第一个电子浓度方程取周期边界条件，第二个电势方程取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
 在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
@@ -331,7 +355,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \label{fig:TVDRK}
 \end{figure}
 
-由于篇幅限制这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
+由于篇幅限制，这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
 \begin{figure}
     \centering
     \begin{minipage}{0.48\textwidth}
@@ -342,6 +366,22 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
         \centering
         \includegraphics[width=\linewidth]{figure/TVDRKN200.pdf}
     \end{minipage}
-    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。nt:时间层；TV：全变差。}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。}
     \label{fig:TVDRKTV}
 \end{figure}
+
+\autoref{fig:TVDRKLimiter}是添加了改进后的minmod限制器和无添加minmode限制器的图像，由于我们的解具有良好光滑性，同时计算空间选择为$V^2$，因此是否添加限制器基本上不会产生影响。
+\begin{figure}
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75limitern.pdf}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75limiterE.pdf}
+    \end{minipage}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$，迁移率$\mu=0.75$。x:时间层；TV：全变差。}
+    \label{fig:TVDRKLimiter}
+\end{figure}
+但如果我们的计算空间选择$V^k , k\geq 3$，如果直接让三次基函数项的系数直接取零，在数值模拟过程中仅在数个时间层后就出现了明显的误差。一般来讲，直接让三次项的系数保持不变即可，但考虑到本文模型假定了解具有良好的光滑性，又构造出了足够光滑的初始函数，不需要限制器也可以正确模拟。因此对于限制器更深入的讨论，可以在未来分析具有强震荡解的模型时再详细研究。

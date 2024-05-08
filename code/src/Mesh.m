@@ -745,11 +745,12 @@ classdef Mesh
 %             index = ~index;
             index = 1:obj.CellsNum;
             index = index(:);
-            c(1,index) =  CellAverages(index)' * sqrt(obj.meshSize);
-            c(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
-            c(3,index) = sqrt(obj.meshSize) * urmod(index) - c(1,index)' - c(2,index)' * sqrt(3);
-            c(3,index) = c(3,index)/sqrt(5);
-            c = reshape(c, [], 1);
+            temp = zeros(obj.degree+1,obj.CellsNum);
+            temp(1,index) =  CellAverages(index)' * sqrt(obj.meshSize);
+            temp(2,index) = (urmod(index) - ulmod(index)) / (2*sqrt( 3/obj.meshSize ));
+            temp(3,index) = sqrt(obj.meshSize) * urmod(index) - temp(1,index)' - temp(2,index)' * sqrt(3);
+            temp(3,index) = temp(3,index)/sqrt(5);
+            c = reshape(temp, [], 1);
         end
 
     end
