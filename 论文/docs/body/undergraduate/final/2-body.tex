@@ -20,8 +20,8 @@
 我们的初值函数就是定义在$[0, 0.6]$的掺杂函数$n_d$，它满足
 \begin{align*}
     n_d(x) = \begin{cases}
-                 5\times 10^{17}, \quad x \in [0, 0.1] \cup [0.5, 0.6] \\
-                 2\times 10^{15}, \quad x \in [0.15,0.45]
+                 5\times 10^{5}, \quad x \in [0, 0.1] \cup [0.5, 0.6] \\
+                 2\times 10^{3}, \quad x \in [0.15,0.45]
              \end{cases}
 \end{align*}
 在中间过渡区域选择光滑的函数连接。在本文中我们考虑光滑过渡函数$g(x)$，满足
@@ -145,16 +145,47 @@ minmod函数$m$定义为
     \end{aligned}
 \end{equation}
 
+对于IMEXRK法，本文考虑三阶精度的四阶段，L-稳定的对角隐式龙格-库塔法（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表分别是：
+\begin{table}
+    \begin{minipage}{0.48\linewidth}
+        \centering
+        \begin{tabular}{c|cccc}
+            $\frac{1}{2}$ & $\frac{1}{2}$  & 0              & 0             & 0             \\
+            $\frac{2}{3}$ & $\frac{1}{6}$  & $\frac{1}{2}$  & 0             & 0             \\
+            $\frac{1}{2}$ & $-\frac{1}{2}$ & $\frac{1}{2}$  & $\frac{1}{2}$ & 0             \\
+            1             & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$ \\
+            \hline
+                          & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$
+        \end{tabular}
+        \label{tab:DIRK}
+    \end{minipage}
+    \begin{minipage}{0.48\linewidth}
+        \centering
+        \begin{tabular}{c|cccc}
+            $\frac{1}{2}$ & $\frac{1}{2}$   & 0              & 0             & 0              \\
+            $\frac{2}{3}$ & $\frac{11}{18}$ & $\frac{1}{18}$ & 0             & 0              \\
+            $\frac{1}{2}$ & $\frac{5}{6}$   & $-\frac{5}{6}$ & $\frac{1}{2}$ & 0              \\
+            1             & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$ \\
+            \hline
+                          & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$
+        \end{tabular}
+        \label{tab:ERK}
+    \end{minipage}
+    \caption{DIRK耦合ERK得到的三阶IMEX格式。左：DIRK；右：ERK。}
+    \label{tab:IMEX3}
+\end{table}
+
 \section{DD模型}
+
 本文采用的DD模型表示为
 \begin{align}
     n_t - (\mu En)_x = \tau \theta n_{xx}, \label{eq:DD} \\
     \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson}
 \end{align}
 其中$x\in(0,1)$，第一个电子浓度方程取周期边界条件，第二个电势方程取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
-在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
+在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是玻尔兹曼常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
-\subsection{弱形式和LDG格式}
+\subsection{TVDRK LDG格式}
 取$q = \sqrt{\tau \theta }n_x$，那么\autoref{eq:DD}可以写作
 \begin{align}
     n_t - (\mu E n)_x - \sqrt{\tau \theta}q_x & = 0, \label{eq:DD:electronConcentration} \\
@@ -188,6 +219,68 @@ minmod函数$m$定义为
     u^{n+1} & = \frac{1}{3}u^n + \frac{2}{3}u^{(2)} + \frac{2}{3}\Delta t L(u^{(2)}).
 \end{align}
 该方法保证$TV(u^{n+1})\leq TV(u^n)$，其中$TV(u) = \sum_j |u_{j+1}-u_j|$。
+\subsection{IMEX全离散LDG格式}
+本小节，我们将考虑LDG空间离散耦合IMEX时间离散格式。这种IMEX时间离散的想法是显式处理二阶非线性对流项和隐式处理线性扩散项，来减弱对两项都使用显式时间离散所要求的严格的时间步长。这样做可以大量节省我们的算力，同时保持无条件稳定性。
+
+与耦合TVDRK时间离散相比，电子浓度方程\eqref{eq:DD}的处理方式不变，而对于泊松方程\eqref{eq:poisson}我们在此处也对它进行空间离散，具体有：
+\begin{align}
+    E_x & = -\frac{e}{\epsilon}(n-n_d), \label{eq:poisson:1} \\
+    E   & = - \phi_x. \label{eq:poisson:2}
+\end{align}
+在等式\eqref{eq:poisson:1}-\eqref{eq:poisson:2}两边分别乘上测试函数$r,z\in V^k_h$，并将单元边界的量替换为对应的数值通量，结合\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的DD模型的空间离散形式：
+\begin{align}
+     & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                       \\
+     & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:IMEX:DD:n}     \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:IMEX:DD:q} \\
+     & -\int_{I_j}E_hr_x\rm{d}x + (\hat{E}_h)_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h)_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h-n_d)r\rm{d}x,                                        \label{eq:IMEX:poisson:1}     \\
+     & \int_{I_j} E_hz \rm{d}x - \int_{I_j}\phi_h z_x \rm{d}x + (\hat{\phi}_h)_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - (\hat{\phi}_h)_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0,\label{eq:IMEX:poisson:2}
+\end{align}
+其中$j = 1,...,N$，带“$\widehat{\ }$”的项也是数值通量。我们选择通量$\widehat{E_h n_h} = \frac{1}{2}((E_hn_h)^+  + (E_hn_h)^-)$，$\hat{n}_h$和$\hat{q}_h$的交替通量，即
+\begin{equation}
+    \hat{n}_h = (n_h)^+, \hat{q}_h = (q_h)^- \quad \text{or} \quad \hat{n}_h = (n_h)^-, \hat{q}_h = (q_h)^+, \label{numbericalFlux:n&q}
+\end{equation}
+对$\hat{\phi}_h$和$\hat{E}_h$选择带边界条件的交替通量，即
+\begin{equation}
+    \begin{aligned}
+        (\hat{\phi}_h)_{\frac{1}{2}} = (\phi_h^-)_{\frac{1}{2}} = 0, (\hat{\phi}_h)_{j-\frac{1}{2}} = (\phi_h^+)_{j-\frac{1}{2}},j = 2,\cdots,N,(\hat{\phi}_h)_{N-\frac{1}{2}} = (\phi_h^+)_{N-\frac{1}{2}} = v_{bias}, \\
+        (\hat{E_h})_{\frac{1}{2}} = (E_h^+)_{\frac{1}{2}} + c_0[\phi]_{\frac{1}{2}}, (\hat{E}_h)_{j-\frac{1}{2}} = (E_h^-)_{j-\frac{1}{2}} + c_0[\phi]_{j-\frac{1}{2}},j = 2,\cdots,N+1,
+    \end{aligned}\label{numbericalFlux:phi&E}
+\end{equation}
+或
+\begin{equation}
+    \begin{aligned}
+        (\hat{\phi}_h)_{\frac{1}{2}} = (\phi_h^-)_{\frac{1}{2}} = 0, (\hat{\phi}_h)_{j-\frac{1}{2}} = (\phi_h^-)_{j-\frac{1}{2}},j = 2,\cdots,N,(\hat{\phi}_h)_{N-\frac{1}{2}} = (\phi_h^+)_{N-\frac{1}{2}} = v_{bias}, \\
+        (\hat{E_h})_{j - \frac{1}{2}} = (E_h^+)_{j - \frac{1}{2}} + c_0[\phi]_{j-\frac{1}{2}},j = 2,\cdots,N, (\hat{E}_h)_{N+\frac{1}{2}} = (E_h^-)_{N+\frac{1}{2}} + c_0[\phi]_{N+\frac{1}{2}}.
+    \end{aligned}\label{numbericalFlux:phi&E alt}
+\end{equation}
+在数值模拟中我们选择第一种。
+
+将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}和\eqref{eq:IMEX:poisson:1}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEXLDG格式：
+\begin{align}
+    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{weakForm:IMEX3 LDG 1:translation}       \\
+    (\frac{n_h^{m,2} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{18} H_j(E_h^m,n_h^m,v) + \frac{1}{18} H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                                      \\
+                                                & + \frac{1}{6} H_j^-(q_h^{m,1},v) + \frac{1}{2} H_j^-(q_h^{m,2},v),                                                         \\
+    (\frac{n_h^{m,3} -n_h^m}{\Delta t},v)_{I_j} & =\frac{5}{6} H_j(E_h^m,n_h^m,v) -\frac{5}{6} H_j(E_h^{m,1},n_h^{m,1},v) + \frac{1}{2} H_j(E_h^{m,2},n_h^{m,2},v) \nonumber \\
+                                                & - \frac{1}{2} H_j^-(q_h^{m,1},v) + \frac{1}{2} H_j^-(q_h^{m,2},v) + \frac{1}{2} H_j^-(q_h^{m,3},v),                        \\
+    (\frac{n_h^{m+1} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{4} H_j(E_h^m,n_h^m,v) +\frac{7}{4} H_j(E_h^{m,1},n_h^{m,1},v)  \nonumber                                        \\
+                                                & + \frac{3}{4} H_j(E_h^{m,2},n_h^{m,2},v) - \frac{7}{4} H_j(E_h^{m,3},n_h^{m,3},v) \nonumber                                \\
+                                                & +\frac{3}{2} H_j^-(q_h^{m,1},v) -\frac{3}{2} H_j^-(q_h^{m,2},v) \nonumber                                                  \\
+                                                & + \frac{1}{2} H_j^-(q_h^{m,3},v)  + \frac{1}{2} H_j^-(q_h^{m+1},v),                                                        \\
+    (q_h^{m,1},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2,3,4, q_h^{m,4} = q_h^{m+1},
+\end{align}
+其中$j = 1,\cdots,N;\quad v,w \in V_h$，
+\begin{align}
+     & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                        \\
+     & H_j^{\pm}(u_h,v)  =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{eq:IMEX:DD:notation:2}
+\end{align}
+
+电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m,l}r_x \rm{d}x + (\hat{E}_h^{m,l})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m,l})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m,l} - n_d) r\rm{d} x, \label{eq:IMEX:poisson:LDG:1} \\
+    \int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{eq:IMEX:poisson:LDG:2}
+\end{align}
+其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$。
+
 \section{HF模型}
 高场模型由以下方程以及带有周期边界条件的Poisson电场方程~\eqref{eq:poisson}表示
 \begin{equation}
@@ -204,7 +297,9 @@ $$
         J_{v i s}=-\tau\left(n\left(\theta+2 \mu^{2} E^{2}\right)\right)_{x}+\tau \mu E(\mu n E)_{x} .
     \end{gathered}
 $$
-这里，$\omega=\left.(\mu n E)\right|_{x=0}$取常数。未知量与DD模型中相同：电子浓度$n$和电势$\phi$。由于
+这里，$\omega=\left.(\mu n E)\right|_{x=0}$取常数。
+\subsection{TVDRK LDG格式}
+未知量与DD模型中相同：电子浓度$n$和电势$\phi$。由于
 $$
     -2\left(n E^{2}\right)_{x}+E(n E)_{x}=-3 n E E_{x}-E^{2} n_{x}
 $$
@@ -240,8 +335,9 @@ $$
      & \int_{I_{j}} q_h w d x+\int_{I_{j}} a_h n_h w_{x} d x+\int_{I_{j}}\left(a_h\right)_{x} n_h w d x                        \nonumber                                                                                                                                                                                                                                                                                                                               \\
      & -\left(a_h \hat{n}_{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(a_h \hat{n}_{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
 \end{align}
-数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{}$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
-\subsection{数值模拟}
+数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{\ }$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
+\section{数值模拟}
+\subsection{TVDRK时间离散}
 DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T=T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}，简洁起见，后文中我们也将省略这些物理参数的单位。
 \begin{table}[htbp]
     \centering
@@ -266,8 +362,8 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 \end{align*}
 其中$\xi = (2x-2x_j)/\Delta x_j$。此时我们的数值解可以写作
 \begin{align*}
-    u_h(x,t) = \sum_{l=0}^k c_{j,l}(t)\varphi_{l}(\xi), \forall x \in I_j , j= 1,2,...,N, \quad (u = n,q), \\
-    \xi = (2x-2x_j)/\Delta x_j.
+    u_h(x,t) & = \sum_{l=0}^k c_{j,l}(t)\varphi_{l}(\xi), \forall x \in I_j , j= 1,2,...,N, \quad (u = n,q), \\
+    \xi      & = (2x-2x_j)/\Delta x_j.
 \end{align*}
 
 在算法中，本文用到了一个勒让德多项式基不常见的二级结论，下给出证明
