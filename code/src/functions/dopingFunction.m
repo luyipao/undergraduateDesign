@@ -33,7 +33,7 @@ for i=1:m*n
         y(i) = 2;
     elseif x(i)>0.45 && x(i) <0.5
         y(i) = transition2(x(i));
-    elseif x(i)>=0.5 && x(i)< 0.6
+    elseif x(i)>=0.5 && x(i)<= 0.6
         y(i) = 500;
     end
 end

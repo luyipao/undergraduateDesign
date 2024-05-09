@@ -16,31 +16,7 @@
 网格上有限维计算空间$V_h^k = \{v:v|_{I_j}\in P^k(I_j); 1\leq j\leq N\}$，其中$P^k(I_j)$表示$I_j$上次数不大于$k$的多项式集合。我们的数值解和测试函数都将从$V_h^k$中取得。需要注意的是，$V_h^k$中的函数在单元边界节点处不一定是连续的，可以出现跳跃。
 
 为了简化标记，我们分别定义$(u_h)^+_{j+1/2}=u_h(x^+_{j+1/2})$和$(u_h)^-_{j+1/2}=u_h(x^-_{j+1/2})$。此外我们定义$u_h$在单元边界节点$x_{j+1/2}$的跳跃$[u_h]_{j+1/2}=(u_h)^+_{j+1/2}-(u_h)^-_{j+1/2}$和均值$(\overline{u}_h)_{j+1/2}=((u_h)_{j+1/2}^++(u_h)_{j+1/2}^-)/2$。
-\subsection{初值的处理}
-我们的初值函数就是定义在$[0, 0.6]$的掺杂函数$n_d$，它满足
-\begin{align*}
-    n_d(x) = \begin{cases}
-                 5\times 10^{5}, \quad x \in [0, 0.1] \cup [0.5, 0.6] \\
-                 2\times 10^{3}, \quad x \in [0.15,0.45]
-             \end{cases}
-\end{align*}
-在中间过渡区域选择光滑的函数连接。在本文中我们考虑光滑过渡函数$g(x)$，满足
-\begin{align*}
-    f(x)               & ={\begin{cases}
-                               e^{-{\frac {1}{x}}}, \quad x>0 \\
-                               0, \quad x\leq 0\end{cases}} ,                     \\
-    \displaystyle g(x) & :={\frac {f(x)}{f(x)+f(1-x)}}\quad x\in \mathbb {R}.
-\end{align*}
-为了得到区间$[a,b]$上的光滑过渡，我们只需要考虑函数
-\begin{align*}
-    g(\frac{x-a}{b-a}).
-\end{align*}
-注意到它任意阶导函数在$[a,b]$外都为零，结合掺杂函数我们容易得到一个任意阶连续导函数的初值函数。这不是唯一可选择的过渡函数，但由于初值函数的光滑性与计算空间的维数有关，选择这样一个绝对光滑的初值函数可以简化后续分析。
 
-为了让初值函数落在我们的计算空间中，我们需要对其进行处理。本文选择的是向计算空间$V_h^k$的分段$L^2$投影，表示为$\mathcal{P}$。对于任意函数$u\in C^{k+1}$，它满足
-\begin{align}
-    \int_{I_j}(\mathcal{P}u(x)-u(x)v(x)) \rm{d}x = 0, \quad \forall v \in P^k(I_j).
-\end{align}
 \subsection{间断伽辽金方法基本理论}
 
 我们有以下事实\cite{sullivan2020brief}：
@@ -120,7 +96,7 @@ minmod函数$m$定义为
     u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
 \end{align}
 上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
-\subsection{龙格库塔法}
+\subsection{龙格库塔法主要案例}
 龙格-库塔法(RK)是一种重要的迭代法。一般的显示龙格-库塔法可以表示为
 \begin{equation}
     \begin{aligned}
@@ -196,9 +172,9 @@ minmod函数$m$定义为
 令$E = -\phi_x$表示电势，通过引入辅助变量易证$E$具有周期性\cite{liu2010errorc}。
 在方程\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}两边分别乘以测试函数$v,w\in V_h^k$，分部积分得到
 \begin{align}
-     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                               \nonumber                     \\
-     & \quad-(\mu E n+\sqrt{\tau \theta} q)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+(\mu E n+\sqrt{\tau \theta} q)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,                                        \\
-     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta} n w_{x} d x-\sqrt{\tau \theta} n_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} n_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0, \\
+     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                               \nonumber                                      \\
+     & \quad-(\mu E n+\sqrt{\tau \theta} q)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+(\mu E n+\sqrt{\tau \theta} q)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,            \label{eq:LDG:n}                             \\
+     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta} n w_{x} d x-\sqrt{\tau \theta} n_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} n_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0, \label{eq:LDG:q} \\
      & E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right) .
 \end{align}
 将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n_h, q_h$。由于数值解$n_h$和$q_h$在单元边界上不连续性，将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
@@ -227,7 +203,13 @@ minmod函数$m$定义为
     E_x & = -\frac{e}{\epsilon}(n-n_d), \label{eq:poisson:1} \\
     E   & = - \phi_x. \label{eq:poisson:2}
 \end{align}
-在等式\eqref{eq:poisson:1}-\eqref{eq:poisson:2}两边分别乘上测试函数$r,z\in V^k_h$，并将单元边界的量替换为对应的数值通量，结合\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的DD模型的空间离散形式：
+在等式\eqref{eq:poisson:1}-\eqref{eq:poisson:2}两边分别乘上测试函数$r,z\in V^k_h$得到
+\begin{align}
+     & -\int_{I_j}Er_x\rm{d}x + E_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - E_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n-n_d)r\rm{d}x,                                       \label{DD:weakform:E} \\
+     & \int_{I_j} Ez \rm{d}x - \int_{I_j}\phi z_x \rm{d}x + \phi_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - \phi_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0, \label{DD:weakform:phi}
+\end{align}
+
+并将单元边界的量替换为对应的数值通量，结合\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的DD模型的空间离散形式：
 \begin{align}
      & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                       \\
      & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:IMEX:DD:n}     \\
@@ -255,9 +237,9 @@ minmod函数$m$定义为
 \end{equation}
 在数值模拟中我们选择第一种。
 
-将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}和\eqref{eq:IMEX:poisson:1}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEXLDG格式：
+将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}和\eqref{eq:IMEX:poisson:1}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEXLDG格式：找到$n_h^{m+1}, q_h^{m+1}\in V_h^k$使得
 \begin{align}
-    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{weakForm:IMEX3 LDG 1:translation}       \\
+    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{eq:IMEX:DD:LDG:1}                       \\
     (\frac{n_h^{m,2} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{18} H_j(E_h^m,n_h^m,v) + \frac{1}{18} H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                                      \\
                                                 & + \frac{1}{6} H_j^-(q_h^{m,1},v) + \frac{1}{2} H_j^-(q_h^{m,2},v),                                                         \\
     (\frac{n_h^{m,3} -n_h^m}{\Delta t},v)_{I_j} & =\frac{5}{6} H_j(E_h^m,n_h^m,v) -\frac{5}{6} H_j(E_h^{m,1},n_h^{m,1},v) + \frac{1}{2} H_j(E_h^{m,2},n_h^{m,2},v) \nonumber \\
@@ -266,7 +248,7 @@ minmod函数$m$定义为
                                                 & + \frac{3}{4} H_j(E_h^{m,2},n_h^{m,2},v) - \frac{7}{4} H_j(E_h^{m,3},n_h^{m,3},v) \nonumber                                \\
                                                 & +\frac{3}{2} H_j^-(q_h^{m,1},v) -\frac{3}{2} H_j^-(q_h^{m,2},v) \nonumber                                                  \\
                                                 & + \frac{1}{2} H_j^-(q_h^{m,3},v)  + \frac{1}{2} H_j^-(q_h^{m+1},v),                                                        \\
-    (q_h^{m,1},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2,3,4, q_h^{m,4} = q_h^{m+1},
+    (q_h^{m,1},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2,3,4, q_h^{m,4} = q_h^{m+1},\label{eq:IMEX:DD:LDG:4}
 \end{align}
 其中$j = 1,\cdots,N;\quad v,w \in V_h$，
 \begin{align}
@@ -281,6 +263,15 @@ minmod函数$m$定义为
 \end{align}
 其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$。
 
+\subsection{误差估计}
+对于三阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
+\begin{theorem}
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式\eqref{eq:IMEX:DD:LDG:1} -\eqref{eq:IMEX:DD:LDG:4} 。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3)
+    \end{equation}
+    其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
 \section{HF模型}
 高场模型由以下方程以及带有周期边界条件的Poisson电场方程~\eqref{eq:poisson}表示
 \begin{equation}
@@ -336,9 +327,13 @@ $$
      & -\left(a_h \hat{n}_{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(a_h \hat{n}_{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
 \end{align}
 数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{\ }$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
-\section{数值模拟}
-\subsection{TVDRK时间离散}
-DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T=T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}，简洁起见，后文中我们也将省略这些物理参数的单位。
+\section{数值算例}
+本节将讨论DD模型和HF模型关于TVDRK时间离散的LDG格式和DD模型关于IMEX时间离散的LDG格式具体实现。本文算例均在windows 10系统上R2021a 64bit版本学术版matlab实现。
+
+本节具体安排如下：在第一小节，我们将介绍算例选取的物理模型参数、初值函数和基函数的选取；在第二小节，我们将给出DD模型和HF模型在TVDRK时间离散下的数值模拟的结果，针对网格数，迁移率，模型，限制器多维度对比模拟的结果，同时给出TV随着迭代次数的变化图像；最后一小节则会给出IMEX LDG格式的模拟结果，并于TVDRK的结果进行比较，同时验证前文中给出误差估计。
+\subsection{算例模型}
+\subsubsection{物理模型参数}
+DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}。简洁起见，后文中我们也将省略这些物理参数的单位。
 \begin{table}[htbp]
     \centering
     \begin{tabular}{ccccccccc}
@@ -351,8 +346,10 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \caption{物理模型参数单位}
     \label{tab:units}
 \end{table}
-
-基函数选择$I_j = (x_{j-1/2}, x_{j+1/2})$上的正交归一化的勒让德多项式基
+此外，尽管LDG的网格不要求必需是均匀的，每个单元上计算空间的次数也不要求相同，本文算例均采用均匀网格和相同最高次计算空间。此外对于同一个算例，时间步长也是取均匀时间步长。
+\subsubsection{基函数}
+本文算例采用了两种不同的基函数，
+第一种基函数选择$I_j = (x_{j-1/2}, x_{j+1/2})$上的正交归一化的勒让德多项式基
 \begin{align*}
     \varphi_0^{(j)}(x) = \sqrt{\frac{1}{\Delta x_j}}, \varphi_1^{(j)}(x) = 2\sqrt{\frac{3}{\Delta x_j}}\frac{x-x_j}{\Delta x_j}, \varphi_2^{(j)} =\frac{1}{2}\sqrt{\frac{5}{\Delta x_j}}(12(\frac{x-x_j}{\Delta x_j})^2 - 1 ), \cdots,
 \end{align*}
@@ -363,10 +360,23 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 其中$\xi = (2x-2x_j)/\Delta x_j$。此时我们的数值解可以写作
 \begin{align*}
     u_h(x,t) & = \sum_{l=0}^k c_{j,l}(t)\varphi_{l}(\xi), \forall x \in I_j , j= 1,2,...,N, \quad (u = n,q), \\
-    \xi      & = (2x-2x_j)/\Delta x_j.
+    \xi      & = 2\frac{x-x_j}{\Delta x_j}.
 \end{align*}
 
-在算法中，本文用到了一个勒让德多项式基不常见的二级结论，下给出证明
+第二种基函数选择$I_j = (x_{j-1/2}, x_{j+1/2})$上正交勒让德多项式基
+\begin{align*}
+    \varphi_0^{(j)}(x) = 1, \varphi_1^{(j)}(x) = x-x_j, \varphi_2^{(j)} =(x-x_j)^2-\frac{1}{12}\Delta x_j^2, \cdots,
+\end{align*}
+在具体的代码实现中，我们选择放缩后的正交勒让德多项式基
+\begin{align*}
+    \varphi_0^{(j)}(x) = 1, \varphi_1^{(j)}(x) = \xi, \varphi_2^{(j)} =\xi^2 - \frac{1}{12}, \cdots,
+\end{align*}
+其中$\xi = (2x-2x_j)/\Delta x_j$。此时我们的数值解可以写作
+\begin{align*}
+    u_h(x,t) & = \sum_{l=0}^k c_{j,l}(t)\varphi_{l}(\xi), \forall x \in I_j , j= 1,2,...,N, \quad (u = n,q), \\
+    \xi      & = \frac{x-x_j}{\Delta x_j}.
+\end{align*}
+在算法中，本文用到了经典勒让德多项式基一个不常见的二级结论，下给出并证明
 \begin{formula}
     令$P_k$表示经典勒让德多项式，定义$I(n,m):= \int  P_{n}P_{m}' \, dx$。那么我们有
     \begin{align*}
@@ -402,15 +412,52 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \end{align*}
     我们得到
     \begin{align*}
-        I(n,n+1+2k) & = \int P_{n}((n+1+2k)P_{n+2k}+xP_{n+2k}) \, dx                \\
-                    & = \int xP_{n}P'_{n+2k} \, dx                                  \\
-                    & = xP_{n}P_{n+2k}|_{-1}^1 - \int P_{n+2k}(P_{n}+xP_{n}') \, dx \\
+        I(n,n+1+2k) & = \int P_{n}((n+1+2k)P_{n+2k}+xP_{n+2k}) \, dx                 \\
+                    & = \int xP_{n}P'_{n+2k} \, dx                                   \\
+                    & = xP_{n}P_{n+2k}|_{-1}^1 - \int P_{n+2k}(P_{n}+xP_{n}') \, dx,
     \end{align*}
     又由于$P_n(1) = 1, P_n(-1) = (-1)^n$以及$xP'_n$可以由$P_0, ..., P_n$表示，我们得到
     \begin{align*}
         I(n, n+1+2k)=2, \quad k\geq 1.
     \end{align*}
 \end{proof}
+\subsubsection{初值函数}
+我们的初值函数就是定义在$[0, 0.6]$的掺杂函数$n_d$，它满足
+\begin{align*}
+    n_d(x) = \begin{cases}
+                 5\times 10^{5}, \quad x \in [0, 0.1] \cup [0.5, 0.6] \\
+                 2\times 10^{3}, \quad x \in [0.15,0.45]
+             \end{cases}
+\end{align*}
+在中间过渡区域选择光滑的函数连接。在本文中我们考虑光滑过渡函数$g(x)$，满足
+\begin{align*}
+    f(x)               & ={\begin{cases}
+                               e^{-{\frac {1}{x}}}, \quad x>0 \\
+                               0, \quad x\leq 0\end{cases}} ,                     \\
+    \displaystyle g(x) & :={\frac {f(x)}{f(x)+f(1-x)}}\quad x\in \mathbb {R}.
+\end{align*}
+为了得到区间$[a,b]$上的光滑过渡，我们只需要考虑函数
+\begin{align*}
+    g(\frac{x-a}{b-a}).
+\end{align*}
+注意到它任意阶导函数在$[a,b]$外都为零，结合掺杂函数我们容易得到电子浓度一个具有任意阶连续导函数的初值函数。
+\begin{align}
+    n(x,0) = n_d(x) = 10^3 \times
+    \begin{cases}
+        500,\quad x\in [0,0.1],                        \\
+        498g(20(0.15-x)) + 2,\quad x \in (0.1, 0.15),  \\
+        2, \quad x\in [0.15, 0.45],                    \\
+        498g(20(x-0.45)) + 2, \quad x \in (0.45, 0.5), \\
+        500, \quad x\in [0.5, 0.6].
+    \end{cases}
+\end{align}
+这不是唯一可选择的过渡函数，但由于初值函数的光滑性与计算空间的维数有关，选择这样一个绝对光滑的初值函数可以简化后续分析。
+
+为了让初值函数落在我们的计算空间中，我们需要对其进行处理。本文选择的是向计算空间$V_h^k$的分段$L^2$投影，表示为$\mathcal{P}$。对于任意函数$u\in C^{k+1}$，它满足
+\begin{align}
+    \int_{I_j}(\mathcal{P}u(x)-u(x)v(x)) \rm{d}x = 0, \quad \forall v \in P^k(I_j).
+\end{align}
+\subsection{TVDRK时间离散}
 我们通过相邻时间层电子浓度的变化量来判断算法是否已经收敛，即如果满足
 \begin{align*}
     ||n^m - n^{m+1}||_{L^2} < \epsilon,
@@ -481,3 +528,27 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \label{fig:TVDRKLimiter}
 \end{figure}
 但如果我们的计算空间选择$V^k , k\geq 3$，如果直接让三次基函数项的系数直接取零，在数值模拟过程中仅在数个时间层后就出现了明显的误差。一般来讲，直接让三次项的系数保持不变即可，但考虑到本文模型假定了解具有良好的光滑性，又构造出了足够光滑的初始函数，不需要限制器也可以正确模拟。因此对于限制器更深入的讨论，可以在未来分析具有强震荡解的模型时再详细研究。
+
+\subsection{IMEX LDG格式}
+由于没有准确解的显式表达式，我们采取细网格上的数值解来代替真实解。
+我们取网格数$N=3200$计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror}的误差估计
+\begin{table}
+    \begin{tabular}{ccc}
+        \toprule
+            & \multicolumn{2}{c}{$V^0$}               \\
+        \cmidrule{2-3}
+        N   & $\frac{||u_h-u||}{||u||}$ & order       \\
+
+        \midrule
+        25  & 9.94e-02                  & \text{----} \\
+        50  & 5.50e-02                  & 0.85        \\
+        100 & 2.80e-02                  & 0.97        \\
+        200 & 1.43e-02                  & 0.97        \\
+        400 & 7.07e-03                  & 1.02        \\
+        800 & 3.44e-03                  & 1.04        \\
+        \bottomrule
+    \end{tabular}
+    \caption{IMEX LDG格式误差估计}
+    \label{tab:IMEXLDGerror}
+\end{table}
+
