@@ -1,7 +1,7 @@
 \cleardoublepage
 
 \section{预备知识}
-在本节，我们将首先给出一些符号和定义，这些符号和定义在后文使用将不再解释，然后我们将简单介绍间断伽辽金方法的动机与想法，最后给出后文中采用的两种龙格-库塔法，TVDRK和IMEXRK法。
+在本节，我们将首先给出一些符号和定义，这些符号和定义在后文使用将不再解释，然后我们将简单介绍间断伽辽金方法的动机与想法，最后给出后文中采用的两种龙格-库塔法，全变差不增龙格-库塔法和隐式-显式龙格-库塔法。
 \subsection{基础符号}
 本文中我们考虑一维模型并假设计算域为$[a,b]$，首先定义$[a,b]$的一个剖分
 \begin{align*}
@@ -19,15 +19,15 @@
 
 \subsection{间断伽辽金方法基本理论}
 
-在PDEs弱形式的理论研究中，我们有以下事实\cite{sullivan2020brief}：
+在偏微分方程弱形式的理论研究中，我们有以下事实\cite{sullivan2020brief}：
 \begin{itemize}
-    \item 许多PDEs没有强解但有弱解
+    \item 许多偏微分方程组没有强解但有弱解
     \item 弱解更容易在线性代数表示
     \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
 \end{itemize}
 而本文中的DD模型和HF模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的便利。
 
-求解弱解的想法来源于分布理论：由于PDEs源于物理模型，而我们知道当从实际中提取一个物理模型时，我们往往不需要也难以获得某个精确时间或位置的物理量，而常常采用一小段时间或距离的均值来代替。因此我们处理PDEs时也可以考虑方程的积分。此外考虑实际物理量时只需考虑物理量部分特性，我们也可以只考虑PDEs中未知量与测试函数积分的性质。可以说测试函数正是我们观察物理量的维度。基于这些想法，我们求得弱解的方法是在方程两边乘上测试函数并积分得到弱形式，然后利用数值方法求解弱形式。以
+求解弱解的想法来源于分布理论：由于偏微分方程组源于物理模型，而我们知道当从实际中提取一个物理模型时，我们往往不需要也难以获得某个精确时间或位置的物理量，而常常采用一小段时间或距离的均值来代替。因此我们处理偏微分方程组时也可以考虑方程的积分。此外考虑实际物理量时只需考虑物理量部分特性，我们也可以只考虑偏微分方程组中未知量与测试函数积分的性质。可以说测试函数正是我们观察物理量的维度。基于这些想法，我们求得弱解的方法是在方程两边乘上测试函数并积分得到弱形式，然后利用数值方法求解弱形式。以
 \begin{align}
     u_t + f_x = 0\label{eq:SDG}
 \end{align}
@@ -51,9 +51,9 @@
 \begin{equation}
     \int_{I_i}u_t v_h\mathrm{d}x - \int_{I_i}f(u)(v_h)_x\mathrm{d}x+\hat{f}_{i+\frac{1}{2}}v_h(x^-_{i+\frac{1}{2}})-\hat{f}_{i-\frac{1}{2}}v_h(x^+_{i-\frac{1}{2}}) = 0. \label{DG:weakSolution}
 \end{equation}
-间断伽辽金法的想法就是找到独一无二的数值解$u_h^k\in V_h^k$使得对于任意的测试函数$v \in V_h^k$，弱形式\eqref{DG:weakSolution}都成立。但由于计算空间$V_h^k$在单元边界处不连续，我们的数值解$u_h$无法处理高阶导数。因此对于高阶PDEs，按照上述流程无法整理为形如\eqref{DG:weakSolution}的弱形式，我们需要考虑改进DGM来解决这样的高阶PDEs。
+间断伽辽金法的想法就是找到独一无二的数值解$u_h^k\in V_h^k$使得对于任意的测试函数$v \in V_h^k$，弱形式\eqref{DG:weakSolution}都成立。但由于计算空间$V_h^k$在单元边界处不连续，我们的数值解$u_h$无法处理高阶导数。因此对于高阶偏微分方程组，按照上述流程无法整理为形如\eqref{DG:weakSolution}的弱形式，我们需要考虑改进DGM来解决这样的高阶偏微分方程组。
 \subsubsection{局部间断伽辽金法}
-改进的方法就是局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，然后在这些一阶PDEs上应用DGM。
+改进的方法就是局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的偏微分方程组，然后在这些一阶偏微分方程组上应用DGM。
 \begin{equation}
     u_t = u_{xx}
 \end{equation}
@@ -97,7 +97,7 @@ minmod函数$m$定义为
     u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
 \end{align}
 上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及左右单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
-\subsection{龙格-库塔法主要案例}
+\subsection{龙格-库塔法例子}
 龙格-库塔法(RK)是一种重要的迭代法。一般的显示龙格-库塔法可以表示为
 \begin{equation}
     \begin{aligned}
@@ -122,8 +122,8 @@ minmod函数$m$定义为
     \end{aligned}
 \end{equation}
 
-对于IMEXRK法，本文考虑
-L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX2}所示：
+对于IMEXRK法，本文考虑特殊的RK法向后欧拉和向前欧拉，
+L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexplicita}，后者的Butcher表如\autoref{tab:IMEX:2}所示：
 \begin{table}
     \centering
     \begin{minipage}{0.45\linewidth}
@@ -146,7 +146,7 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
     \label{tab:IMEX:2}
 \end{table}
 其中$\gamma=1- \sqrt{2}/2,\delta = 1- 1/(2\gamma)$
-三阶精度的四阶段L-稳定对角隐式龙格-库塔（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX3}所示：
+三阶精度的四阶段L-稳定对角隐式龙格-库塔（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX:3}所示：
 \begin{table}
     \centering
     \begin{minipage}{0.45\linewidth}
@@ -172,7 +172,7 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
         \end{tabular}.
     \end{minipage}
     \caption{DIRK耦合ERK得到的三阶IMEX格式。左：DIRK；右：ERK。}
-    \label{tab:IMEX3}
+    \label{tab:IMEX:3}
 \end{table}
 
 \section{DD模型}
@@ -193,7 +193,7 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
 \end{align}
 而对于泊松方程，本文直接通过积分得到。
 
-令$E = -\phi_x$表示电势，通过引入辅助变量易证$E$具有周期性\cite{liu2010errorc}。
+令$E = -\phi_x$表示电势，通过引入辅助变量易证$E$具有周期性\cite{liu2010error}。
 在方程\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}两边分别乘以测试函数$v,w\in V_h^k$，分部积分得到
 \begin{align}
      & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                               \nonumber                                      \\
@@ -259,12 +259,29 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
     \end{aligned}\label{numbericalFlux:phi&E:alt}
 \end{equation}
 在数值模拟中我们选择第一种。
-\subsubsection{二阶IMEX LDG格式}
+\subsubsection{一阶IMEX LDG格式}
 为了简化表达，我们定义辅助算子
 \begin{align}
      & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                        \\
      & H_j^{\pm}(u_h,v)  =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{eq:IMEX:DD:notation:2}
 \end{align}
+这些辅助算子将同样应用于二阶和三阶格式。
+通过分别对\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}中的对流项和扩散项使用向前欧拉法和向后欧拉法，我们可以得到最简单的一阶IMEX LGD格式：找到数值解$n_h^{m+1},q_h^{m+1}\in V_h$，使得
+\begin{align}
+    (\frac{n_h^{m+1} - n_h^m}{\Delta t},v)I_j & = -(\mu E_h^mn_h^m, v_x)I_j + (\mu \hat{E_h^mn_h^m})_{j+\frac{1}{2}}v_{j-\frac{1}{2}}^- - (\mu\hat{E_h^mn_h^m})_{j-\frac{1}{2}}v^+_{j-\frac{1}{2}}                                         \nonumber                 \\
+                                              & -(\sqrt{\tau \theta}q_h^{m+1},v_x)_{I_j} + (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,  \label{eq:IMEX:1:first} \\
+    (q_h^{m+1},w)_{I_j}                       & = -(\sqrt{\tau \theta}n_h^{m+1},w_x)_{I_j} + (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j+\frac{1}{2}}w_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j-\frac{1}{2}}w_{j-\frac{1}{2}}^+,
+\end{align}
+其中$j = 1,\cdots,N;\quad r,z \in V_h$。
+
+电势方程的LDG格式是：找到$E_h^{m},\phi_h^{m} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m}r_x \rm{d}x + (\hat{E}_h^{m})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m} - n_d) r\rm{d} x, \\
+    \int_{I_j} E_h^{m}z \rm{d}x - \int_{I_j} \phi_h^{m}z_x \rm{d}x  + (\hat{\phi}_h^{m})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{eq:IMEX:1:last}
+\end{align}
+中$j = 1,\cdots,N;\quad r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。
+\subsubsection{二阶IMEX LDG格式}
+
 
 将\autoref{tab:IMEX:2}对应的二阶阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}中得到二阶IMEX LDG格式：找到数值解$n_h^{m+1},q_h^{m+1}\in V_h$，使得
 \begin{align}
@@ -283,7 +300,7 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
 其中$j = 1,\cdots,N; r,v \in V_h, l = 0,1, u^{m,0} = u^m$。带“$\widehat{\ }$”的项代表数值通量，取值可以取\eqref{numbericalFlux:phi&E}或者\eqref{numbericalFlux:phi&E:alt}，在后续的数值算例中，对于所有IMEX格式如未加声明，我们都默认取前者。
 
 \subsubsection{三阶IMEX LDG格式}
-将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEX LDG格式：找到数值解$n_h^{m+1}, q_h^{m+1}\in V_h^k$使得
+将\autoref{tab:IMEX:3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEX LDG格式：找到数值解$n_h^{m+1}, q_h^{m+1}\in V_h^k$使得
 \begin{align}
     (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{eq:IMEX:DD:LDG:1}                       \\
     (\frac{n_h^{m,2} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{18} H_j(E_h^m,n_h^m,v) + \frac{1}{18} H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                                      \\
@@ -307,21 +324,41 @@ L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexpli
 其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$，数值通量的选择和之前相同。
 
 \subsection{误差估计}
+\subsubsection{DD模型三阶TVD LDG格式}
+对于DD模型的三阶TVD LDG格式，我们有以下误差估计\cite{liu2010error}：
+\begin{theorem}
+    设$n, q$是问题\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}的精确解，它们足够光滑且有有界导数。设$n^{h}, q^{h}$是半离散LDG格式\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的数值解。相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    \begin{equation}
+        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}},
+    \end{equation}
+    其中常数$C$依赖于最终时间$T,k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}和\left\|n_{d}\right\|_{0, \infty}$。
+\end{theorem}
+
+\subsubsection{一阶IMEX LDG格式}
+我们在关于IMEX LDG格式中我们有定义：$||u||_{L^{\infty}(0,T;L^2)}  = \max \limits_{0 \leq t \leq T}||u^m||_{l^2(I)}$和$||u||_{L^2(0,T;L^2)} = (\int_{0}^{T}||u^m||_{L^2(I)}^2\Delta t)^{1/2}$
+对于一阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
+\begin{theorem}
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是一阶IMEX LDG格式\eqref{eq:IMEX:1:first}-\eqref{eq:IMEX:1:last}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2), \label{eq:IMEX:es:2}
+    \end{equation}
+    其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
 \subsubsection{二阶IMEX LDG格式}
 对于二阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
 \begin{theorem}
-    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是二阶IMEX LDG格式\eqref{eq:IMEX:2:first}-\eqref{eq:IMEX:2:last}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是二阶IMEX LDG格式\eqref{eq:IMEX:2:first}-\eqref{eq:IMEX:2:last}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下面的误差估计成立
     \begin{equation}
-        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2), \label{eq:IMEX:es:2}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2), \label{eq:IMEX:es:2}
     \end{equation}
     其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
 \subsubsection{三阶IMEX LDG格式}
 对于三阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
 \begin{theorem}
-    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式\eqref{eq:IMEX:DD:LDG:1} -\eqref{eq:IMEX:DD:LDG:4}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式\eqref{eq:IMEX:DD:LDG:1} -\eqref{eq:IMEX:DD:LDG:4}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下面的误差估计成立
     \begin{equation}
-        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3), \label{eq:IMEX:es:3}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3), \label{eq:IMEX:es:3}
     \end{equation}
     其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
@@ -380,6 +417,15 @@ $$
      & -\left(a_h \hat{n}_{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(a_h \hat{n}_{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
 \end{align}
 数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{\ }$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
+\subsection{误差估计}
+对于HF模型的三阶TVD LDG格式，同样为了简便我们定义$a:=\sqrt{\tau \theta+\tau \mu^{2}\left(E\right)^{2}}, b:=3 C_{2} E n_{d}+\mu E-C_{3}$，然后我们有误差估计\cite{liu2010error}：
+\begin{theorem}
+    设$n, q$是问题\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    $$
+        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
+    $$
+    其中常数$C$依赖于最终时间$T, k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}, \left\|n_{d}\right\|_{0, \infty}$以及导函数$\left|a^{\prime}\right|$和$\left|b^{\prime}\right|$的界。
+\end{theorem}
 \section{数值算例}
 本节将讨论DD模型和HF模型关于TVDRK时间离散的LDG格式和DD模型关于IMEX时间离散的LDG格式具体实现。本文算例均在windows 10系统上R2021a 64bit版本学术版matlab实现。
 
@@ -589,14 +635,32 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 
 \subsection{IMEX LDG格式}
 由于没有准确解的显式表达式，我们采取细网格上的数值解来代替真实解。
-我们取网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror}的误差估计：
+我们取网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror:2}和\autoref{tab:IMEXLDGerror:3}的误差估计，其中，我们有几点要说明的地方，表中所有案例的时间步长均选择$\Delta t = 1.2e-3$，由于\eqref{eq:IMEX:es:3}中时间项相对于空间项很小，因此我们在计算精度时忽略了时间项，\autoref{tab:IMEXLDGerror:3}中第一列采用的真实解取的是网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解，以增加更多方面的对比。在从表中数据我们可以看到，对于计算空间$V^0, V^1, V^2$我们分别得到了一阶、二阶、三阶精度。而对于从网格数$N=25$到网格数$N=50$这两个网格上求得误差明显差于更细的网格，可能的原因是因为当网格过粗时，投影得到的初值函数误差过大。此外注意到，对于随着网格加密，我们的时间步长保持不变，但依然可以得到收敛的结果，这证明了IMEX方法的无条件稳定性。在我们的验证中，$t=1.2e-3$是一个接近临界的时间步长，当选取更大的时间步长如$t=3.0e-3$时，我们的数值解随着迭代的进行很快就发散了，更精确的时间步长可以通过二分法逐渐求出，这不是本文讨论的重点，同时为了节省算力，此处不做过多展开。
 \begin{table}
     \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
         \toprule
             & \multicolumn{2}{c}{$V^0$} & \multicolumn{2}{c}{$V^1$} & \multicolumn{2}{c}{$V^2$}                                                     \\
         \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
         N   & $\frac{||n_h-n||}{||n||}$ & Order                     & $\frac{||n_h-n||}{||n||}$ & Order     & $\frac{||n_h-n||}{||n||}$ & Order     \\
+        \midrule
+        25  & 9.94e-02                  & \text{——}                 & 3.24e-02                  & \text{——} & 4.46e-03                  & \text{——} \\
+        50  & 5.50e-02                  & 0.85                      & 9.48e-03                  & 1.77      & 1.24e-03                  & 1.84      \\
+        100 & 2.80e-02                  & 0.97                      & 2.56e-03                  & 1.89      & 1.77e-04                  & 2.81      \\
+        200 & 1.41e-02                  & 0.99                      & 6.78e-04                  & 1.92      & 2.43e-05                  & 2.87      \\
+        400 & 6.97e-03                  & 1.02                      & 1.54e-04                  & 2.14      & 2.47e-06                  & 3.30      \\
+        800 & 3.54e-03                  & 0.98                      & 3.52e-05                  & 2.13      & 2.79e-07                  & 3.15      \\
+        \bottomrule
+    \end{tabularx}
+    \caption{二阶IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$(||n_h-n||)/||n||$。}
+    \label{tab:IMEXLDGerror:2}
+\end{table}
 
+\begin{table}
+    \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
+        \toprule
+            & \multicolumn{2}{c}{$V^0$} & \multicolumn{2}{c}{$V^1$} & \multicolumn{2}{c}{$V^2$}                                                     \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+        N   & $\frac{||n_h-n||}{||n||}$ & Order                     & $\frac{||n_h-n||}{||n||}$ & Order     & $\frac{||n_h-n||}{||n||}$ & Order     \\
         \midrule
         25  & 9.94e-02                  & \text{——}                 & 3.24e-02                  & \text{——} & 4.46e-03                  & \text{——} \\
         50  & 5.50e-02                  & 0.85                      & 9.48e-03                  & 1.77      & 1.24e-03                  & 1.84      \\
@@ -606,11 +670,9 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
         800 & 3.44e-03                  & 1.04                      & 3.52e-05                  & 2.13      & 2.78e-07                  & 3.15      \\
         \bottomrule
     \end{tabularx}
-    \caption{IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$\frac{||n_h-n||}{||n||}$。}
-    \label{tab:IMEXLDGerror}
+    \caption{三阶IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$(||n_h-n||)/||n||$。}
+    \label{tab:IMEXLDGerror:3}
 \end{table}
-
-其中，我们有几点要说明的地方，表中所有案例的时间步长均选择$\Delta t = 1.2e-3$，由于\eqref{eq:IMEX:es:3}中时间项相对于空间项很小，因此我们在计算精度时忽略了时间项。从表中数据我们可以看到，对于计算空间$V^0, V^1, V^2$我们分别得到了一阶、二阶、三阶精度。而对于从网格数$N=25$到网格数$N=50$这两个网格上求得误差明显差于更细的网格，可能的原因是因为当网格过粗时，投影得到的初值函数误差过大。此外注意到，对于随着网格加密，我们的时间步长保持不变，但依然可以得到收敛的结果，这证明了IMEX方法的无条件稳定性。在我们的验证中，$t=1.2e-3$是一个接近临界的时间步长，当选取更大的时间步长如$3.0e-3$时，我们的数值解随着迭代的进行很快就发散了，更精确的时间步长可以通过二分法逐渐求出，这不是本文讨论的重点，同时为了节省算力，此处不做过多展开。
 
 \autoref{tab:time:100}和\autoref{tab:time:200}分别给出了在网格数$N=100$和$N=200$的条件下，TVD LDG格式和IMEX LDG格式达到稳态时的时间步长$\Delta t$，经过的时间层数$nt$以及到达稳态的时间$t$。从表中我们可以清楚地看到IMEX LDG要求的时间步长远小于TVD LDG格式，更大的时间步长大大减少了算力消耗。
 \begin{table}

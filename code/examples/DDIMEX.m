@@ -4,8 +4,8 @@ addpath('..\src\functions');
 setParameters
 a = 0;
 b = 0.6;
-n = 0;
-order = 2;
+n = 2;
+Order = 2;
 nSteps = zeros(2,5);
 N = [25 50 100 200 400 800];
 % t = [1.2e-3, 1.8e-3, 2.4e-3, 3.0e-3, 3.6e-3]/3;
@@ -22,28 +22,27 @@ for i = 1:length(N)
     for j = 1:length(t)
         mesh = Mesh2(a,b,N(i),@(x) dopingFunction(x),n);
         mesh.t = t(j);
-        [mesh, nSteps(i,j)] = mesh.IMEXGK(2);
+        [mesh, nSteps(i,j)] = mesh.IMEXGK(Order);
         IMEX2M{i,j} = mesh;
         x = linspace(0,0.6,1000);
         
         
         % Generate a filename with N and t
-        electronConcentration = mesh.getBasisPolys(mesh.coeffs);
-        plot(x,electronConcentration.solve(x));
-        filename1 = sprintf('DDIMEXRK%dDegree%dmeshCells%dElectronConcentration_t%g.pdf',order,n, N(i), t(j));
-        filename1 = fullfile('..\docs\images', filename1);
-        exportgraphics(gcf, filename1, 'ContentType', 'vector');
-        
-
-        % Generate another filename with N and t
-        E = mesh.getBasisPolys(mesh.Ecoeffs);
-        plot(x,E.solve(x));
-        filename2 = sprintf('DDIMEXRK%dDegree%dmeshCells%d_E_t%g.pdf',order, n, N(i), t(j));
-        filename2 = fullfile('..\docs\images', filename2);
-        exportgraphics(gcf, filename2, 'ContentType', 'vector');
+%         electronConcentration = mesh.getBasisPolys(mesh.coeffs);
+%         plot(x,electronConcentration.solve(x));
+%         filename1 = sprintf('DDIMEXRK%dDegree%dmeshCells%dElectronConcentration_t%g.pdf',Order,n, N(i), t(j));
+%         filename1 = fullfile('..\docs\images', filename1);
+%         exportgraphics(gcf, filename1, 'ContentType', 'vector');
+%         
+% 
+%         % Generate another filename with N and t
+%         E = mesh.getBasisPolys(mesh.Ecoeffs);
+%         plot(x,E.solve(x));
+%         filename2 = sprintf('DDIMEXRK%dDegree%dmeshCells%d_E_t%g.pdf',order, n, N(i), t(j));
+%         filename2 = fullfile('..\docs\images', filename2);
+%         exportgraphics(gcf, filename2, 'ContentType', 'vector');
     end
 end
-
 E = zeros(length(N),length(t));
 for i = 1:length(N)
     for j = 1:length(t)
@@ -54,8 +53,8 @@ for i = 1:length(N)
 end
 order = (E(1:end-1))./E(2:end);
 order = log2(order);
-order = num2str(order,'%.2f');
-order = ['----'; order] ;
+order = num2str(order,'%.4f');
+order = ['------'; order] ;
 T = table(N', num2str(E, '%.2e'),order );
-filename = sprintf('..\\docs\\tables\\DDIMEXRK2Degree%d.tex', n);
+filename = sprintf('..\\docs\\tables\\DDIMEXRK%dDegree%d.tex', Order,n);
 table2latex(T,filename)

@@ -8,10 +8,10 @@ for i = 1:length(N)
 end
 order = (E(1:end-1))./E(2:end);
 order = log2(order);
-order = num2str(order,'%.2f');
-order = ['----'; order] ;
+order = num2str(order,'%.4f');
+order = ['------'; order] ;
 T = table(N', num2str(E, '%.2e'),order );
-filename = sprintf('..\\docs\\tables\\DDIMEXRK2Degree%d.tex', n);
+filename = sprintf('..\\docs\\tables\\DDIMEXRK%dDegree%d.tex', Order,n);
 table2latex(T,filename)
 
 %% draw time when stable reached
