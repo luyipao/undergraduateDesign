@@ -1,9 +1,9 @@
 \cleardoublepage
 
 \section{预备知识}
-在本节，我们将给出一些符号和定义。在之后的部分，我们会直接使用这些符号和结论。
+在本节，我们将首先给出一些符号和定义，这些符号和定义在后文使用将不再解释，然后我们将简单介绍间断伽辽金方法的动机与想法，最后给出后文中采用的两种龙格-库塔法，TVDRK和IMEXRK法。
 \subsection{基础符号}
-首先定义计算域$[a,b]$的一个剖分
+本文中我们考虑一维模型并假设计算域为$[a,b]$，首先定义$[a,b]$的一个剖分
 \begin{align*}
     I_{j} = (x_{j-1/2}, x_{j+1/2}), \ j = 1, 2, ..., N
 \end{align*}
@@ -13,46 +13,47 @@
 \end{align*}
 其中$\Delta x_j$表示网格大小，$h$表示网格长度，$x_j$表示网格中点。
 
-网格上有限维计算空间$V_h^k = \{v:v|_{I_j}\in P^k(I_j); 1\leq j\leq N\}$，其中$P^k(I_j)$表示$I_j$上次数不大于$k$的多项式集合。我们的数值解和测试函数都将从$V_h^k$中取得。需要注意的是，$V_h^k$中的函数在单元边界节点处不一定是连续的，可以出现跳跃。
+网格上有限维计算空间$V_h^k = \{v:v|_{I_j}\in P^k(I_j); 1\leq j\leq N\}$，其中$P^k(I_j)$表示$I_j$上次数不大于$k$的多项式集合。我们的数值解和测试函数都将从$V_h^k$中取得。注意到我们并没有对$V^k_h$中的元素附加额外的条件，因此$V_h^k$中的函数在单元边界节点处不一定是连续的，可以出现跳跃。
 
 为了简化标记，我们分别定义$(u_h)^+_{j+1/2}=u_h(x^+_{j+1/2})$和$(u_h)^-_{j+1/2}=u_h(x^-_{j+1/2})$。此外我们定义$u_h$在单元边界节点$x_{j+1/2}$的跳跃$[u_h]_{j+1/2}=(u_h)^+_{j+1/2}-(u_h)^-_{j+1/2}$和均值$(\overline{u}_h)_{j+1/2}=((u_h)_{j+1/2}^++(u_h)_{j+1/2}^-)/2$。
 
 \subsection{间断伽辽金方法基本理论}
 
-我们有以下事实\cite{sullivan2020brief}：
+在PDEs弱形式的理论研究中，我们有以下事实\cite{sullivan2020brief}：
 \begin{itemize}
     \item 许多PDEs没有强解但有弱解
     \item 弱解更容易在线性代数表示
     \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
 \end{itemize}
-而我们的DD模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的简便。
+而本文中的DD模型和HF模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的便利。
 
-为了得到这样的弱解，我们想法是在方程两边乘上测试函数并积分得到弱形式，利用数值方法求解弱形式。以
+求解弱解的想法来源于分布理论：由于PDEs源于物理模型，而我们知道当从实际中提取一个物理模型时，我们往往不需要也难以获得某个精确时间或位置的物理量，而常常采用一小段时间或距离的均值来代替。因此我们处理PDEs时也可以考虑方程的积分。此外考虑实际物理量时只需考虑物理量部分特性，我们也可以只考虑PDEs中未知量与测试函数积分的性质。可以说测试函数正是我们观察物理量的维度。基于这些想法，我们求得弱解的方法是在方程两边乘上测试函数并积分得到弱形式，然后利用数值方法求解弱形式。以
 \begin{align}
     u_t + f_x = 0\label{eq:SDG}
 \end{align}
-为例，我们在\eqref{eq:SDG}两边乘以测试函数v并积分整理得到
+为例，我们在\eqref{eq:SDG}两边乘以测试函数$v$并分部积分得到
 \begin{equation}
     \int_{I_i}u_t v_h\mathrm{d}x - \int_{I_i}f(u)(v_h)_x\mathrm{d}x+v_hf\bigg|^{x_{i+\frac{1}{2}}}_{x_{i-\frac{1}{2}}}.
 \end{equation}
-这里f需要用的隔壁单元的值，为了处理这一问题，需要采用数值通量
+这里$f$需要用到相邻单元的值，为了解决这一问题，我们可以采用数值通量
 \begin{equation*}
     \hat{f}_{i+\frac{1}{2}}=\hat{f}(u_h(x^-_{i+\frac{1}{2}},t),u_h(x^+_{i+\frac{1}{2}},t))
 \end{equation*}
-来代替f。具体来说，数值通量$\hat{f}$需要满足下列要求：
+来代替$f$在单元边界处的值。具体来说，数值通量$\hat{f}$需要满足下列要求：
 \begin{enumerate}
     \item 一致性：$\hat{f}(u,u)=f(u)$。
     \item 连续性：$\hat{f}$关于两个变量都是Lipschitz连续的。
     \item 单调性：$\hat{f}$关于第一个变量单增，关于第二个单减。可以记作$\hat{f}(\uparrow,\downarrow)$。
 \end{enumerate}
-这些性质将保证间断伽辽金法（DGM）的稳定性。
+这些性质将保证间断伽辽金法的稳定性。
+
 现在我们得到弱形式。
 \begin{equation}
     \int_{I_i}u_t v_h\mathrm{d}x - \int_{I_i}f(u)(v_h)_x\mathrm{d}x+\hat{f}_{i+\frac{1}{2}}v_h(x^-_{i+\frac{1}{2}})-\hat{f}_{i-\frac{1}{2}}v_h(x^+_{i-\frac{1}{2}}) = 0. \label{DG:weakSolution}
 \end{equation}
-间断伽辽金法的想法就是找到独一无二的数值解$u_h^k\in V_h^k$使得对于任意的测试函数，弱形式\eqref{DG:weakSolution}都成立。但是对于高阶PDEs，按照上述流程无法整理为形如\eqref{DG:weakSolution}的弱形式，因此我们需要考虑改进DGM来解决这样的PDEs。
+间断伽辽金法的想法就是找到独一无二的数值解$u_h^k\in V_h^k$使得对于任意的测试函数$v \in V_h^k$，弱形式\eqref{DG:weakSolution}都成立。但由于计算空间$V_h^k$在单元边界处不连续，我们的数值解$u_h$无法处理高阶导数。因此对于高阶PDEs，按照上述流程无法整理为形如\eqref{DG:weakSolution}的弱形式，我们需要考虑改进DGM来解决这样的高阶PDEs。
 \subsubsection{局部间断伽辽金法}
-改进的方法有多种，在本文我们采用的是局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，然后在这些一阶PDEs上应用DG法。
+改进的方法就是局部间断伽辽金法（LDG）。LDG法的想法是引入一个辅助变量来使得含有高阶偏导的PDE降阶为只含一阶导的PDEs，然后在这些一阶PDEs上应用DGM。
 \begin{equation}
     u_t = u_{xx}
 \end{equation}
@@ -63,7 +64,7 @@
 \end{align}
 现在我们可以利用DGM来处理该高阶PDE了。
 \subsubsection{限制器}
-当但DG法依然存在数值振荡，特别是对于包含强离散的问题，因此我们使用限制器来限制震荡，同时保证全变差稳定性。限制器的想法是先对当前时间层的数值解进行一个预处理，然后再更新至下一个时间层。本文将采用一种实际中常用的满足全变差有界（TVB）的改进后的minmod限制器\cite{cockburn1989tvb2}。
+当DGM处理含有不连续的解的模型时，特别是对于包含强离散的问题，依然存在数值振荡，因此我们引入有限元方法中的限制器来限制震荡，同时保证全变差稳定性。限制器的想法是先对当前时间层的数值解进行一个预处理，然后再更新至下一个时间层。本文将采用一种实际中常用的满足全变差有界（TVB）的改进后的minmod限制器\cite{cockburn1989tvb2}。
 
 对于$I_j$上的解$u_h$，首先定义它的平均值
 $$
@@ -95,8 +96,8 @@ minmod函数$m$定义为
 \begin{align}
     u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
 \end{align}
-上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
-\subsection{龙格库塔法主要案例}
+上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及左右单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
+\subsection{龙格-库塔法主要案例}
 龙格-库塔法(RK)是一种重要的迭代法。一般的显示龙格-库塔法可以表示为
 \begin{equation}
     \begin{aligned}
@@ -121,9 +122,34 @@ minmod函数$m$定义为
     \end{aligned}
 \end{equation}
 
-对于IMEXRK法，本文考虑三阶精度的四阶段，L-稳定的对角隐式龙格-库塔法（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表分别是：
+对于IMEXRK法，本文考虑
+L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX2}所示：
 \begin{table}
-    \begin{minipage}{0.48\linewidth}
+    \centering
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|cc}
+            $\gamma$ & $\gamma$   & $0$      \\
+            $1$      & $1-\gamma$ & $\gamma$ \\
+                     & $1-\gamma$ & $\gamma$
+        \end{tabular}
+    \end{minipage}
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|cc}
+            $\gamma$ & $\gamma$ & $0$         \\
+            $1$      & $\delta$ & $1- \delta$ \\
+                     & $\delta$ & $1-\delta$
+        \end{tabular}.
+    \end{minipage}
+    \caption{DIRK耦合ERK得到的二阶IMEX格式。左：DIRK；右：ERK。}
+    \label{tab:IMEX:2}
+\end{table}
+其中$\gamma=1- \sqrt{2}/2,\delta = 1- 1/(2\gamma)$
+三阶精度的四阶段L-稳定对角隐式龙格-库塔（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX3}所示：
+\begin{table}
+    \centering
+    \begin{minipage}{0.45\linewidth}
         \centering
         \begin{tabular}{c|cccc}
             $\frac{1}{2}$ & $\frac{1}{2}$  & 0              & 0             & 0             \\
@@ -133,9 +159,8 @@ minmod函数$m$定义为
             \hline
                           & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$
         \end{tabular}
-        \label{tab:DIRK}
     \end{minipage}
-    \begin{minipage}{0.48\linewidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \begin{tabular}{c|cccc}
             $\frac{1}{2}$ & $\frac{1}{2}$   & 0              & 0             & 0              \\
@@ -144,8 +169,7 @@ minmod函数$m$定义为
             1             & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$ \\
             \hline
                           & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$
-        \end{tabular}
-        \label{tab:ERK}
+        \end{tabular}.
     \end{minipage}
     \caption{DIRK耦合ERK得到的三阶IMEX格式。左：DIRK；右：ERK。}
     \label{tab:IMEX3}
@@ -198,7 +222,7 @@ minmod函数$m$定义为
 \subsection{IMEX全离散LDG格式}
 本小节，我们将考虑LDG空间离散耦合IMEX时间离散格式。这种IMEX时间离散的想法是显式处理二阶非线性对流项和隐式处理线性扩散项，来减弱对两项都使用显式时间离散所要求的严格的时间步长。这样做可以大量节省我们的算力，同时保持无条件稳定性。
 
-与耦合TVDRK时间离散相比，电子浓度方程\eqref{eq:DD}的处理方式不变，而对于泊松方程\eqref{eq:poisson}我们在此处也对它进行空间离散，具体有：
+与讨论TVDRK时间离散相比，对于电子浓度方程\eqref{eq:DD}，我们有相同的弱形式。而对于泊松方程\eqref{eq:poisson}，与TVDRK格式中直接积分不同的是，我们在此处也对它进行空间离散，即对于电势方程组：
 \begin{align}
     E_x & = -\frac{e}{\epsilon}(n-n_d), \label{eq:poisson:1} \\
     E   & = - \phi_x. \label{eq:poisson:2}
@@ -208,8 +232,7 @@ minmod函数$m$定义为
      & -\int_{I_j}Er_x\rm{d}x + E_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - E_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n-n_d)r\rm{d}x,                                       \label{DD:weakform:E} \\
      & \int_{I_j} Ez \rm{d}x - \int_{I_j}\phi z_x \rm{d}x + \phi_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - \phi_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0, \label{DD:weakform:phi}
 \end{align}
-
-并将单元边界的量替换为对应的数值通量，结合\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的DD模型的空间离散形式：
+将单元边界的量替换为对应的数值通量，结合电子浓度方程的LDG格式\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}，我们得到另一种LDG格式：
 \begin{align}
      & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                       \\
      & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:IMEX:DD:n}     \\
@@ -217,7 +240,7 @@ minmod函数$m$定义为
      & -\int_{I_j}E_hr_x\rm{d}x + (\hat{E}_h)_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h)_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h-n_d)r\rm{d}x,                                        \label{eq:IMEX:poisson:1}     \\
      & \int_{I_j} E_hz \rm{d}x - \int_{I_j}\phi_h z_x \rm{d}x + (\hat{\phi}_h)_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - (\hat{\phi}_h)_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0,\label{eq:IMEX:poisson:2}
 \end{align}
-其中$j = 1,...,N$，带“$\widehat{\ }$”的项也是数值通量。我们选择通量$\widehat{E_h n_h} = \frac{1}{2}((E_hn_h)^+  + (E_hn_h)^-)$，$\hat{n}_h$和$\hat{q}_h$的交替通量，即
+其中$j = 1,...,N$，带“$\widehat{\ }$”的项是数值通量。我们选择数值通量$\widehat{E_h n_h} = \frac{1}{2}((E_hn_h)^+  + (E_hn_h)^-)$，$\hat{n}_h$和$\hat{q}_h$选择交替通量，即
 \begin{equation}
     \hat{n}_h = (n_h)^+, \hat{q}_h = (q_h)^- \quad \text{or} \quad \hat{n}_h = (n_h)^-, \hat{q}_h = (q_h)^+, \label{numbericalFlux:n&q}
 \end{equation}
@@ -233,11 +256,34 @@ minmod函数$m$定义为
     \begin{aligned}
         (\hat{\phi}_h)_{\frac{1}{2}} = (\phi_h^-)_{\frac{1}{2}} = 0, (\hat{\phi}_h)_{j-\frac{1}{2}} = (\phi_h^-)_{j-\frac{1}{2}},j = 2,\cdots,N,(\hat{\phi}_h)_{N-\frac{1}{2}} = (\phi_h^+)_{N-\frac{1}{2}} = v_{bias}, \\
         (\hat{E_h})_{j - \frac{1}{2}} = (E_h^+)_{j - \frac{1}{2}} + c_0[\phi]_{j-\frac{1}{2}},j = 2,\cdots,N, (\hat{E}_h)_{N+\frac{1}{2}} = (E_h^-)_{N+\frac{1}{2}} + c_0[\phi]_{N+\frac{1}{2}}.
-    \end{aligned}\label{numbericalFlux:phi&E alt}
+    \end{aligned}\label{numbericalFlux:phi&E:alt}
 \end{equation}
 在数值模拟中我们选择第一种。
+\subsubsection{二阶IMEX LDG格式}
+为了简化表达，我们定义辅助算子
+\begin{align}
+     & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                        \\
+     & H_j^{\pm}(u_h,v)  =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{eq:IMEX:DD:notation:2}
+\end{align}
 
-将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}和\eqref{eq:IMEX:poisson:1}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEXLDG格式：找到$n_h^{m+1}, q_h^{m+1}\in V_h^k$使得
+将\autoref{tab:IMEX:2}对应的二阶阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:DD:q}中得到二阶IMEX LDG格式：找到数值解$n_h^{m+1},q_h^{m+1}\in V_h$，使得
+\begin{align}
+    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & = \gamma H_j(E_h^m,n_h^m,v) + \gamma H_j^-(q_h^{m,1},v),              \label{eq:IMEX:2:first} \\
+    (\frac{n_h^{m+1} -n_h^m}{\Delta t},v)_{I_j} & = \delta H_j(E_h^m,n_h^m,v) + (1-\delta)H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                  \\
+                                                & +(1-\gamma)H_j^-(q_h^{m,1},v) + \gamma H_j^-(q_h^{m+1},v),                                    \\
+    (q_h^{m,l},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2, \quad q_h^{m,2} = q_h^{m+1},
+\end{align}
+其中$j = 1,\cdots,N;\quad v,w \in V_h$并且$\gamma = 1- \frac{\sqrt{2}}{2},\delta = 1 - \frac{1}{2\gamma}$。
+
+电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m,l}r_x \rm{d}x + (\hat{E}_h^{m,l})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m,l})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m,l} - n_d) r\rm{d} x, \\
+    -\int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0, \label{eq:IMEX:2:last}
+\end{align}
+其中$j = 1,\cdots,N; r,v \in V_h, l = 0,1, u^{m,0} = u^m$。带“$\widehat{\ }$”的项代表数值通量，取值可以取\eqref{numbericalFlux:phi&E}或者\eqref{numbericalFlux:phi&E:alt}，在后续的数值算例中，对于所有IMEX格式如未加声明，我们都默认取前者。
+
+\subsubsection{三阶IMEX LDG格式}
+将\autoref{tab:IMEX3}对应的三阶IMEX时间离散分别应用到\eqref{eq:IMEX:DD:n}-\eqref{eq:IMEX:poisson:2}中得到三阶IMEX LDG格式：找到数值解$n_h^{m+1}, q_h^{m+1}\in V_h^k$使得
 \begin{align}
     (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{eq:IMEX:DD:LDG:1}                       \\
     (\frac{n_h^{m,2} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{18} H_j(E_h^m,n_h^m,v) + \frac{1}{18} H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                                      \\
@@ -250,27 +296,34 @@ minmod函数$m$定义为
                                                 & + \frac{1}{2} H_j^-(q_h^{m,3},v)  + \frac{1}{2} H_j^-(q_h^{m+1},v),                                                        \\
     (q_h^{m,1},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2,3,4, q_h^{m,4} = q_h^{m+1},\label{eq:IMEX:DD:LDG:4}
 \end{align}
-其中$j = 1,\cdots,N;\quad v,w \in V_h$，
-\begin{align}
-     & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                        \\
-     & H_j^{\pm}(u_h,v)  =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{eq:IMEX:DD:notation:2}
-\end{align}
+其中$j = 1,\cdots,N;v,w \in V_h$，$H_j$和$H_j^{\pm}$定义如\eqref{eq:IMEX:DD:notation:1}-\eqref{eq:IMEX:DD:notation:2}所示。
+
 
 电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
 \begin{align}
     -\int_{I_j} E_h^{m,l}r_x \rm{d}x + (\hat{E}_h^{m,l})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m,l})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m,l} - n_d) r\rm{d} x, \label{eq:IMEX:poisson:LDG:1} \\
     \int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{eq:IMEX:poisson:LDG:2}
 \end{align}
-其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$。
+其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$，数值通量的选择和之前相同。
 
 \subsection{误差估计}
+\subsubsection{二阶IMEX LDG格式}
+对于二阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
+\begin{theorem}
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是二阶IMEX LDG格式\eqref{eq:IMEX:2:first}-\eqref{eq:IMEX:2:last}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2), \label{eq:IMEX:es:2}
+    \end{equation}
+    其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
+\subsubsection{三阶IMEX LDG格式}
 对于三阶IMEX LDG格式，我们有以下误差估计\cite{liu2016analysis}：
 \begin{theorem}
-    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式\eqref{eq:IMEX:DD:LDG:1} -\eqref{eq:IMEX:DD:LDG:4} 。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
+    令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式\eqref{eq:IMEX:DD:LDG:1} -\eqref{eq:IMEX:DD:LDG:4}。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关正常数C，使得下列误差估计成立
     \begin{equation}
-        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3)
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3), \label{eq:IMEX:es:3}
     \end{equation}
-    其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+    其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
 \section{HF模型}
 高场模型由以下方程以及带有周期边界条件的Poisson电场方程~\eqref{eq:poisson}表示
@@ -466,31 +519,34 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 \autoref{fig:TVDRK}给出了DD模型和HF模型的数值模拟结果。最上方的两图比较DD模型关于网格数N等于100和200的数值模拟结果。中间两幅图比较DD模型关于迁移率$\mu=0.75$和$\mu = \mu(n_d)$的模拟结果。最下方的两幅图比较了DD模型和HF模型的结果。在我们的收敛条件下，\autoref{fig:TVDRK}中所有图对应的模型都基本符合TVD，且数值解逐渐收敛。
 \begin{figure}
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75Nn.pdf}
     \end{minipage}
-    \begin{minipage}{0.48\textwidth}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2mu0.75NE.pdf}
     \end{minipage}
 
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mun.pdf}
     \end{minipage}
-    \begin{minipage}{0.48\textwidth}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100muE.pdf}
     \end{minipage}
 
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75modeln.pdf}
     \end{minipage}
-    \begin{minipage}{0.48\textwidth}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75modelE.pdf}
     \end{minipage}
@@ -501,54 +557,105 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 由于篇幅限制，这里只给出DD模型在网格数$N=100$和$N=200$情况下的全变差变化图，如\autoref{fig:TVDRKTV}所示，可以看到在一定误差范围内，总变差基本满足总变差不增。
 \begin{figure}
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/TVDRKN100.pdf}
     \end{minipage}
-    \begin{minipage}{0.48\textwidth}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/TVDRKN200.pdf}
     \end{minipage}
-    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。nt：时间层；TV：全变差。}
     \label{fig:TVDRKTV}
 \end{figure}
 
 \autoref{fig:TVDRKLimiter}是添加了改进后的minmod限制器和无添加minmode限制器的图像，由于我们的解具有良好光滑性，同时计算空间选择为$V^2$，因此是否添加限制器基本上不会产生影响。
 \begin{figure}
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75limitern.pdf}
     \end{minipage}
-    \begin{minipage}{0.48\textwidth}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figure/DDTVDRK3Degree2N100mu0.75limiterE.pdf}
     \end{minipage}
-    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$，迁移率$\mu=0.75$。x:时间层；TV：全变差。}
+    \caption{默认值：DD模型三阶TVDRK，计算空间$V^2$，网格数$N=100$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。}
     \label{fig:TVDRKLimiter}
 \end{figure}
 但如果我们的计算空间选择$V^k , k\geq 3$，如果直接让三次基函数项的系数直接取零，在数值模拟过程中仅在数个时间层后就出现了明显的误差。一般来讲，直接让三次项的系数保持不变即可，但考虑到本文模型假定了解具有良好的光滑性，又构造出了足够光滑的初始函数，不需要限制器也可以正确模拟。因此对于限制器更深入的讨论，可以在未来分析具有强震荡解的模型时再详细研究。
 
 \subsection{IMEX LDG格式}
 由于没有准确解的显式表达式，我们采取细网格上的数值解来代替真实解。
-我们取网格数$N=3200$计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror}的误差估计
+我们取网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror}的误差估计：
 \begin{table}
-    \begin{tabular}{ccc}
+    \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
         \toprule
-            & \multicolumn{2}{c}{$V^0$}               \\
-        \cmidrule{2-3}
-        N   & $\frac{||u_h-u||}{||u||}$ & order       \\
+            & \multicolumn{2}{c}{$V^0$} & \multicolumn{2}{c}{$V^1$} & \multicolumn{2}{c}{$V^2$}                                                     \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+        N   & $\frac{||n_h-n||}{||n||}$ & Order                     & $\frac{||n_h-n||}{||n||}$ & Order     & $\frac{||n_h-n||}{||n||}$ & Order     \\
 
         \midrule
-        25  & 9.94e-02                  & \text{----} \\
-        50  & 5.50e-02                  & 0.85        \\
-        100 & 2.80e-02                  & 0.97        \\
-        200 & 1.43e-02                  & 0.97        \\
-        400 & 7.07e-03                  & 1.02        \\
-        800 & 3.44e-03                  & 1.04        \\
+        25  & 9.94e-02                  & \text{——}                 & 3.24e-02                  & \text{——} & 4.46e-03                  & \text{——} \\
+        50  & 5.50e-02                  & 0.85                      & 9.48e-03                  & 1.77      & 1.24e-03                  & 1.84      \\
+        100 & 2.80e-02                  & 0.97                      & 2.56e-03                  & 1.89      & 1.77e-04                  & 2.81      \\
+        200 & 1.43e-02                  & 0.97                      & 6.78e-04                  & 1.92      & 2.43e-05                  & 2.87      \\
+        400 & 7.07e-03                  & 1.02                      & 1.54e-04                  & 2.14      & 2.47e-06                  & 3.30      \\
+        800 & 3.44e-03                  & 1.04                      & 3.52e-05                  & 2.13      & 2.78e-07                  & 3.15      \\
         \bottomrule
-    \end{tabular}
-    \caption{IMEX LDG格式误差估计}
+    \end{tabularx}
+    \caption{IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$\frac{||n_h-n||}{||n||}$。}
     \label{tab:IMEXLDGerror}
 \end{table}
 
+其中，我们有几点要说明的地方，表中所有案例的时间步长均选择$\Delta t = 1.2e-3$，由于\eqref{eq:IMEX:es:3}中时间项相对于空间项很小，因此我们在计算精度时忽略了时间项。从表中数据我们可以看到，对于计算空间$V^0, V^1, V^2$我们分别得到了一阶、二阶、三阶精度。而对于从网格数$N=25$到网格数$N=50$这两个网格上求得误差明显差于更细的网格，可能的原因是因为当网格过粗时，投影得到的初值函数误差过大。此外注意到，对于随着网格加密，我们的时间步长保持不变，但依然可以得到收敛的结果，这证明了IMEX方法的无条件稳定性。在我们的验证中，$t=1.2e-3$是一个接近临界的时间步长，当选取更大的时间步长如$3.0e-3$时，我们的数值解随着迭代的进行很快就发散了，更精确的时间步长可以通过二分法逐渐求出，这不是本文讨论的重点，同时为了节省算力，此处不做过多展开。
+
+\autoref{tab:time:100}和\autoref{tab:time:200}分别给出了在网格数$N=100$和$N=200$的条件下，TVD LDG格式和IMEX LDG格式达到稳态时的时间步长$\Delta t$，经过的时间层数$nt$以及到达稳态的时间$t$。从表中我们可以清楚地看到IMEX LDG要求的时间步长远小于TVD LDG格式，更大的时间步长大大减少了算力消耗。
+\begin{table}
+    \centering
+    \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
+        \toprule
+                   & \multicolumn{1}{c}{TVDRK3} & \multicolumn{5}{c}{IMEX3}                                         \\
+        \cmidrule(lr){2-2} \cmidrule(lr){3-7}
+        \midrule
+        $\Delta t$ & 1.6e-05                    & 4.0e-04                   & 6.0e-04 & 8.0e-04 & 1.0e-03 & 1.2e-03 \\
+        nt         & 11457                      & 414                       & 354     & 307     & 255     & 217     \\
+        t          & 0.1833                     & 0.1656                    & 0.2124  & 0.2456  & 0.2550  & 0.2604  \\
+        \bottomrule
+    \end{tabularx}
+    \caption{TVDRK LDG格式和IMEX LDG格式达到稳态的时间步长$\Delta t$，时间层数$nt$，时间$t$。网格数$N=100$，计算空间$V^2$。}
+    \label{tab:time:100}
+\end{table}
+\begin{table}
+    \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
+        \toprule
+                   & \multicolumn{1}{c}{TVDRK3} & \multicolumn{5}{c}{IMEX3}                                         \\
+        \cmidrule(lr){2-2} \cmidrule(lr){3-7}
+        \midrule
+        $\Delta t$ & 4.2e-06                    & 4.0e-04                   & 6.0e-04 & 8.0e-04 & 1.0e-03 & 1.2e-03 \\
+        nt         & 39892                      & 416                       & 353     & 307     & 255     & 217     \\
+        t          & 0.1675                     & 0.1664                    & 0.2118  & 0.2456  & 0.2550  & 0.2604  \\
+        \bottomrule
+    \end{tabularx}
+    \caption{TVDRK LDG格式和IMEX LDG格式达到稳态的时间步长$\Delta t$，时间层数$nt$，时间$t$。网格数$N=100$，计算空间$V^2$。}
+    \label{tab:time:200}
+\end{table}
+
+\autoref{fig:IMEX:N}直观地给出了在网格数$N=100$和$N=200$的条件下，IMEX LDG法的结果。可以看到在两个网格上我们均取得良好的结果。
+\begin{figure}
+    \centering
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/IMEXNn.pdf}
+    \end{minipage}
+    \hspace{1cm}
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figure/IMEXNE.pdf}
+    \end{minipage}
+    \caption{默认值：DD模型三阶IMEXRK，计算空间$V^2$，网格数$N=100$和$N=200$，迁移率$\mu=0.75$。左：电子浓度n；右：电势E。}
+    \label{fig:IMEX:N}
+\end{figure}
+综合上述数值算例结果，我们可以认为IMEX格式在处理如DD模型的类似的物理模型时能取得良好的结果，并有望应用于其他物理模型当中。

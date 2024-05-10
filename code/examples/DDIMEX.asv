@@ -4,7 +4,7 @@ addpath('..\src\functions');
 setParameters
 a = 0;
 b = 0.6;
-n = 0;
+n = 2;
 order = 2;
 nSteps = zeros(2,5);
 N = [25 50 100 200 400 800];
@@ -44,7 +44,6 @@ for i = 1:length(N)
     end
 end
 
-E = zeros(length(N),length(t));
 for i = 1:length(N)
     for j = 1:length(t)
         f = IMEX2M{i,j}.getBasisPolys(IMEX2M{i,j}.coeffs);
