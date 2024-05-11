@@ -16,7 +16,15 @@
 网格上有限维计算空间$V_h^k = \{v:v|_{I_j}\in P^k(I_j); 1\leq j\leq N\}$，其中$P^k(I_j)$表示$I_j$上次数不大于$k$的多项式集合。我们的数值解和测试函数都将从$V_h^k$中取得。注意到我们并没有对$V^k_h$中的元素附加额外的条件，因此$V_h^k$中的函数在单元边界节点处不一定是连续的，可以出现跳跃。
 
 为了简化标记，我们分别定义$(u_h)^+_{j+1/2}=u_h(x^+_{j+1/2})$和$(u_h)^-_{j+1/2}=u_h(x^-_{j+1/2})$。此外我们定义$u_h$在单元边界节点$x_{j+1/2}$的跳跃$[u_h]_{j+1/2}=(u_h)^+_{j+1/2}-(u_h)^-_{j+1/2}$和均值$(\overline{u}_h)_{j+1/2}=((u_h)_{j+1/2}^++(u_h)_{j+1/2}^-)/2$。
-
+\subsection{逆性质}
+我们会列出一些有限元空间$V_h^k$逆性质\cite{ciarlet1978finite}，在之后的误差估计中我们将用到这些结论。
+对于任意$v \in V_h^k$，存在与v和h无关的正常数$C_i$使得
+\begin{equation}
+    ||v_x|| \leq C_1 h^{-1} ||v||, \qquad
+    ||v||_{\Gamma_h} \leq C_2 h^{-\frac{1}{2}}||v||, \qquad
+    ||v||_{0,\infty} \leq C_3 h^{-\frac{d}{2}}||v||.
+\end{equation}
+其中d是空间维数。由于我们考虑的是一维模型，因此本文$d=1$。
 \subsection{间断伽辽金方法基本理论}
 
 在偏微分方程弱形式的理论研究中，我们有以下事实\cite{sullivan2020brief}：
@@ -97,7 +105,7 @@ minmod函数$m$定义为
     u^{(mod)}_h(x^-_{j+1/2}) = \overline{u}_j + \tilde{u}_j, \quad u^{(mod)}_h(x^+_{j-1/2}) = \overline{u}_j - \tilde{\tilde{u}}_j.
 \end{align}
 上述限制限制器本质上是在满足单元平均值$\overline{u}_j$不变的前提下重新计算单元边界处的值。最终，我们能够得到单元平均值以及左右单元边界的值，因此我们可以唯一求出一个$k\leq 2$的多项式。但是对于$k> 2$的情况需要更复杂的分析，简单地把更二次多项式看作更高次多项式可能会导致损失精度。
-\subsection{龙格-库塔法例子}
+\subsection{龙格-库塔法案例}
 龙格-库塔法(RK)是一种重要的迭代法。一般的显示龙格-库塔法可以表示为
 \begin{equation}
     \begin{aligned}
@@ -122,53 +130,116 @@ minmod函数$m$定义为
     \end{aligned}
 \end{equation}
 
-对于IMEXRK法，本文考虑特殊的RK法向后欧拉和向前欧拉，
-L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexplicita}，后者的Butcher表如\autoref{tab:IMEX:2}所示：
+在给出本文采用的IMEX格式前，我们首先介绍IMEX格式的基本形式。根据\parencite{calvo2001linearly}，考虑常微分系统：
+\begin{align}
+    \frac{dy}{dt} = Ly(t,y) + N(t,y), \quad y(t_0) = y_0,
+\end{align}
+其中$y = [y_1, y_2, ..., y_d]^T$，$L$是一个$d\times d$的矩阵，来源于扩散项的空间离散，$N(t,y)$来源于对流项的离散。从时间层$t_n$到时间层$t_{n+1}=t_n+h$，我们的求解过程为：
+\begin{align*}
+    Y_1     & =y_n,                                                                                                        \\
+    Y_i     & = y_n + h(\sum_{j=2}^i a_{i,j}LY_j + \sum_{j=1}^{i-1}\hat{a}_{i,j}N(t_n+hc_j,Y_j)), \quad 2 \leq i \leq s+1, \\
+    y_{n+1} & = y_n + h(\sum_{i=2}^{s+1}b_iLY_i+\sum_{i=1}^{s+1}\hat{b}_iN(t_n+hc_i, Y_i)),
+\end{align*}
+其中$Y_j$是过程量。定义$A = (a_{i,j}), \hat{A} = (\hat{a}_{i,j}), b^T = [0, b_2, ..., b_{s+1}], \hat{b}^T=[\hat{b}_1,...,\hat{b}_{s+1}]$和$c^T_{0, c_2, ..., c_{s+1}}$，然后我们将s阶段IMEX格式表示为Butcher表\autoref{tab:IMEX}：
+\begin{table}
+    \centering
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|c}
+            c & A \\
+            \hline
+              & b
+        \end{tabular}
+    \end{minipage}
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|c}
+            c & $\hat{A}$ \\
+            \hline
+              & b
+        \end{tabular}
+    \end{minipage}
+    \caption{IMEX格式的一般形式}
+    \label{tab:IMEX}
+\end{table}
+在上表中$(A|b)$表示DIRK法，$(\hat{A}|\hat{b})$表示ERK法，二者分别应用于对流项和扩散项。
+
+对于一阶IMEXRK法，考虑向后欧拉和向前欧拉\cite{ascher1997implicitexplicita}，它的Butcher表如\autoref{tab:IMEX:1}所示；L-稳定二阶段二阶精度DIRK耦合二阶ERK法\cite{ascher1997implicitexplicita}，Butcher表如\autoref{tab:IMEX:2}所示，其中$\gamma=1- \sqrt{2}/2,\delta = 1- 1/(2\gamma)$；三阶精度的四阶段L-稳定对角隐式龙格-库塔（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX:3}所示。
 \begin{table}
     \centering
     \begin{minipage}{0.45\linewidth}
         \centering
         \begin{tabular}{c|cc}
-            $\gamma$ & $\gamma$   & $0$      \\
-            $1$      & $1-\gamma$ & $\gamma$ \\
-                     & $1-\gamma$ & $\gamma$
+            0 & 0 & 0 \\
+            1 & 0 & 1 \\
+            \hline
+              & 0 & 1
         \end{tabular}
     \end{minipage}
     \begin{minipage}{0.45\linewidth}
         \centering
         \begin{tabular}{c|cc}
-            $\gamma$ & $\gamma$ & $0$         \\
-            $1$      & $\delta$ & $1- \delta$ \\
-                     & $\delta$ & $1-\delta$
+            0 & 0 & 0 \\
+            1 & 1 & 0 \\
+            \hline
+              & 1 & 0
+        \end{tabular}.
+    \end{minipage}
+    \caption{DIRK耦合ERK得到的二阶IMEX格式。左：向后欧拉；右：向前欧拉。}
+    \label{tab:IMEX:1}
+\end{table}
+\begin{table}
+    \centering
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|ccc}
+            0        & 0 & 0          & 0        \\
+            $\gamma$ & 0 & $\gamma$   & $0$      \\
+            $1$      & 0 & $1-\gamma$ & $\gamma$ \\
+            \hline
+                     & 0 & $1-\gamma$ & $\gamma$
+        \end{tabular}
+    \end{minipage}
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tabular}{c|ccc}
+            0        & 0        & 0           & 0 \\
+            $\gamma$ & $\gamma$ & $0$         & 0 \\
+            $1$      & $\delta$ & $1- \delta$ & 0 \\
+            \hline
+                     & $\delta$ & $1-\delta$  & 0
         \end{tabular}.
     \end{minipage}
     \caption{DIRK耦合ERK得到的二阶IMEX格式。左：DIRK；右：ERK。}
     \label{tab:IMEX:2}
 \end{table}
-其中$\gamma=1- \sqrt{2}/2,\delta = 1- 1/(2\gamma)$
-三阶精度的四阶段L-稳定对角隐式龙格-库塔（DIRK）耦合四阶段显式龙格-库塔（ERK）法\cite{ascher1997implicitexplicita}，它们的Butcher表如\autoref{tab:IMEX:3}所示：
+
+
+
 \begin{table}
     \centering
     \begin{minipage}{0.45\linewidth}
         \centering
-        \begin{tabular}{c|cccc}
-            $\frac{1}{2}$ & $\frac{1}{2}$  & 0              & 0             & 0             \\
-            $\frac{2}{3}$ & $\frac{1}{6}$  & $\frac{1}{2}$  & 0             & 0             \\
-            $\frac{1}{2}$ & $-\frac{1}{2}$ & $\frac{1}{2}$  & $\frac{1}{2}$ & 0             \\
-            1             & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$ \\
+        \begin{tabular}{c|ccccc}
+            0             & 0 & 0              & 0              & 0             & 0             \\
+            $\frac{1}{2}$ & 0 & $\frac{1}{2}$  & 0              & 0             & 0             \\
+            $\frac{2}{3}$ & 0 & $\frac{1}{6}$  & $\frac{1}{2}$  & 0             & 0             \\
+            $\frac{1}{2}$ & 0 & $-\frac{1}{2}$ & $\frac{1}{2}$  & $\frac{1}{2}$ & 0             \\
+            1             & 0 & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$ \\
             \hline
-                          & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$
+                          & 0 & $\frac{3}{2}$  & $-\frac{3}{2}$ & $\frac{1}{2}$ & $\frac{1}{2}$
         \end{tabular}
     \end{minipage}
     \begin{minipage}{0.45\linewidth}
         \centering
-        \begin{tabular}{c|cccc}
-            $\frac{1}{2}$ & $\frac{1}{2}$   & 0              & 0             & 0              \\
-            $\frac{2}{3}$ & $\frac{11}{18}$ & $\frac{1}{18}$ & 0             & 0              \\
-            $\frac{1}{2}$ & $\frac{5}{6}$   & $-\frac{5}{6}$ & $\frac{1}{2}$ & 0              \\
-            1             & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$ \\
+        \begin{tabular}{c|ccccc}
+            0             & 0               & 0              & 0             & 0              & 0 \\
+            $\frac{1}{2}$ & $\frac{1}{2}$   & 0              & 0             & 0              & 0 \\
+            $\frac{2}{3}$ & $\frac{11}{18}$ & $\frac{1}{18}$ & 0             & 0              & 0 \\
+            $\frac{1}{2}$ & $\frac{5}{6}$   & $-\frac{5}{6}$ & $\frac{1}{2}$ & 0              & 0 \\
+            1             & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$ & 0 \\
             \hline
-                          & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$
+                          & $\frac{1}{4}$   & $\frac{7}{4}$  & $\frac{3}{4}$ & $-\frac{7}{4}$ & 0
         \end{tabular}.
     \end{minipage}
     \caption{DIRK耦合ERK得到的三阶IMEX格式。左：DIRK；右：ERK。}
@@ -445,6 +516,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \caption{物理模型参数单位}
     \label{tab:units}
 \end{table}
+
 此外，尽管LDG的网格不要求必需是均匀的，每个单元上计算空间的次数也不要求相同，本文算例均采用均匀网格和相同最高次计算空间。此外对于同一个算例，时间步长也是取均匀时间步长。
 \subsubsection{基函数}
 本文算例采用了两种不同的基函数，
@@ -721,3 +793,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
     \label{fig:IMEX:N}
 \end{figure}
 综合上述数值算例结果，我们可以认为IMEX格式在处理如DD模型的类似的物理模型时能取得良好的结果，并有望应用于其他物理模型当中。
+\section{结论与展望}
+在本文，我们给出了一维漂移-扩散模型（DD）和高场模型（HF）的半离散半局部间断伽辽金（semi-LDG）格式，即对于电子浓度方程采用LDG格式，而对于电势方程采用直接积分法或者连续伽辽金有限元方法。两个模型中都包含一阶导对流项和二阶导扩散项。时间离散上我们采用全变差不增龙格-库塔法（TVDRK）。当使用k次分段多项式函数（$P^k$）作为我们的计算空间，我们有对于一维DD模型（$k\geq 1$）和HF模型（$k\geq 2$）都有$O(h^{k+1/2})$的误差估计\cite{liu2010error}，这里我们假设我们的模型都有光滑解。我们的数值算例验证了数值解的稳定性并验证了TVD LDG格式的全变差不增性质。由于我们采用的计算空间是间断的，我们需要采用合适的数值通量来处理网格单元边界的跳跃项。尽管这种格式具有良好的稳定性，但是对于时间步长有着严格的要求，这将带来大量的计算消耗。这一问题主要来源于显式处理具有二阶导的扩散项使得我们的时间步长只能有$O(h^2)$的长度。一个方法是采用隐式法来处理扩散项中的二阶导。在本文中我们给出了一阶到三阶的隐式-显式（IMEX）龙格-库塔法，该方法的想法是采用隐式方法处理线性扩散项，采用显式方法处理非线性对流项。与讨论TVD LDG格式时相同，我们采用同样的一维DD模型，但不同的是前者只对电子浓度方程使用LDG空间离散，而讨论IMEX LDG格式时，我们对电子浓度方程和电势方程都采用LDG空间离散。对于三种精度的IMEX RK法，我们分别得到对应的IMEX LDG格式。可以证明，IMEX方法具有无条件稳定性，且对于光滑解和小于某个固定常数的时间步长都收敛。我们有与$\Delta t$有关的$O(h^{k+1})$的误差估计\cite{liu2016analysis}。在我们的数值算例中，我们验证了二阶和三阶IMEX LDG格式的收敛阶，无条件稳定性和收敛性。
+
+在本文的数值算例中，我们采用的都是均匀网格，因此，且每个单元上的数值近似都采用的时相同的$P^k$，这没有充分利用LDG方法的h-p自适应性。未来可以考虑对于变化剧烈的区域采用更细的网格以及更高阶的多项式近似，以期在不增加太多计算量的情况下提高我们的计算精度和效率。同时，我们也计划将这种方法推广到其他半导体模型。
