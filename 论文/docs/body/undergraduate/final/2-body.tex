@@ -253,7 +253,7 @@ minmod函数$m$定义为
     n_t - (\mu En)_x = \tau \theta n_{xx}, \label{eq:DD} \\
     \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:poisson}
 \end{align}
-其中$x\in(0,1)$，第一个电子浓度方程取周期边界条件，第二个电势方程取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
+其中$x\in(0,1)$，电子浓度方程\eqref{eq:DD}取周期边界条件，电势方程\eqref{eq:poisson}取Dirichlet边界条件：$\phi(0,t) = 0, \phi(1,t) = v_{bias}$。
 在系统\eqref{eq:DD}-\eqref{eq:poisson}中，未知量是电子浓度$n$和电势$\phi$。$m_0$表示电子有效质量，k是玻尔兹曼常数，e是电子电荷，$\mu$代表迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是介电常量，$n_d$是一个给定的掺杂函数。
 
 \subsection{TVDRK LDG格式}
