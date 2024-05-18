@@ -2,16 +2,19 @@ E = zeros(length(N),length(t));
 for i = 1:length(N)
     for j = 1:length(t)
         f = IMEX2M{i,j}.getBasisPolys(IMEX2M{i,j}.coeffs);
-        x = linspace(a,b,1000);
-        E(i,j) = sqrt(sum((f.solve(x)-exactSolution.solve(x)).^2)./sum(exactSolution.solve(x).^2));
+        %         x = IMEX2M{i,j}.X;
+        x = linspace(a, b, 10000);
+        %         E(i,j) = sqrt( gaussLegendre(@(x) (f.solve(x)-exactSolution.solve(x)).^2, a , b, 10) );
+        %         E(i,j) = sqrt(sum((f.solve(x)-exactSolution.solve(x)).^2)) / sqrt(2^(i-1));
+        E(i,j) = sqrt(sum((f.solve(x)-exactSolution.solve(x)).^2));
     end
 end
-order = (E(1:end-1))./E(2:end);
-order = log2(order);
+order = (E(1:end-1))./(E(2:end));
+order = log(order) / log(2);
 order = num2str(order,'%.4f');
 order = ['------'; order] ;
-T = table(N', num2str(E, '%.2e'),order);
-filename = sprintf('..\\docs\\tables\\DDIMEXRK%dDegree%d.tex', Order,n);
+T = table(N', num2str(E, '%.2e'),order );
+filename = sprintf('..\\docs\\tables\\tempMTimeDDIMEXRK%dDegree%d.tex', timeOrder,n);
 table2latex(T,filename)
 
 %% draw time when stable reached
@@ -27,13 +30,13 @@ table2latex(T,filename)
 % % N = 100
 % f1 = IMEXM{4,1}.getBasisPolys(IMEXM{4,1}.coeffs);
 % E1 = IMEXM{4,1}.getBasisPolys(IMEXM{4,1}.Ecoeffs);
-% 
+%
 % % N = 200
-% 
-% 
+%
+%
 % f2 = IMEXM{3,1}.getBasisPolys(IMEXM{3,1}.coeffs);
 % E2 = IMEXM{3,1}.getBasisPolys(IMEXM{3,1}.Ecoeffs);
-% 
+%
 % plot(x,f1.solve(x), x, f2.solve(x), 'o', 'linewidth', 1);
 % lgd = legend('N=100', 'N=200', 'Location', 'north');
 % yticks(0:100000:600000);
@@ -41,20 +44,20 @@ table2latex(T,filename)
 % filename = sprintf('IMEXNn.pdf');
 % filename = fullfile('..\..\论文\docs\figure',filename);
 % exportgraphics(gcf, filename, 'ContentType', 'vector');
-% 
+%
 % plot(x,E1.solve(x), x, E2.solve(x), 'o', 'linewidth', 1);
 % lgd = legend('N=100', 'N=200', 'Location', 'north');
-% 
+%
 % setFormat(lgd, 'x', 'E');
 % filename = sprintf('IMEXNE.pdf');
 % filename = fullfile('..\..\论文\docs\figure',filename);
 % exportgraphics(gcf, filename, 'ContentType', 'vector');
-% 
+%
 % function setFormat(lgd, xLabelName, yLabelName)
-% lgd.FontSize = 11; % 
+% lgd.FontSize = 11; %
 % lgd.Location = 'north'; %
 % set(gca,'XMinorTick', 'on', 'YMinorTick', 'on', 'linewidth',1.5); % change axes width
-% 
+%
 % set(gca,'yticklabel',get(gca,'ytick'));
 % set(gca,'xticklabel',get(gca,'xtick'));
 % xlabel(xLabelName);

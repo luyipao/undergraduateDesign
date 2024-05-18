@@ -1,7 +1,7 @@
 \cleardoublepage
 
 \section{预备知识}
-在本节，我们将首先给出一些符号和定义，这些符号和定义在后文使用将不再解释，然后我们将简单介绍间断伽辽金方法的动机与想法，最后给出后文中采用的两种龙格-库塔法，全变差不增龙格-库塔法和隐式-显式龙格-库塔法。
+在本节，我们将首先给出一些符号和定义，这些符号和定义在后文使用时将不再解释，然后我们将简单介绍间断伽辽金方法的动机与想法，最后给出后文中采用的两种龙格-库塔法，全变差不增龙格-库塔法和隐式-显式龙格-库塔法。
 \subsection{基础符号}
 本文中我们考虑一维模型并假设计算域为$[a,b]$，首先定义$[a,b]$的一个剖分
 \begin{align*}
@@ -30,7 +30,7 @@
 在偏微分方程弱形式的理论研究中，我们有以下事实\cite{sullivan2020brief}：
 \begin{itemize}
     \item 许多偏微分方程组没有强解但有弱解
-    \item 弱解更容易在线性代数表示
+    \item 弱解更容易用线性代数表示
     \item 即使强解存在，证明弱解存在性再说明其具有强解的性质往往比直接找到一个强解要简单
 \end{itemize}
 而本文中的DD模型和HF模型的强解很难求出，因此我们期望弱化要求，求得一个对于测试函数满足我们真正关心的性质的弱解，这同时也能给我们带来编程上的便利。
@@ -50,7 +50,7 @@
 来代替$f$在单元边界处的值。具体来说，数值通量$\hat{f}$需要满足下列要求：
 \begin{enumerate}
     \item 一致性：$\hat{f}(u,u)=f(u)$。
-    \item 连续性：$\hat{f}$关于两个变量都是Lipschitz连续的。
+    \item 连续性：$\hat{f}$关于两个变量都是利普希茨连续的。
     \item 单调性：$\hat{f}$关于第一个变量单增，关于第二个单减。可以记作$\hat{f}(\uparrow,\downarrow)$。
 \end{enumerate}
 这些性质将保证间断伽辽金法的稳定性。
@@ -140,7 +140,7 @@ minmod函数$m$定义为
     Y_i     & = y_n + h(\sum_{j=2}^i a_{i,j}LY_j + \sum_{j=1}^{i-1}\hat{a}_{i,j}N(t_n+hc_j,Y_j)), \quad 2 \leq i \leq s+1, \\
     y_{n+1} & = y_n + h(\sum_{i=2}^{s+1}b_iLY_i+\sum_{i=1}^{s+1}\hat{b}_iN(t_n+hc_i, Y_i)),
 \end{align*}
-其中$Y_j$是过程量。定义$A = (a_{i,j}), \hat{A} = (\hat{a}_{i,j}), b^T = [0, b_2, ..., b_{s+1}], \hat{b}^T=[\hat{b}_1,...,\hat{b}_{s+1}]$和$c^T_{0, c_2, ..., c_{s+1}}$，然后我们将s阶段IMEX格式表示为Butcher表\autoref{tab:IMEX}：
+其中$Y_j$是过程量。定义$A = (a_{i,j}), \hat{A} = (\hat{a}_{i,j}), b^T = [0, b_2, ..., b_{s+1}], \hat{b}^T=[\hat{b}_1,...,\hat{b}_{s+1}]$和$c^T_{0, c_2, ..., c_{s+1}}$，然后我们将s阶段IMEX格式表示为Butcher表如\autoref{tab:IMEX}：
 \begin{table}
     \centering
     \begin{minipage}{0.45\linewidth}
@@ -276,7 +276,7 @@ minmod函数$m$定义为
 \begin{align}
      & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                    \\
      & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDLDGn}     \\
-     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} (\hat{n}_h)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} (\hat{n}_h)_{j+\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDLDGq} \\
      & E_h=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n_h-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDLDGE}
 \end{align}
 其中，$E_{0}=E_h(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n_h-n_{d}\right) d s\right) d x$。这里的“$\hat{}$”项表示数值通量。$\hat{n}_{h}$和$\hat{q}_{h}$选择交替通量，即$\hat{n}_{h}=\left(n_h\right)^{+}$，$\hat{q}_{h}=\left(q_h\right)^{-}$，$\widehat{E_h n_h}$采用上风通量，即$\widehat{E_h n_h}=\max \left(E_h, 0\right)\left(n_h\right)^{+}+\min \left(E_h, 0\right)\left(n_h\right)^{-}$。
@@ -307,7 +307,7 @@ minmod函数$m$定义为
 \begin{align}
      & \int_{I_{j}}\left(n_h\right)_{t} v d x+\int_{I_{j}}\left(\mu E_h n_h+\sqrt{\tau \theta} q_h\right) v_{x} d x      \nonumber                                                                                                                       \\
      & \quad-\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E_h n_h}+\sqrt{\tau \theta} \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:IMEX:DD:n}     \\
-     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:IMEX:DD:q} \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} \sqrt{\tau \theta} n_h w_{x} d x-\sqrt{\tau \theta} (\hat{n}_h)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} (\hat{n}_h)_{j+\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:IMEX:DD:q} \\
      & -\int_{I_j}E_hr_x\rm{d}x + (\hat{E}_h)_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h)_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h-n_d)r\rm{d}x,                                        \label{eq:IMEX:poisson:1}     \\
      & \int_{I_j} E_hz \rm{d}x - \int_{I_j}\phi_h z_x \rm{d}x + (\hat{\phi}_h)_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - (\hat{\phi}_h)_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0,\label{eq:IMEX:poisson:2}
 \end{align}
@@ -333,7 +333,7 @@ minmod函数$m$定义为
 \subsubsection{一阶IMEX LDG格式}
 为了简化表达，我们定义辅助算子
 \begin{align}
-     & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                        \\
+     & H_j(E_h,n_h,v)    = - (\mu E_h n_h, v_x)_{I_j} + (\mu \widehat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \widehat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{eq:IMEX:DD:notation:1}                                \\
      & H_j^{\pm}(u_h,v)  =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{eq:IMEX:DD:notation:2}
 \end{align}
 这些辅助算子将同样应用于二阶和三阶格式。
@@ -343,14 +343,14 @@ minmod函数$m$定义为
                                               & -(\sqrt{\tau \theta}q_h^{m+1},v_x)_{I_j} + (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,  \label{eq:IMEX:1:first} \\
     (q_h^{m+1},w)_{I_j}                       & = -(\sqrt{\tau \theta}n_h^{m+1},w_x)_{I_j} + (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j+\frac{1}{2}}w_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j-\frac{1}{2}}w_{j-\frac{1}{2}}^+,
 \end{align}
-其中$j = 1,\cdots,N;\quad r,z \in V_h$。
+其中$j = 1,\cdots,N; r,z \in V_h$。
 
 电势方程的LDG格式是：找到$E_h^{m},\phi_h^{m} \in V_h$，使得
 \begin{align}
     -\int_{I_j} E_h^{m}r_x \rm{d}x + (\hat{E}_h^{m})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m} - n_d) r\rm{d} x, \\
     \int_{I_j} E_h^{m}z \rm{d}x - \int_{I_j} \phi_h^{m}z_x \rm{d}x  + (\hat{\phi}_h^{m})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{eq:IMEX:1:last}
 \end{align}
-中$j = 1,\cdots,N;\quad r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。
+中$j = 1,\cdots,N; r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。
 \subsubsection{二阶IMEX LDG格式}
 
 
@@ -361,7 +361,7 @@ minmod函数$m$定义为
                                                 & +(1-\gamma)H_j^-(q_h^{m,1},v) + \gamma H_j^-(q_h^{m+1},v),                                    \\
     (q_h^{m,l},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2, \quad q_h^{m,2} = q_h^{m+1},
 \end{align}
-其中$j = 1,\cdots,N;\quad v,w \in V_h$并且$\gamma = 1- \frac{\sqrt{2}}{2},\delta = 1 - \frac{1}{2\gamma}$。
+其中$j = 1,\cdots,N; v,w \in V_h$并且$\gamma = 1- \frac{\sqrt{2}}{2},\delta = 1 - \frac{1}{2\gamma}$。
 
 电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
 \begin{align}
@@ -398,11 +398,11 @@ minmod函数$m$定义为
 \subsubsection{DD模型三阶TVD LDG格式}
 对于DD模型的三阶TVD LDG格式，我们有以下误差估计\cite{liu2010error}：
 \begin{theorem}
-    设$n, q$是问题\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}的精确解，它们足够光滑且有有界导数。设$n^{h}, q^{h}$是半离散LDG格式\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的数值解。相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    设$n, q$是问题\eqref{eq:DD:electronConcentration}-\eqref{eq:DD:auxiliaryFunction}的精确解，它们足够光滑且有有界导数。设$n_h, q_h$是半离散LDG格式\eqref{eq:DDLDGn}-\eqref{eq:DDLDGq}的数值解。相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
     \begin{equation}
-        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}},
+        \left\|n-n_h\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q_h\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}},
     \end{equation}
-    其中常数$C$依赖于最终时间$T,k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}和\left\|n_{d}\right\|_{0, \infty}$。
+    其中常数$C$依赖于最终时间$T,k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}$和$\left\|n_{d}\right\|_{0, \infty}$。
 \end{theorem}
 
 \subsubsection{一阶IMEX LDG格式}
@@ -411,7 +411,7 @@ minmod函数$m$定义为
 \begin{theorem}
     令$n^m,q^m$是问题\eqref{eq:LDG:n}-\eqref{eq:LDG:q}和\eqref{DD:weakform:E}-\eqref{DD:weakform:phi}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是一阶IMEX LDG格式\eqref{eq:IMEX:1:first}-\eqref{eq:IMEX:1:last}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下列误差估计成立
     \begin{equation}
-        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2), \label{eq:IMEX:es:2}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + \Delta t), \label{eq:IMEX:es:2}
     \end{equation}
     其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
 \end{theorem}
@@ -481,19 +481,19 @@ $$
 \end{align}
 将上述方程中的精确解$n, q$替换为它们在$V_{h}^{k}$中的数值近似$n_h, q_h$。注意到数值解$n_h$和$q_h$在单元边界上不连续，我们需要将单元边界上的项替换为合适的数值通量。为了简化，我们定义$a_h:=\sqrt{\tau \theta+\tau \mu^{2}\left(E_h\right)^{2}}$，$b_h:=3 C_{2} E_h n_{d}+\mu E_h-C_{3}$，最终得到LDG格式：
 \begin{align}
-     & \int_{I_{j}} n_{t}^{h} v d x+\int_{I_{j}}\left(b_h\right) n_h v_{x} d x                                                                    -\left(b_h\right)_{j+\frac{1}{2}} \hat{n}_{j+\frac{1}{2}}^{h} v_{j+\frac{1}{2}}^{-}  +\left(b_h\right)_{j-\frac{1}{2}} \hat{n}_{j-\frac{1}{2}}^{h} v_{j-\frac{1}{2}}^{+}                                                                                                                                   \nonumber \\
-     & -\int_{I_{j}} 2 C_{2} E_h\left(n_h\right)^{2} v_{x} d x+2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+} \nonumber                                                                                                                                                                                                     \\
-     & +\int_{I_{j}} a_h q_h v_{x} d x -\left(a_h \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(a_h \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,             \label{eq:HFRewrittenLDGa}                                                                                                                                                                                                                                                \\
-     & \int_{I_{j}} q_h w d x+\int_{I_{j}} a_h n_h w_{x} d x+\int_{I_{j}}\left(a_h\right)_{x} n_h w d x                        \nonumber                                                                                                                                                                                                                                                                                                                               \\
+     & \int_{I_{j}} (n_h)_t v d x+\int_{I_{j}}\left(b_h\right) n_h v_{x} d x                                                                    -\left(b_h\right)_{j+\frac{1}{2}} (\hat{n}_h)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}  +\left(b_h\right)_{j-\frac{1}{2}} (\hat{n}_h)_{j+\frac{1}{2}} v_{j-\frac{1}{2}}^{+}                                                                                                                                   \nonumber \\
+     & -\int_{I_{j}} 2 C_{2} E_h\left(n_h\right)^{2} v_{x} d x+2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E_h \widehat{\left(n_h\right)^{2}}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+} \nonumber                                                                                                                                                                                                   \\
+     & +\int_{I_{j}} a_h q_h v_{x} d x -\left(a_h \hat{q}_{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(a_h \hat{q}_{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,             \label{eq:HFRewrittenLDGa}                                                                                                                                                                                                                                              \\
+     & \int_{I_{j}} q_h w d x+\int_{I_{j}} a_h n_h w_{x} d x+\int_{I_{j}}\left(a_h\right)_{x} n_h w d x                        \nonumber                                                                                                                                                                                                                                                                                                                             \\
      & -\left(a_h \hat{n}_{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(a_h \hat{n}_{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
 \end{align}
 数值电场$E_h$的与之前一样直接通过积分来求解。这里的“$\widehat{\ }$”项表示数值通量。$a_h \hat{n}_{h}$和$a_h \hat{q}_{h}$选择交替通量，即$a_h \hat{n}_{h}=a_h\left(n_h\right)^{+}$，$a_h \hat{q}_{h}=a_h\left(q_h\right)^{-}$；对于$b_h \hat{n}_{h}$，我们选择上风通量，即如果$b_h>0$，则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{+}$，否则$b_h \hat{n}_{h}=b_h\left(n_h\right)^{-}$；对于通量$\widehat{\left(n_h\right)^{2}}$，有两种选择：$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n_h\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n_h\right)^{-}\left(n_h\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n_h\right]$（如果$E_h>0$，则$\alpha=1$；否则$\alpha=-1$）。在本文数值模拟中，我们实现前者。
 \subsection{误差估计}
 对于HF模型的三阶TVD LDG格式，同样为了简便我们定义$a:=\sqrt{\tau \theta+\tau \mu^{2}\left(E\right)^{2}}, b:=3 C_{2} E n_{d}+\mu E-C_{3}$，然后我们有误差估计\cite{liu2010error}：
 \begin{theorem}
-    设$n, q$是问题\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    设$n, q$是问题\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n_h, q_h$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
     $$
-        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
+        \left\|n-n_h\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q_h\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
     $$
     其中常数$C$依赖于最终时间$T, k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}, \left\|n_{d}\right\|_{0, \infty}$以及导函数$\left|a^{\prime}\right|$和$\left|b^{\prime}\right|$的界。
 \end{theorem}
@@ -503,7 +503,7 @@ $$
 本节具体安排如下：在第一小节，我们将介绍算例选取的物理模型参数、初值函数和基函数的选取；在第二小节，我们将给出DD模型和HF模型在TVDRK时间离散下的数值模拟的结果，针对网格数，迁移率，模型，限制器多维度对比模拟的结果，同时给出TV随着迭代次数的变化图像；最后一小节则会给出IMEX LDG格式的模拟结果，并于TVDRK的结果进行比较，同时验证前文中给出误差估计。
 \subsection{算例模型}
 \subsubsection{物理模型参数}
-DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}。简洁起见，后文中我们也将省略这些物理参数的单位。
+DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10^{-4}, \epsilon = 11.7\times 8.85418, e = 0.1602, m = 0.26\times0.9109\times 10^{-31}, \mu = 0.75 $或$0.0088(1+14.2273/(1+n_d/143200))$。左边界条件$\phi=\phi_0=kTe^{-1}\ln(n_d/n_i)$；右边界条件$\phi = \phi_0+v_{bias}, v_{bias}=1.5$。两个边界处都有$T_0 = 300, n = 5\times 10^5$。它们的单位如\autoref{tab:units}所示\cite{cercignani2000deviceb}。简洁起见，后文中我们也将省略这些物理参数的单位。
 \begin{table}[htbp]
     \centering
     \begin{tabular}{ccccccccc}
@@ -633,7 +633,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 \begin{align*}
     ||n^m - n^{m+1}||_{L^2} < \epsilon,
 \end{align*}
-其中$\epsilon$是一个足够小的数，那么我们认为这时算法已经收敛。在此处的数值模拟中，$\epsilon = 0.01$。
+其中$\epsilon$是一个足够小的数，那么我们认为这时算法已经收敛，其中$n^m$表示在时间层$m$的数值解。在此处的数值模拟中，$\epsilon = 0.01$。
 \autoref{fig:TVDRK}给出了DD模型和HF模型的数值模拟结果。最上方的两图比较DD模型关于网格数N等于100和200的数值模拟结果。中间两幅图比较DD模型关于迁移率$\mu=0.75$和$\mu = \mu(n_d)$的模拟结果。最下方的两幅图比较了DD模型和HF模型的结果。在我们的收敛条件下，\autoref{fig:TVDRK}中所有图对应的模型都基本符合TVD，且数值解逐渐收敛。
 \begin{figure}
     \centering
@@ -707,7 +707,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
 
 \subsection{IMEX LDG格式}
 由于没有准确解的显式表达式，我们采取细网格上的数值解来代替真实解。
-我们取网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror:2}和\autoref{tab:IMEXLDGerror:3}的误差估计，其中，我们有几点要说明的地方，表中所有案例的时间步长均选择$\Delta t = 1.2e-3$，由于\eqref{eq:IMEX:es:3}中时间项相对于空间项很小，因此我们在计算精度时忽略了时间项，\autoref{tab:IMEXLDGerror:3}中第一列采用的真实解取的是网格数$N=3200$、时间步长$t=1.2e-3$和计算空间$V_h^2$的数值解，以增加更多方面的对比。在从表中数据我们可以看到，对于计算空间$V^0, V^1, V^2$我们分别得到了一阶、二阶、三阶精度。而对于从网格数$N=25$到网格数$N=50$这两个网格上求得误差明显差于更细的网格，可能的原因是因为当网格过粗时，投影得到的初值函数误差过大。此外注意到，对于随着网格加密，我们的时间步长保持不变，但依然可以得到收敛的结果，这证明了IMEX方法的无条件稳定性。在我们的验证中，$t=1.2e-3$是一个接近临界的时间步长，当选取更大的时间步长如$t=3.0e-3$时，我们的数值解随着迭代的进行很快就发散了，更精确的时间步长可以通过二分法逐渐求出，这不是本文讨论的重点，同时为了节省算力，此处不做过多展开。
+我们取网格数$N=3200$、时间步长$t=1.2e-3$、收敛条件$\epsilon = 0.01$和计算空间$V_h^2$的数值解作为真实解，我们有\autoref{tab:IMEXLDGerror:2}和\autoref{tab:IMEXLDGerror:3}的误差估计，其中，我们有几点要说明的地方，表中所有案例均选择时间步长$\Delta t = 1.2e-3$和收敛条件$\epsilon=0.01$，其次我们在计算精度时忽略了时间项的影响，此外由于算力限制，我们判断收敛时$\epsilon$取值相对较大，这很大程度上限制了最后得到的精度。从表中数据我们可以看到，对于计算空间$V^0, V^1, V^2$我们分别得到了一阶、二阶、三阶精度。而对于从网格数$N=25$到网格数$N=50$这两个网格上求得误差明显差于更细的网格，可能的原因是因为当网格过粗时，投影得到的初值函数误差过大。此外注意到，对于随着网格加密，我们的时间步长保持不变，但依然可以得到收敛的结果，这证明了IMEX方法的无条件稳定性。在我们的验证中，$t=1.2e-3$是一个接近临界的时间步长，当选取更大的时间步长如$t=3.0e-3$时，我们的数值解随着迭代的进行很快就发散了，更精确的时间步长可以通过二分法逐渐求出，这不是本文讨论的重点，同时为了节省算力，此处不做过多展开。
 \begin{table}
     \begin{tabularx}{\textwidth}{@{} *7{X} @{}}
         \toprule
@@ -716,11 +716,11 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
         N   & $\frac{||n_h-n||}{||n||}$ & Order                     & $\frac{||n_h-n||}{||n||}$ & Order     & $\frac{||n_h-n||}{||n||}$ & Order     \\
         \midrule
         25  & 9.94e-02                  & \text{——}                 & 3.24e-02                  & \text{——} & 4.46e-03                  & \text{——} \\
-        50  & 5.50e-02                  & 0.85                      & 9.48e-03                  & 1.77      & 1.24e-03                  & 1.84      \\
-        100 & 2.80e-02                  & 0.97                      & 2.56e-03                  & 1.89      & 1.77e-04                  & 2.81      \\
-        200 & 1.41e-02                  & 0.99                      & 6.78e-04                  & 1.92      & 2.43e-05                  & 2.87      \\
-        400 & 6.97e-03                  & 1.02                      & 1.54e-04                  & 2.14      & 2.47e-06                  & 3.30      \\
-        800 & 3.54e-03                  & 0.98                      & 3.52e-05                  & 2.13      & 2.79e-07                  & 3.15      \\
+        50  & 5.50e-02                  & 0.8531                    & 9.48e-03                  & 1.7716    & 1.24e-03                  & 1.8417    \\
+        100 & 2.80e-02                  & 0.9745                    & 2.56e-03                  & 1.8875    & 1.77e-04                  & 2.8112    \\
+        200 & 1.41e-02                  & 0.9886                    & 6.78e-04                  & 1.9176    & 2.43e-05                  & 2.8653    \\
+        400 & 6.97e-03                  & 1.0181                    & 1.54e-04                  & 2.1392    & 2.47e-06                  & 3.3014    \\
+        800 & 3.54e-03                  & 0.9765                    & 3.52e-05                  & 2.1304    & 2.79e-07                  & 3.1458    \\
         \bottomrule
     \end{tabularx}
     \caption{二阶IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$(||n_h-n||)/||n||$。}
@@ -735,11 +735,11 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
         N   & $\frac{||n_h-n||}{||n||}$ & Order                     & $\frac{||n_h-n||}{||n||}$ & Order     & $\frac{||n_h-n||}{||n||}$ & Order     \\
         \midrule
         25  & 9.94e-02                  & \text{——}                 & 3.24e-02                  & \text{——} & 4.46e-03                  & \text{——} \\
-        50  & 5.50e-02                  & 0.85                      & 9.48e-03                  & 1.77      & 1.24e-03                  & 1.84      \\
-        100 & 2.80e-02                  & 0.97                      & 2.56e-03                  & 1.89      & 1.77e-04                  & 2.81      \\
-        200 & 1.43e-02                  & 0.97                      & 6.78e-04                  & 1.92      & 2.43e-05                  & 2.87      \\
-        400 & 7.07e-03                  & 1.02                      & 1.54e-04                  & 2.14      & 2.47e-06                  & 3.30      \\
-        800 & 3.44e-03                  & 1.04                      & 3.52e-05                  & 2.13      & 2.78e-07                  & 3.15      \\
+        50  & 5.50e-02                  & 0.8531                    & 9.48e-03                  & 1.7716    & 1.24e-03                  & 1.8417    \\
+        100 & 2.80e-02                  & 0.9745                    & 2.56e-03                  & 1.8875    & 1.77e-04                  & 2.8112    \\
+        200 & 1.43e-02                  & 0.9886                    & 6.78e-04                  & 1.9176    & 2.43e-05                  & 2.8654    \\
+        400 & 7.07e-03                  & 1.0181                    & 1.54e-04                  & 2.1392    & 2.47e-06                  & 3.3018    \\
+        800 & 3.44e-03                  & 0.9765                    & 3.52e-05                  & 2.1305    & 2.78e-07                  & 3.1506    \\
         \bottomrule
     \end{tabularx}
     \caption{三阶IMEX LDG格式误差估计。网格数N，收敛阶Order，计算空间$V^k, k=0,1,2$，相对误差$(||n_h-n||)/||n||$。}
@@ -773,7 +773,7 @@ DD和HF模型选取相同的物理模型参数：$T_0 = 300, k = 0.138 \times 10
         t          & 0.1675                     & 0.1664                    & 0.2118  & 0.2456  & 0.2550  & 0.2604  \\
         \bottomrule
     \end{tabularx}
-    \caption{TVDRK LDG格式和IMEX LDG格式达到稳态的时间步长$\Delta t$，时间层数$nt$，时间$t$。网格数$N=100$，计算空间$V^2$。}
+    \caption{TVDRK LDG格式和IMEX LDG格式达到稳态的时间步长$\Delta t$，时间层数$nt$，时间$t$。网格数$N=200$，计算空间$V^2$。}
     \label{tab:time:200}
 \end{table}
 

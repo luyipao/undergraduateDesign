@@ -147,7 +147,7 @@ classdef Mesh2
         function [obj, nSteps] = IMEXGK(obj, n)
             
             if n ~= 3 && n~=2
-                error('Invalid input, please choose 3');
+                error('Invalid input, please choose 3 or 2');
             else
                 obj = obj.setAssMatrix(n);
                 
