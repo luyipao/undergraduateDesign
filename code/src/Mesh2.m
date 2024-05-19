@@ -136,6 +136,9 @@ classdef Mesh2
                 A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
                 gamma = 0.292893218813452;
                 obj.assMatrix = A - gamma * obj.t * obj.BNeg*diag(1./diag(A))*obj.BPos;
+            elseif n ==1
+                A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
+                obj.assMatrix = A - obj.t * obj.BNeg*diag(1./diag(A))*obj.BPos;
             end
         end
         function obj = setTimeStep(obj, timeStep)
@@ -144,10 +147,10 @@ classdef Mesh2
         function f = getBasisPolys(obj,c)
             f = basisPolys(obj.X, reshape(c,obj.degree+1,obj.CellsNum), obj.degree, obj.basisFuncs, obj.basisInterval);
         end
-        function [obj, nSteps] = IMEXGK(obj, n)
+        function [obj, nSteps, COEFFS, QCOEFFS] = IMEXGK(obj, n)
             
-            if n ~= 3 && n~=2
-                error('Invalid input, please choose 3 or 2');
+            if n ~= 3 && n~=2 && n~=1
+                error('Invalid input, please choose 3 , 2 , 1');
             else
                 obj = obj.setAssMatrix(n);
                 
@@ -168,7 +171,8 @@ classdef Mesh2
                     FLast = FNow;
                     FNow = obj.getBasisPolys(obj.coeffs);
                     nSteps = nSteps + 1;
-                    
+                    COEFFS(:,nSteps) = obj.coeffs;
+                    QCOEFFS(:,nSteps) = obj.auxCoeffs;
                     % save the change of electron concentration and electric field gif
 %                     figure(fig1)
 %                     x = linspace(0,0.6,1000);
@@ -200,6 +204,8 @@ classdef Mesh2
                obj = L3(obj, M, BNegBpos);
            elseif n == 2
                obj = L2(obj, M, BNegBpos);
+           elseif n == 1
+               obj = L1(obj, M, BNegBpos);
            end
         end
         function obj = L3(obj, M, BNegBPos)
@@ -228,7 +234,11 @@ classdef Mesh2
             H{4} = obj.H;
             b = (M*c{1}+obj.t*((H{1}+7*H{2}+3*H{3}-7*H{4})/4 + BNegBPos*(3*(c{2}-c{3})+c{4})/2));
             obj.coeffs = obj.assMatrix \ b;
-            obj.auxCoeffs = obj.BPos*obj.coeffs;
+            
+            A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
+            A = diag(1./diag(A));
+            A = sparse(A);
+            obj.auxCoeffs = A * obj.BPos*obj.coeffs;
         end
         function obj = L2(obj, M, BNegBPos)
             gamma = 0.292893218813452;
@@ -246,7 +256,24 @@ classdef Mesh2
             H{2} =  obj.H;
             b = (M*c{1} +(delta*H{1}+(1-delta)*H{2})*obj.t + obj.t*BNegBPos*(1-gamma)*c{2});
             obj.coeffs = obj.assMatrix \ b;
-            obj.auxCoeffs = obj.BPos*obj.coeffs;
+
+            A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
+            A = diag(1./diag(A));
+            A = sparse(A);
+            obj.auxCoeffs = A * obj.BPos*obj.coeffs;
+        end
+        function obj = L1(obj, M, BNegBPos)
+            H = cell(4,1);
+            c = cell(4,1);
+            c{1} = obj.coeffs;
+            obj = obj.getIMEXPotential;
+            H{1} = obj.H;
+            obj.coeffs = obj.assMatrix \ (M*c{1} + obj.t*H{1});
+            
+            A = obj.meshSize * kron(eye(obj.CellsNum),obj.massMatrix);
+            A = diag(1./diag(A));
+            A = sparse(A);
+            obj.auxCoeffs = A * obj.BPos*obj.coeffs;
         end
         function [obj, CellValues, ECellValues] = getCellValues(obj)
             electronConcentration = obj.getBasisPolys(obj.coeffs);

@@ -5,7 +5,7 @@ setParameters
 a = 0;
 b = 0.6;
 n = [0 1 2];
-timeOrder = 2;
+timeOrder = 1;
 nSteps = zeros(2,5);
 N = [25 50 100 200 400 800];
 % t = [1.2e-3, 1.8e-3, 2.4e-3, 3.0e-3, 3.6e-3]/3;
@@ -13,22 +13,21 @@ t = 1.2e-3;
 % M = cell(length(N),length(t));
 
 %% get exact solution
-% Fmesh = Mesh2(a,b,3200,@(x) dopingFunction(x),2);
-% Fmesh.t = t;
-% Fmesh.epsilon = 0.001;
-% [Fmesh, exactnSteps] = Fmesh.IMEXGK(3);
-% exactSolution = Fmesh.getBasisPolys(Fmesh.coeffs);
+exactMesh = Mesh2(a,b,3200,@(x) dopingFunction(x),2);
+exactMesh.t = t;
+exactMesh.epsilon = 0.001;
+[exactMesh, exactnSteps, exactCOEFFS, exactQCOEFFS] = exactMesh.IMEXGK(3);
+exactSolution = exactMesh.getBasisPolys(exactMesh.coeffs);
 %%
 for k = 1:length(n)
     for i = 1:length(N)
         for j = 1:length(t)
-            mesh = Mesh2(a,b,N(i),@(x) dopingFunction(x),n);
+            mesh = Mesh2(a,b,N(i),@(x) dopingFunction(x),n(k));
             mesh.t = t(j);
-            [mesh, nSteps(i,j)] = mesh.IMEXGK(timeOrder);
+            mesh.epsilon = 0.001;
+            [mesh, nSteps(i,j), COEFFS{timeOrder}{k,i,j}, QCOEFFS{timeOrder}{k,i,j}] = mesh.IMEXGK(timeOrder);
             IMEX{timeOrder}{k,i,j} = mesh;
-            x = linspace(0,0.6,1000);
-            
-            
+
             % Generate a filename with N and t
             %         electronConcentration = mesh.getBasisPolys(mesh.coeffs);
             %         plot(x,electronConcentration.solve(x));
