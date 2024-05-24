@@ -63,40 +63,40 @@ x = linspace(0, 0.6);
 % exportgraphics(gcf, filename, 'ContentType', 'vector');
 
 % slope limiter 
-[f{1,1,4}, E{1,1,4}] = M{4}{1,1}.getFuncs;
-fig7 = figure;
-plot(x, f{1,1,4}.solve(x), x, f{1,1,1}.solve(x), 'o', 'LineWidth', 1);
-lgd = legend('limiter', 'without limiter', 'Location', 'north');
-setFormat(lgd, 'x', 'n');
-filename = sprintf('DDTVDRK3Degree2N100mu0.75limitern.pdf');
-filename = fullfile('..\..\论文\docs\figure',filename);
-exportgraphics(gcf, filename, 'ContentType', 'vector');
-
-fig8 = figure;
-plot(x, E{1,1,4}(x), x, E{1,1,1}(x), 'o', 'LineWidth', 1);
-lgd = legend('limiter', 'without limiter', 'Location', 'north');
-setFormat(lgd, 'x', 'E');
-filename = sprintf('DDTVDRK3Degree2N100mu0.75limiterE.pdf');
-filename = fullfile('..\..\论文\docs\figure',filename);
-exportgraphics(gcf, filename, 'ContentType', 'vector');
-
-% %% Total variable change 
-% fig9 = figure;
-% scatter(1:length(TV{1,1,1}), TV{1,1,1},'.');
-% lgd = legend('N=100');
-% setFormat(lgd, 'nt', 'TV');
-% filename = sprintf('TVDRKN100.pdf');
+% [f{1,1,4}, E{1,1,4}] = M{4}{1,1}.getFuncs;
+% fig7 = figure;
+% plot(x, f{1,1,4}.solve(x), x, f{1,1,1}.solve(x), 'o', 'LineWidth', 1);
+% lgd = legend('limiter', 'without limiter', 'Location', 'north');
+% setFormat(lgd, 'x', 'n');
+% filename = sprintf('DDTVDRK3Degree2N100mu0.75limitern.pdf');
 % filename = fullfile('..\..\论文\docs\figure',filename);
 % exportgraphics(gcf, filename, 'ContentType', 'vector');
 % 
-% 
-% fig10 = figure;
-% scatter(1:length(TV{2,2,1}), TV{2,2,1},'.')
-% lgd = legend('N=100');
-% setFormat(lgd, 'nt', 'TV');
-% filename = sprintf('TVDRKN200.pdf');
+% fig8 = figure;
+% plot(x, E{1,1,4}(x), x, E{1,1,1}(x), 'o', 'LineWidth', 1);
+% lgd = legend('limiter', 'without limiter', 'Location', 'north');
+% setFormat(lgd, 'x', 'E');
+% filename = sprintf('DDTVDRK3Degree2N100mu0.75limiterE.pdf');
 % filename = fullfile('..\..\论文\docs\figure',filename);
 % exportgraphics(gcf, filename, 'ContentType', 'vector');
+
+%% %% Total variable change 
+fig9 = figure;
+scatter(1:length(TV{1,1,1}), TV{1,1,1},'.');
+lgd = legend('N=100');
+setFormat(lgd, 'nt', 'TV');
+filename = sprintf('TVDRKN100.pdf');
+filename = fullfile('..\..\论文\docs\figure',filename);
+exportgraphics(gcf, filename, 'ContentType', 'vector');
+
+
+fig10 = figure;
+scatter(1:length(TV{2,2,1}), TV{2,2,1},'.')
+lgd = legend('N=200');
+setFormat(lgd, 'nt', 'TV');
+filename = sprintf('TVDRKN200.pdf');
+filename = fullfile('..\..\论文\docs\figure',filename);
+exportgraphics(gcf, filename, 'ContentType', 'vector');
 
 % clear all figures
 

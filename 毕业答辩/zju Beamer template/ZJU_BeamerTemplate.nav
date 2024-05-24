@@ -1,0 +1,92 @@
+\headcommand {\slideentry {0}{0}{1}{1/1}{}{0}}
+\headcommand {\beamer@framepages {1}{1}}
+\headcommand {\slideentry {0}{0}{2}{2/2}{}{0}}
+\headcommand {\beamer@framepages {2}{2}}
+\headcommand {\beamer@sectionpages {1}{2}}
+\headcommand {\beamer@subsectionpages {1}{2}}
+\headcommand {\sectionentry {1}{研究背景与意义}{3}{研究背景与意义}{0}}
+\headcommand {\slideentry {1}{0}{1}{3/3}{}{0}}
+\headcommand {\beamer@framepages {3}{3}}
+\headcommand {\beamer@sectionpages {3}{3}}
+\headcommand {\beamer@subsectionpages {3}{3}}
+\headcommand {\sectionentry {2}{预备知识}{4}{预备知识}{0}}
+\headcommand {\slideentry {2}{0}{1}{4/4}{}{0}}
+\headcommand {\beamer@framepages {4}{4}}
+\headcommand {\beamer@sectionpages {4}{4}}
+\headcommand {\beamer@subsectionpages {4}{4}}
+\headcommand {\sectionentry {3}{DD模型}{5}{DD模型}{0}}
+\headcommand {\beamer@subsectionpages {5}{4}}
+\headcommand {\beamer@subsectionentry {0}{3}{1}{5}{LDG离散DD模型}}
+\headcommand {\slideentry {3}{1}{1}{5/5}{LDG离散DD模型}{0}}
+\headcommand {\beamer@framepages {5}{5}}
+\headcommand {\slideentry {3}{1}{2}{6/6}{LDG离散DD模型}{0}}
+\headcommand {\beamer@framepages {6}{6}}
+\headcommand {\slideentry {3}{1}{3}{7/7}{LDG离散DD模型}{0}}
+\headcommand {\beamer@framepages {7}{7}}
+\headcommand {\slideentry {3}{1}{4}{8/8}{LDG离散DD模型}{0}}
+\headcommand {\beamer@framepages {8}{8}}
+\headcommand {\beamer@subsectionpages {5}{8}}
+\headcommand {\beamer@subsectionentry {0}{3}{2}{9}{误差估计}}
+\headcommand {\slideentry {3}{2}{1}{9/9}{误差估计}{0}}
+\headcommand {\beamer@framepages {9}{9}}
+\headcommand {\slideentry {3}{2}{2}{10/10}{误差估计}{0}}
+\headcommand {\beamer@framepages {10}{10}}
+\headcommand {\slideentry {3}{2}{3}{11/11}{误差估计}{0}}
+\headcommand {\beamer@framepages {11}{11}}
+\headcommand {\slideentry {3}{2}{4}{12/12}{误差估计}{0}}
+\headcommand {\beamer@framepages {12}{12}}
+\headcommand {\beamer@sectionpages {5}{12}}
+\headcommand {\beamer@subsectionpages {9}{12}}
+\headcommand {\sectionentry {4}{HF模型}{13}{HF模型}{0}}
+\headcommand {\slideentry {4}{0}{1}{13/13}{}{0}}
+\headcommand {\beamer@framepages {13}{13}}
+\headcommand {\beamer@subsectionpages {13}{13}}
+\headcommand {\beamer@subsectionentry {0}{4}{1}{14}{误差估计}}
+\headcommand {\slideentry {4}{1}{1}{14/14}{误差估计}{0}}
+\headcommand {\beamer@framepages {14}{14}}
+\headcommand {\beamer@sectionpages {13}{14}}
+\headcommand {\beamer@subsectionpages {14}{14}}
+\headcommand {\sectionentry {5}{数值算例}{15}{数值算例}{0}}
+\headcommand {\beamer@subsectionpages {15}{14}}
+\headcommand {\beamer@subsectionentry {0}{5}{1}{15}{参数选取}}
+\headcommand {\slideentry {5}{1}{1}{15/15}{参数选取}{0}}
+\headcommand {\beamer@framepages {15}{15}}
+\headcommand {\beamer@subsectionpages {15}{15}}
+\headcommand {\beamer@subsectionentry {0}{5}{2}{16}{TVD LDG格式}}
+\headcommand {\slideentry {5}{2}{1}{16/16}{TVD LDG格式}{0}}
+\headcommand {\beamer@framepages {16}{16}}
+\headcommand {\slideentry {5}{2}{2}{17/17}{TVD LDG格式}{0}}
+\headcommand {\beamer@framepages {17}{17}}
+\headcommand {\slideentry {5}{2}{3}{18/18}{TVD LDG格式}{0}}
+\headcommand {\beamer@framepages {18}{18}}
+\headcommand {\beamer@subsectionpages {16}{18}}
+\headcommand {\beamer@subsectionentry {0}{5}{3}{19}{IMEX LDG格式}}
+\headcommand {\slideentry {5}{3}{1}{19/19}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {19}{19}}
+\headcommand {\slideentry {5}{3}{2}{20/20}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {20}{20}}
+\headcommand {\slideentry {5}{3}{3}{21/21}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {21}{21}}
+\headcommand {\slideentry {5}{3}{4}{22/22}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {22}{22}}
+\headcommand {\slideentry {5}{3}{5}{23/23}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {23}{23}}
+\headcommand {\slideentry {5}{3}{6}{24/24}{IMEX LDG格式}{0}}
+\headcommand {\beamer@framepages {24}{24}}
+\headcommand {\beamer@sectionpages {15}{24}}
+\headcommand {\beamer@subsectionpages {19}{24}}
+\headcommand {\sectionentry {6}{总结与展望}{25}{总结与展望}{0}}
+\headcommand {\slideentry {6}{0}{1}{25/25}{}{0}}
+\headcommand {\beamer@framepages {25}{25}}
+\headcommand {\beamer@sectionpages {25}{25}}
+\headcommand {\beamer@subsectionpages {25}{25}}
+\headcommand {\sectionentry {7}{参考文献}{26}{参考文献}{0}}
+\headcommand {\slideentry {7}{0}{0}{26/26}{}{0}}
+\headcommand {\beamer@framepages {26}{26}}
+\headcommand {\slideentry {7}{0}{1}{27/27}{}{0}}
+\headcommand {\beamer@framepages {27}{27}}
+\headcommand {\beamer@partpages {1}{27}}
+\headcommand {\beamer@subsectionpages {25}{27}}
+\headcommand {\beamer@sectionpages {25}{27}}
+\headcommand {\beamer@documentpages {27}}
+\headcommand {\gdef \inserttotalframenumber {27}}

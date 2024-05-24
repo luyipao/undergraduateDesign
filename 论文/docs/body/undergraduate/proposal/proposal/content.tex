@@ -1,7 +1,389 @@
 \section{项目的主要内容和技术路线}
-
+本节首先将给出一些预备知识。接着介绍DD模型和HF的其弱形式与LDG格式，并对其进行误差分析。对于一维DD模型，我们还会给出其半离散LDG格式及误差估计、包含了具有周期边界条件的DD模型的几个IMEX LDG格式及其误差估计和Dirichlet边界条件的DD模型的LDG格式的误差估计。最后我们将设计实验证明上述结果。
 \subsection{主要研究内容}
 
 \subsection{技术路线}
+\subsubsection{预备知识}
+首先使有限元空间的基础符号。然后定义具体的投影并提供特定的插值和有限元空间的逆性质。
+\paragraph{基础符号}
+$I_j = (x_{j-\frac{1}{2}},x_{j+\frac{1}{2}}),j=1,2,\cdots,N$是计算域I的一个划分。$\Delta x_j = x_{j+\frac{1}{2}}-x_{j-\frac{1}{2}},x_j = \frac{1}{2}(x_{j-\frac{1}{2}}+x_{j+\frac{1}{2}}), h = \max\{\sup\limits_{j} \Delta x_j\}$。
+有限维计算空间
+\begin{equation*}
+    V_h = V_h^k = \{z:z|_{I_j} \in P^k(I_j)\}
+\end{equation*}
+其中$P^k(I_j)$表示定义在$I_j$上维数不大于k的多项式集。数值解和测试函数都来自空间$V_h^k$。
+
+在$V_h^k$中，函数允许在接口$x_{j+\frac{1}{2}}$跳跃间断，因此$V_h^k \not\subseteq H^1$，其中$H^k = W^{k,2}$，后者表示Sobolev空间。这时DG法和其他有限元方法的主要区别。而且网格大小$\Delta x_j$和多项式阶k可以随着单位元自由改变，者允许h-p adptivity。h-adaptivity(网格自适应)，p-adaptivity(多项式自适应)。
+
+定义$(u_h)^+_{j+\frac{1}{2}} = u_h(x^+_{j+\frac{1}{2}})$和$(u_h)^-_{j+\frac{1}{2}} = u_h(x^-_{j+\frac{1}{2}})$。用$[u_h]_{j+\frac{1}{2}} = (u_h)^+_{j+\frac{1}{2}} - (u_h)^-_{j+\frac{1}{2}}$和$(\bar{u}_h)_{j+\frac{1}{2}}=\frac{1}{2}((u_h)^+_{j+\frac{1}{2}}+(u_h)^-_{j+\frac{1}{2}})$来表示$u_h$在每个单元边界点的跳跃和平均值。
+
+C是与h无关的正常数，可能依赖于PDE的准确解。$\tilde{\epsilon}$表示小的正常数。两者每次出现可能取不同的值。在本文的讨论的问题中，准确解被假定为光滑的。另外$0\leq t \leq T$，因此，准确解恒有界。
+\paragraph{投影和插值性质}
+我们考虑关于具有k+1阶连续导数的函数$u$到空间$V_h^k$的标准$L^2$-投影$\mathcal{P}$，即对于每个j
+\begin{equation*}
+    \int_{I_j}(\mathcal{P}u(x) - u(x))v(x)\rm{d} x = 0, \forall v \in P^k(I_j).
+\end{equation*}
+到$V_h^k$的特殊投影$\mathcal{P}^{\pm}$满足对每个j
+\begin{align*}
+    \int_{I_j}(\mathcal{P}^+u(x) - u(x))v(x)\rm{d} x = 0, \forall v \in P^{k-1}(I_j), \\
+    \mathcal{P}^+u(x_{j-\frac{1}{2}}^+) = u(x_{j-\frac{1}{2}})
+\end{align*}
+和
+\begin{align*}
+    \int_{I_j}(\mathcal{P}^-u(x) - u(x))v(x)\rm{d} x = 0, \forall v \in P^{k-1}(I_j), \\
+    \mathcal{P}^-u(x_{j+\frac{1}{2}}^-) = u(x_{j+\frac{1}{2}})
+\end{align*}
+利用上述性质可以得到
+\begin{equation}
+    ||\eta|| + h||\eta||_{0,\infty} + h^{\frac{1}{2}}||\eta||_{\Gamma_h} \leq Ch^{k+1},
+\end{equation}
+其中$\eta = \mathcal{P}u - u$或$\eta = \mathcal{P}^{\pm}u - u$。$||\cdot||$表示$L^2$范数，$||\cdot||_{0,\infty}$表示$L^{\infty}$范数和$||\eta||_{\Gamma_h} = [\sum_{j=1}^{N}((\eta_{j+\frac{1}{2}}^+)^2 + (\eta_{j+\frac{1}{2}}^-)^2)]^{\frac{1}{2}}$。正常数C仅依赖于u，与h无关。$\Gamma_h$表示单元$I_j$的边界点的集合。
+\paragraph{逆性质}
+对于任意$v \in V_h^k$，存在与v和h无关的正常数$C_i$使得
+\begin{equation}
+    (i)\quad  ||v_x|| \leq C_1 h^{-1} ||v||, \qquad
+    (ii)\quad||v||_{\Gamma_h} \leq C_2 h^{-\frac{1}{2}}||v||, \qquad
+    (iii)\quad ||v||_{0,\infty} \leq C_3 h^{-\frac{d}{2}}||v||.
+\end{equation}
+其中d是空间维数。在我们的例子中d=1。
+
+\subsubsection{DD模型、弱形式及误差估计}
+\paragraph{漂移-扩散模型}
+漂移-扩散模型由以下方程表示
+\begin{align}
+    n_t - (\mu En)_x = \tau \theta n_{xx}, \label{eq:DDa} \\
+    \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{eq:DDb}
+\end{align}
+其中$x \in (0,1)$，第一个方程具有周期边界条件，势方程$\phi(0,t) = 0, \phi(1,t) = v_{bias}$具有Dirichlet边界条件。后续会考虑关于第一个方程的Dirichlet边界条件。泊松方程~\eqref{eq:DDb}是电势方程，$E = -\phi_x$代表电场。
+
+在系统~\eqref{eq:DDa}-\eqref{eq:DDb}，未知变量是电子浓度n和电势$\phi$。$m_0$是电子有效质量，k是玻尔兹曼常数，e是电子电荷，$\mu$是迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是节电常数，$n_d$是掺杂，这是一个给定的函数。
+\paragraph{弱形式和LDG格式}
+LDG方法的想法是引入一个辅助变量，将包含高阶空间导数的偏微分方程$~\eqref{eq:DDa}$重写为一个只包含一阶空间导数的较大系统。令$q=\sqrt{\tau \theta} n_{x}$，因此方程$~\eqref{equation:DD}$被重写为
+\begin{align}
+     & n_{t}-(\mu E n)_{x}-\sqrt{\tau \theta} q_{x}=0 \label{eq:DDaReforma} \\
+     & q-\sqrt{\tau \theta} n_{x}=0 \label{eq:DDaReformb}
+\end{align}
+注意，我们只将方程~\eqref{eq:DDa}重写为一个包含一阶空间导数的系统，然后使用LDG方法来求解它。对于电场的泊松方程，我们仍然通过直接积分或连续伽辽金有限元方法来求解。这是为了方便误差分析。为了缩短本文长度，我们仅以直接积分泊松方程的情况作为示例进行误差分析。之后，我们将简要解释使用连续伽辽金有限元方法求解泊松方程的情况。
+
+由于$\phi$的边界条件不是周期性的，我们对其进行如下处理。令$\tilde{\phi}$是以下方程的解：
+\begin{equation*}
+    \left\{\begin{array}{l}
+        \tilde{\phi}_{x x}=\phi_{x x}=\frac{e}{\varepsilon}\left(n-n_{d}\right) \\
+        \tilde{\phi} \text {具有周期边界条件} \tilde{\phi}(0, t)=0 .
+    \end{array}\right.
+\end{equation*}
+我们可以很容易验证$\phi=\tilde{\phi}+v_{\text {bias }} x, E=\tilde{E}-v_{bias}=-\tilde{\phi}{x}-v_{\text {bias}}$。由于$\tilde{\phi}$是周期性的，我们有$\tilde{E}$也是周期性的，于是$E$也是周期性的。
+
+分别将~\eqref{eq:DDaReforma} - ~\eqref{eq:DDaReformb}乘以测试函数$v, w \in V_{h}^{k}$，并对涉及空间导数的项分部积分，可得
+\begin{align}
+     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}(\mu E n+\sqrt{\tau \theta} q) v_{x} d x                                                                                                             \\
+     & \quad-(\mu E n+\sqrt{\tau \theta} q)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+(\mu E n+\sqrt{\tau \theta} q)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,                                        \\
+     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta} n w_{x} d x-\sqrt{\tau \theta} n_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} n_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0, \\
+     & E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right) .
+\end{align}
+将上述方程中的精确解$n, q$和$E$替换为它们在$V_{h}^{k}$中的数值近似解$n^{h}, q^{h}$，注意到数值解$n^{h}$和$q^{h}$在单元边界上不连续，然后将单元边界上的项替换为适当的数值通量，我们得到LDG格式：
+\begin{align}
+     & \int_{I_{j}}\left(n^{h}\right)_{t} v d x+\int_{I_{j}}\left(\mu E^{h} n^{h}+\sqrt{\tau \theta} q^{h}\right) v_{x} d x      \nonumber                                                                                                                       \\
+     & \quad-\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\mu \widehat{E^{h} n^{h}}+\sqrt{\tau \theta} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0, \label{eq:DDaReformLDGa} \\
+     & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta} n^{h} w_{x} d x-\sqrt{\tau \theta} \hat{n}_{j+\frac{1}{2}}^{h} w_{j+\frac{1}{2}}^{-}+\sqrt{\tau \theta} \hat{n}_{j-\frac{1}{2}}^{h} w_{j-\frac{1}{2}}^{+}=0,            \label{eq:DDaReformLDGb} \\
+     & E_{x}^{h}=\tilde{E}_{x}^{h}=-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right),   \label{eq:DDaReformLDGc}                                                                                                                                                    \\
+     & E^{h}=\tilde{E}^{h}-v_{\text {bias }}=\int_{0}^{x}-\frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d x+E_{0}-v_{\text {bias }},\label{eq:DDaReformLDGd}
+\end{align}
+其中，$E_{0}=E^{h}(0)=\int_{0}^{1}\left(\int_{0}^{x} \frac{e}{\varepsilon}\left(n^{h}-n_{d}\right) d s\right) d x$。这里的“$\hat{\ }$”项表示数值通量。我们选择交替通量来计算$\hat{n}^{h}$和$\hat{q}^{h}$，即$\hat{n}^{h}=\left(n^{h}\right)^{+}$，$\hat{q}^{h}=\left(q^{h}\right)^{-}$，$\widehat{E^{h} n^{h}}$采用上风通量，即$\widehat{E^{h} n^{h}}=\max \left(E^{h}, 0\right)\left(n^{h}\right)^{+}+\min \left(E^{h}, 0\right)\left(n^{h}\right)^{-}$。
+注意到辅助变量$q^{h}$可以通过~\eqref{eq:DDaReformLDGb}在局部得到解，并代入~\eqref{eq:DDaReformLDGa}中。这就是该方法被称为“局部”不连续Galerkin方法的原因，也是LDG方法与传统的混合有限元方法不同的地方，传统方法中辅助变量$q^{h}$必须从一个全局系统中求解。
+\paragraph{误差估计}
+假设$n, q$是问题~\eqref{eq:DDaReforma}-\eqref{eq:DDaReformb}足够光滑的精确解，且导数有界。假设$n^{h}, q^{h}$是半离散LDG方案~\eqref{eq:DDaReformLDGa}-\eqref{eq:DDaReformLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}$ $(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+$$
+    \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
+$$
+其中常数$C$依赖于最终时间$T$、$k$、$||n||_{L^{\infty}\left(0, T ; H^{k+1}\right)}$和$\left||n{x}\right||_{0, \infty}$。
+\subsubsection{HF模型弱形式及LDG格式}
+高场模型由以下方程以及带有周期边界条件的泊松电场方程\eqref{eq:DDb}表示
+\begin{equation}
+    n_{t}+J_{x}=0, \quad x \in(0,1) \label{eq:HF}
+\end{equation}
+其中
+$$
+    J=J_{h y p}+J_{v i s}
+$$
+
+$$
+    \begin{gathered}
+        J_{h y p}=-\mu n E+\tau \mu\left(\frac{e}{\varepsilon}\right) n(-\mu n E+\omega) \\
+        J_{v i s}=-\tau\left(n\left(\theta+2 \mu^{2} E^{2}\right)\right)_{x}+\tau \mu E(\mu n E)_{x} .
+    \end{gathered}
+$$
+这里，$\omega=\left.(\mu n E)\right|_{x=0}$取常数。未知量与DD模型中相同：电子浓度$n$和电势$\phi$。由于
+$$
+    -2\left(n E^{2}\right)_{x}+E(n E)_{x}=-3 n E E_{x}-E^{2} n_{x}
+$$
+方程\eqref{eq:HF}可以写作
+\begin{equation}
+    n_{t}+\left(-\mu n E-\tau \mu^{2} \frac{e}{\varepsilon} n^{2} E+\tau \mu \frac{e}{\varepsilon} \omega n-3 \tau \mu^{2} E n E_{x}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0.\label{eq:HFRewritten}
+\end{equation}
+因为$E_{x}=-\frac{e}{\varepsilon}\left(n-n_{d}\right)$，定义$C_{1}=\frac{\tau \mu e}{\varepsilon}$，$C_{2}=\frac{\tau \mu^{2} e}{\varepsilon}=\mu C_{1}$和$C_{3}=\frac{\tau \mu e \omega}{\varepsilon}=\omega C_{1}$，改写方程~\eqref{eq:HFRewritten}，我们得到以下的HF模型
+\begin{equation}
+    n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}\right)_{x}-\left(\left(\tau \theta+\tau \mu^{2} E^{2}\right) n_{x}\right)_{x}=0 .  \label{eq:HFRewrittenc}
+\end{equation}
+设$q=\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n_{x}=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n$，我们可以将方程~\eqref{eq:HFRewrittenc}改写为
+\begin{align}
+     & n_{t}+\left(-\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n+2 C_{2} E n^{2}-\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{x}=0, \label{eq:HFRewrittenca} \\
+     & q=\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{x}-\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n.\label{eq:HFRewrittencb}
+\end{align}
+分别用测试函数$v, w \in V_{h}^{k}$乘以方程~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}，并对涉及空间导数的项进行分部积分，最终我们得到以下弱形式：
+\begin{align}
+     & \int_{I_{j}} n_{t} v d x+\int_{I_{j}}\left(3 C_{2} E n_{d}+\mu E-C_{3}\right) n v_{x} d x                                                                          \nonumber                                              \\
+     & -\left(3 C_{2} E n_{d} n+\mu E n-C_{3} n\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}                                                                                       \nonumber                                     \\
+     & +\left(3 C_{2} E n_{d} n+\mu E n-C_{3} n\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}                                                                                      \nonumber                                      \\
+     & -\int_{I_{j}} 2 C_{2} E n^{2} v_{x} d x+2 C_{2}\left(E n^{2}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E n^{2}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}           \nonumber                           \\
+     & +\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2} E^{2}} q v_{x} d x                                                                                               \nonumber                                                   \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} q\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0  \label{eq:HFRewrittenWeakForma} \\
+     & \int_{I_{j}} q w d x+\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2} E^{2}} n w_{x} d x+\int_{I_{j}}\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}}\right)_{x} n w d x    \nonumber                                               \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2} E^{2}} n\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenWeakFormb}
+\end{align}
+将上述方程中的精确解$n, q$替换为$V_{h}^{k}$中的数值近似$n^{h}, q^{h}$。注意到数值解$n^{h}$和$q^{h}$在单元边界上的不连续性，我们需要将单元边界上的项替换为合适的数值通量，最终得到LDG格式：
+\begin{align}
+     & \int_{I_{j}} n_{t}^{h} v d x+\int_{I_{j}}\left(3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}\right) n^{h} v_{x} d x                                                                   \nonumber                                                                                                \\
+     & -\left(3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}\right)_{j+\frac{1}{2}} \hat{n}_{j+\frac{1}{2}}^{h} v_{j+\frac{1}{2}}^{-}                                                                                                                                    \nonumber                     \\
+     & +\left(3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}\right)_{j-\frac{1}{2}} \hat{n}_{j-\frac{1}{2}}^{h} v_{j-\frac{1}{2}}^{+}                                                                                                                                   \nonumber                      \\
+     & -\int_{I_{j}} 2 C_{2} E^{h}\left(n^{h}\right)^{2} v_{x} d x+2 C_{2}\left(E^{h} \widehat{\left(n^{h}\right)^{2}}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}-2 C_{2}\left(E^{h} \widehat{\left(n^{h}\right)^{2}}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+} \nonumber              \\
+     & +\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} q^{h} v_{x} d x                                                                                                                                                 \nonumber                                        \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{q}^{h}\right)_{j+\frac{1}{2}} v_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{q}^{h}\right)_{j-\frac{1}{2}} v_{j-\frac{1}{2}}^{+}=0,             \label{eq:HFRewrittenLDGa} \\
+     & \int_{I_{j}} q^{h} w d x+\int_{I_{j}} \sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} n^{h} w_{x} d x+\int_{I_{j}}\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}}\right)_{x} n^{h} w d x                        \nonumber                                          \\
+     & -\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{n}^{h}\right)_{j+\frac{1}{2}} w_{j+\frac{1}{2}}^{-}+\left(\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}} \hat{n}^{h}\right)_{j-\frac{1}{2}} w_{j-\frac{1}{2}}^{+}=0 .\label{eq:HFRewrittenLDGb}
+\end{align}
+数值电场$E^{h}$的与之前一样直接通过积分来求解。为了简化，我们定义$a^{h}:=\sqrt{\tau \theta+\tau \mu^{2}\left(E^{h}\right)^{2}}$，$b^{h}:=3 C_{2} E^{h} n_{d}+\mu E^{h}-C_{3}$。这里的“$\widehat{\ }$”项表示数值通量。$a^{h} \hat{n}^{h}$和$a^{h} \hat{q}^{h}$选择交替通量，即$a^{h} \hat{n}^{h}=a^{h}\left(n^{h}\right)^{+}$，$a^{h} \hat{q}^{h}=a^{h}\left(q^{h}\right)^{-}$；对于$b^{h} \hat{n}^{h}$，我们选择上风通量，即如果$b^{h}>0$，则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{+}$，否则$b^{h} \hat{n}^{h}=b^{h}\left(n^{h}\right)^{-}$；对于通量$\widehat{\left(n^{h}\right)^{2}}$，有两种选择：$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}$或$\widehat{\left(n^{h}\right)^{2}}=\frac{\left(n^{h-}\right)^{2}+\left(n^{h}\right)^{-}\left(n^{h}\right)^{+}+\left(n^{h-}\right)^{2}}{3}-\alpha\left[n^{h}\right]$（如果$E^{h}>0$，则$\alpha=1$；否则$\alpha=-1$）。
+\subsubsection{漂移-扩散DD模型全LDG离散}
+\paragraph{DD模型}
+漂移-扩散模型由以下方程表示
+\begin{align}
+    n_t - (\mu En)_x = \tau \theta n_{xx}, \label{equation:DD} \\
+    \phi_{xx} = \frac{e}{\epsilon}(n - n_d),  \label{equation:poisson}
+\end{align}
+其中$x \in (0,1)$，第一个方程具有周期边界条件，势方程$\phi(0,t) = 0, \phi(1,t) = v_{bias}$具有Dirichlet边界条件。我们会在第六节考虑关于第一个方程的Dirichlet边界条件。泊松方程~\eqref{equation:poisson}是电势方程，$E = -\phi_x$代表电场。
+
+在系统~\eqref{equation:DD}-\eqref{equation:poisson}，未知变量是电子浓度n和电势$\phi$。$m_0$是电子有效质量，k是Boltzmann常数，e是电子电荷，$\mu$是迁移率，$T_0$是晶格温度，$\tau = \frac{m_0 \mu}{e}$是松弛参数，$\theta = \frac{k}{m_0}T_0$，$\epsilon$是节电常数，$n_d$是掺杂，这是一个给定的函数。
+\paragraph{弱形式}
+LDG法的出发点是引入一个辅助变量，将包含高阶空间导数的PDE~\eqref{equation:DD}改写为只包含一阶空间导数的更大系统。
+
+令$q = \sqrt{\tau \theta }n_x$，因此等式~\eqref{equation:DD}可以写作
+\begin{align}
+    n_t - (\mu E n)_x - \sqrt{\tau \theta}q_x = 0, \\
+    q - \sqrt{\tau \theta}n_x = 0,                 \\
+    E_x = -\frac{e}{\epsilon}(n - n_d),            \\
+    E = - \phi_x.
+\end{align}
+我们用测试函数$v,w,r,z \in V_h^k$分别乘以上述方程，再对所有包含空间导数的部分进行分部积分来得到
+\begin{align}
+    \int_{I_j} n_t v \rm{d}x + \int_{I_j}(\mu En + \sqrt{\tau \theta}q)v_x\rm{d} x          \nonumber                                                                                                             \\
+    - (\mu En + \sqrt{\tau \theta}q)_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- +(\mu En + \sqrt{\tau \theta}q)_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+ = 0, \label{weakForm:1}                                                \\
+    \int_{I_j} qw\rm{d}x + \int_{I_j}\sqrt{\tau \theta} n w_x \rm{d}x - \sqrt{\tau \theta} n_{j+\frac{1}{2}}w_{j+\frac{1}{2}}^- + \sqrt{\tau \theta} n_{j-\frac{1}{2}}w_{j-\frac{1}{2}}^+ = 0, \label{weakForm:2} \\
+    -\int_{I_j}Er_x\rm{d}x + E_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - E_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n-n_d)r\rm{d}x,                                       \label{weakForm:3} \\
+    \int_{I_j} Ez \rm{d}x - \int_{I_j}\phi z_x \rm{d}x + \phi_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - \phi_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0,\label{weakForm:4}
+\end{align}
+其中$ j=1,\cdots,N$，$v,w,r,z \in V_h$。
+\subsubsection{半离散LDG法}
+将上述方程中的精确解$n,q,E,\phi$替换为数值近似$n_h,q_h,E_h,\phi_h \in V_h^k$，注意到数值解$n_h,q_h,E_h,\phi_h$在单元边界处不连续，然后用合适的数值通量来替换单元边界的项，我们得到半离散LDG法：对于任意的$t>0$，找数值解$n_h,q_h,E_h,\phi_h \in V_h$使得
+\begin{align}
+    \int_{I_j} (n_h)_t v \rm{d}x + \int_{I_j}(\mu E_h n_h + \sqrt{\tau \theta}q_h)v_x\rm{d} x                                                               \nonumber                                                                 \\
+    - (\mu E_hn_h + \sqrt{\tau \theta}\hat{q}_h)_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- +(\mu \widehat{E_hn_h} + \sqrt{\tau \theta}\hat{q}_h)_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+ = 0,                                   \label{LDG:1}     \\
+    \int_{I_j} q_hw \rm{d}x + \int_{I_j}\sqrt{\tau \theta} n_h w_x \rm{d}x - \sqrt{\tau \theta} (\hat{n}_h)_{j+\frac{1}{2}}w_{j+\frac{1}{2}}^- + \sqrt{\tau \theta} (\hat{n}_h)_{j-\frac{1}{2}}w_{j-\frac{1}{2}}^+ = 0, \label{LDG:2} \\
+    -\int_{I_j}E_hr_x\rm{d}x + (\hat{E}_h)_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h)_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h-n_d)r\rm{d}x,                                        \label{LDG:3} \\
+    \int_{I_j} E_hz \rm{d}x - \int_{I_j}\phi_h z_x \rm{d}x + (\hat{\phi}_h)_{j+\frac{1}{2}}z_{j+\frac{1}{2}}^- - (\hat{\phi}_h)_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+ = 0,\label{LDG:4}
+\end{align}
+其中$ j=1,\cdots,N$，$v,w,r,z \in V_h$。
+
+带“$\widehat{\ }$”的项是数值通量。 我们选择通量$\widehat{E_h n_h} = \frac{1}{2}((E_hn_h)^+  + (E_hn_h)^-)$，$\hat{n}_h$和$\hat{q}_h$的交变通量，即
+\begin{equation}
+    \hat{n}_h = (n_h)^+, \hat{q}_h = (q_h)^- \quad \text{or} \quad \hat{n}_h = (n_h)^-, \hat{q}_h = (q_h)^+, \label{numbericalFlux:n&q}
+\end{equation}
+$\hat{\phi}_h$和$\hat{E}_h$的交变通量，带有一个边界条件来考虑Dirichlet边界条件，即
+\begin{equation}
+    \begin{aligned}
+        (\hat{\phi}_h)_{\frac{1}{2}} = (\phi_h^-)_{\frac{1}{2}} = 0, (\hat{\phi}_h)_{j-\frac{1}{2}} = (\phi_h^+)_{j-\frac{1}{2}},j = 2,\cdots,N,(\hat{\phi}_h)_{N-\frac{1}{2}} = (\phi_h^+)_{N-\frac{1}{2}} = v_{bias}, \\
+        (\hat{E_h})_{\frac{1}{2}} = (E_h^+)_{\frac{1}{2}} + c_0[\phi]_{\frac{1}{2}}, (\hat{E}_h)_{j-\frac{1}{2}} = (E_h^-)_{j-\frac{1}{2}} + c_0[\phi]_{j-\frac{1}{2}},j = 2,\cdots,N+1,
+    \end{aligned}\label{numbericalFlux:phi&E}
+\end{equation}
+或
+\begin{equation}
+    \begin{aligned}
+        (\hat{\phi}_h)_{\frac{1}{2}} = (\phi_h^-)_{\frac{1}{2}} = 0, (\hat{\phi}_h)_{j-\frac{1}{2}} = (\phi_h^-)_{j-\frac{1}{2}},j = 2,\cdots,N,(\hat{\phi}_h)_{N-\frac{1}{2}} = (\phi_h^+)_{N-\frac{1}{2}} = v_{bias}, \\
+        (\hat{E_h})_{j - \frac{1}{2}} = (E_h^+)_{j - \frac{1}{2}} + c_0[\phi]_{j-\frac{1}{2}},j = 2,\cdots,N, (\hat{E}_h)_{N+\frac{1}{2}} = (E_h^-)_{N+\frac{1}{2}} + c_0[\phi]_{N+\frac{1}{2}}.
+    \end{aligned}\label{numbericalFlux:phi&E alt}
+\end{equation}
+注意辅助变量$q_h$和$E_h$可以从~~\eqref{weakForm:2}或~~\eqref{weakForm:4}中解出并且带入~\eqref{weakForm:1}或~\eqref{weakForm:3}。这就是这种方法被叫做“局部”不连续Galerkin法的原因，同时也是区分LDG法和经典混合有限元方法的原因。后者的辅助变量$q_h$或$E_h$必须从全局系统中求出。
+
+\paragraph{误差估计}
+在下面关于半离散法的分析中定义$||u||_{L^{\infty}(0,T;L^2)}  = \max \limits_{0 \leq t \leq T}||u||_{l^2(I)}$和$||u||_{L^2(0,T;L^2)} = (\int_{0}^{T}||u||_{L^2(I)}^2\rm{d}t)^{\frac{1}{2}}$。
+\begin{theorem}
+    令n，q为问题~\eqref{weakForm:1} - ~\eqref{weakForm:4}的精确解，且足够光滑，导数有界。令$n_h,q_h$为半离散LDG法~\eqref{LDG:1}-\eqref{LDG:4}的数值解。定义对应的数值误差$e_u = u - u_h (u = n,q)$。如果有限元空间$V_h^k$是间断$k(k\geq 0)$阶多形式，那么对于足够小的h，存在下列误差估计
+    \begin{equation}
+        ||n - n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C h^{k+1},
+    \end{equation}
+    其中常数C依赖于最终时间T,k,反常数$C_2$，$||n||_{L^{\infty}(0,T;L^2)}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
+\subsubsection{IMEX RK全离散LDG格式}
+在本节我们会考虑LDG空间离散化与[1,27]中提出的三阶特定IMEX龙格-库塔法相耦合。其想法是隐性处理线性扩散部分，显性处理非线性耦合漂移项来节省计算成本，同时依然追求无条件稳定性，即时间步长可以取小于给定常数的任意值。
+\paragraph{全离散法}
+令$\{t^m = m\Delta t\}^M_{m = 0}$是时间区间[0,T]的均匀分割，时间步长为$\Delta t$。时间步长实际上可以一步步变化，但是在本文中我们为了简化取时间步长为常数。给定$n_h^m$，因此得到$q_h^m,E_h^m,\phi_h^m$，我们想找到在下一时间级别$t^{m+1}$处找到数值解，可以通过几个中间阶段$t^{m,l}$，通过下面IMEX RK法来实现。
+
+\noindent \textbf{一阶格式}
+
+使用一阶IMEX时间推进方案的LDG法，其中浓度方程中耦合的非线性部分用向前欧拉法处理，漂移部分用向后欧拉法处理，由以下形式给出：找到数值解$n_h^{m+1},q_h^{m+1}\in V_h$使得
+\begin{align}
+    (\frac{n_h^{m+1} - n_h^m}{\Delta t},v)I_j & = -(\mu E_h^mn_h^m, v_x)I_j + (\mu \hat{E_h^mn_h^m})_{j+\frac{1}{2}}v_{j-\frac{1}{2}}^- - (\mu\hat{E_h^mn_h^m})_{j-\frac{1}{2}}v^+_{j-\frac{1}{2}}                                         \nonumber                      \\
+                                              & -(\sqrt{\tau \theta}q_h^{m+1},v_x)_{I_j} + (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{q}_h^{m+1})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,  \label{weakForm:IMEX1 LDG 1} \\
+    (q_h^{m+1},w)_{I_j}                       & = -(\sqrt{\tau \theta}n_h^{m+1},w_x)_{I_j} + (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j+\frac{1}{2}}w_{j+\frac{1}{2}}^- - (\sqrt{\tau \theta}\hat{n}_h^{m+1})_{j-\frac{1}{2}}w_{j-\frac{1}{2}}^+,\label{weakForm:IMEX1 LDG 2}
+\end{align}
+其中$j = 1,\cdots,N;\quad r,z \in V_h$。
+
+电势方程的LDG格式是：找到$E_h^{m},\phi_h^{m} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m}r_x \rm{d}x + (\hat{E}_h^{m})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m} - n_d) r\rm{d} x, \label{equation:IMEX1 LDG:EPE 1} \\
+    \int_{I_j} E_h^{m}z \rm{d}x - \int_{I_j} \phi_h^{m}z_x \rm{d}x  + (\hat{\phi}_h^{m})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{equation:IMEX1 LDG:EPE 2}
+\end{align}
+中$j = 1,\cdots,N;\quad r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。
+
+与半离散情况相同，“$\hat{\ }$”项是数值通量，依然选择为~\eqref{numbericalFlux:n&q}和~\eqref{numbericalFlux:phi&E}(或~\eqref{numbericalFlux:phi&E alt})。
+
+\noindent \textbf{二阶格式}
+
+因为二阶和三阶格式有许多项，为了简化符号，我们将定义
+\begin{align}
+    H_j(E_h,n_h,v) = - (\mu E_h n_h, v_x)_{I_j} + (\mu \hat{E_h n_h})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu \hat{E_h n_h})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \label{notation:IMEX2 RK 1} \\
+    H_j^{\pm}(u_h,v) =- \sqrt{\tau \theta}(u_h,v_x)_{I_j} + \sqrt{\tau\theta}(u_h^{\pm})_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^0 - \sqrt{\tau\theta}(u_h^{\pm})_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+,\quad u = n,q.\label{notation:IMEX2 RK 2}
+\end{align}
+显然对于光滑的$E,n,u$我们有
+\begin{align*}
+    H_j(E,n,v) = -(\mu En,v_x)_{I_j} + (\mu En)_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - (\mu En)_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+, \\
+    H_j(E,n,v)^{\pm} = - \sqrt{\tau\theta}(u,v_x)_{I_j} + \sqrt{\tau\theta}u_{j+\frac{1}{2}}v_{j+\frac{1}{2}}^- - \sqrt{\tau\theta}u_{j-\frac{1}{2}}v_{j-\frac{1}{2}}^+.
+\end{align*}
+利用~\eqref{notation:IMEX2 RK 1}和~\eqref{notation:IMEX2 RK 2}，[1]中关于二阶IMEX时间推进的LDG格式是：找到数值解$n_h^{m+1},q_h^{m+1}\in V_h$，使得
+\begin{align}
+    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & = \gamma H_j(E_h^m,n_h^m,v) + \gamma H_j^-(q_h^{m,1},v),                     \label{weakForm:IMEX2 LDG 1} \\
+    (\frac{n_h^{m+1} -n_h^m}{\Delta t},v)_{I_j} & = \delta H_j(E_h^m,n_h^m,v) + (1-\delta)H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                              \\
+                                                & +(1-\gamma)H_j^-(q_h^{m,1},v) + \gamma H_j^-(q_h^{m+1},v),                                                \\
+    (q_h^{m,l},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2, \quad q_h^{m,2} = q_h^{m+1},\label{weakForm:IMEX2 LDG 3}
+\end{align}
+其中$j = 1,\cdots,N;\quad v,w \in V_h$并且$\gamma = 1- \frac{\sqrt{2}}{2},\delta = 1 - \frac{1}{2\gamma}$。
+
+电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m,l}r_x \rm{d}x + (\hat{E}_h^{m,l})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m,l})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m,l} - n_d) r\rm{d} x, \label{equation:IMEX2 LDG:EPE 1} \\
+    -\int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0, \label{equation:IMEX2 LDG:EPE 2}
+\end{align}
+中$j = 1,\cdots,N;\quad r,v \in V_h$并且$l = 0,1, u^{m,0} = u^m$。带“$\hat{\ }$”的项代表数值通量，选择与之前相同。
+
+\noindent \textbf{三阶格式}
+
+[1]中给出的使用三阶IMEX时间推进格式的LDG格式是：找到数值解$n_h^{m+1},q_h^{m+1} \in V_h$使得
+\begin{align}
+    (\frac{n_h^{m,1} -n_h^m}{\Delta t},v)_{I_j} & =\frac{1}{2} H_j(E_h^m,n_h^m,v) + \frac{1}{2} H_j^-(q_h^{m,1},v),           \label{weakForm:IMEX3 LDG 1}                   \\
+    (\frac{n_h^{m,2} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{18} H_j(E_h^m,n_h^m,v) + \frac{1}{18} H_j(E_h^{m,1},n_h^{m,1},v) \nonumber                                      \\
+                                                & + \frac{1}{6} H_j^-(q_h^{m,1},v) + \frac{1}{2} H_j^-(q_h^{m,2},v),                                                         \\
+    (\frac{n_h^{m,3} -n_h^m}{\Delta t},v)_{I_j} & =\frac{5}{6} H_j(E_h^m,n_h^m,v) -\frac{5}{6} H_j(E_h^{m,1},n_h^{m,1},v) + \frac{1}{2} H_j(E_h^{m,2},n_h^{m,2},v) \nonumber \\
+                                                & - \frac{1}{2} H_j^-(q_h^{m,1},v) + \frac{1}{2} H_j^-(q_h^{m,2},v) + \frac{1}{2} H_j^-(q_h^{m,3},v),                        \\
+    (\frac{n_h^{m+1} -n_h^m}{\Delta t},v)_{I_j} & = \frac{1}{4} H_j(E_h^m,n_h^m,v) +\frac{7}{4} H_j(E_h^{m,1},n_h^{m,1},v)  \nonumber                                        \\
+                                                & + \frac{3}{4} H_j(E_h^{m,2},n_h^{m,2},v) - \frac{7}{4} H_j(E_h^{m,3},n_h^{m,3},v) \nonumber                                \\
+                                                & +\frac{3}{2} H_j^-(q_h^{m,1},v) -\frac{3}{2} H_j^-(q_h^{m,2},v) \nonumber                                                  \\
+                                                & + \frac{1}{2} H_j^-(q_h^{m,3},v)  + \frac{1}{2} H_j^-(q_h^{m+1},v),                                                        \\
+    (q_h^{m,1},w)_{I_j}                         & = H_j^+(n_h^{m,l},w), l = 1,2,3,4, q_h^{m,4} = q_h^{m+1},
+\end{align}
+其中$j = 1,\cdots,N;\quad v,w \in V_h$。
+
+电势方程的LDG格式是：找到$E_h^{m,l},\phi_h^{m,l} \in V_h$，使得
+\begin{align}
+    -\int_{I_j} E_h^{m,l}r_x \rm{d}x + (\hat{E}_h^{m,l})_{j+\frac{1}{2}}r_{j+\frac{1}{2}}^- - (\hat{E}_h^{m,l})_{j-\frac{1}{2}}r_{j-\frac{1}{2}}^+ = -\frac{e}{\epsilon}\int_{I_j}(n_h^{m,l} - n_d) r\rm{d} x, \\
+    \int_{I_j} E_h^{m,l}z \rm{d}x - \int_{I_j} \phi_h^{m,l}z_x \rm{d}x  + (\hat{\phi}_h^{m,l})_{j+\frac{1}{2}}z^-_{j+\frac{1}{2}} - (\hat{\phi}_h^{m,l})_{j-\frac{1}{2}}z_{j-\frac{1}{2}}^+  = 0,\label{equation:IMEX3 LDG:EPE 2}
+\end{align}
+其中$j = 1,\cdots,N; r,z \in V_h$且$l = 0,1,2,3, u^{m,0} = u^m$。带“$\hat{\ }$”的项代表数值通量，选择与之前相同。
+
+\paragraph{Dirichlet边界条件的LDG法的误差估计}
+我们已经在之前章节对浓度方程使用了周期边界条件来简化分析。事实上，半导体设备的边界条件通常是Dirichlet边界条件。我们仅给出半离散格式的详细分析，因为全离散类似但是更加冗长。
+
+Dirichlet边界条件是：
+\begin{align}
+    n(0,t) = n_l,\quad n(1,t) = n_r
+    \phi(0,t) = 0, \quad \phi(1,t) = v_{bias},
+\end{align}
+半离散LDG格式与~\eqref{LDG:1}-\eqref{LDG:4}相同，除了通量$\hat{n}_h$和$\hat{q}_h$需要在某个边界改变，由于Dirichlet边界条件的存在。我们对$\hat{n}_h$和$\hat{q}_h$选择类似~\eqref{numbericalFlux:phi&E}或~\eqref{numbericalFlux:phi&E alt}的通量
+\begin{align}
+    (\hat{n}_h)_{\frac{1}{2}} = (n_h^-)_{j-\frac{1}{2}} =n_l, (\hat{n}_h)_{j-\frac{1}{2}} =  (n_h^+)_{j-\frac{1}{2}},j=2,\cdots,N,  (\hat{n}_h)_{N+\frac{1}{2}} = (n_h^-)_{N+\frac{1}{2}} = n_r, \nonumber \\
+    (\hat{q}_h)_{\frac{1}{2}} = (q_h^+)_{\frac{1}{2}}, (\hat{q}_h)_{j-\frac{1}{2}},j=2,\cdots,N+1. \label{numbericalFlux:Dirichlet 1}
+\end{align}
+或
+\begin{align}
+    (\hat{n}_h)_{\frac{1}{2}} = (n_h^-)_{j-\frac{1}{2}} = n_l, (\hat{n}_h)_{j-\frac{1}{2}} = (n_h^+)_{j-\frac{1}{2}},j=2,\cdots,N,\quad (\hat{n}_h)_{N+\frac{1}{2}} = (n_h^-)_{N+\frac{1}{2}} = n_r, \nonumber \\
+    (\hat{q}_h)_{j - \frac{1}{2}} = (q_h^+)_{j - \frac{1}{2}}, j = 1,\cdots,N,(\hat{q}_h)_{N+\frac{1}{2}} = (q_h^-)_{N+\frac{1}{2}}.\label{numbericalFlux:Dirichlet 2}
+\end{align}
+通量$\hat{E}_h$和$\hat{\phi}_h$和之前一样。
 
 \subsection{可行性分析}
+\subsubsection{误差分析}
+
+先前的文献已经证明了上述模型的误差分析。由于篇幅限制，具体证明过程此处不列出。
+\paragraph{DD模型LDG格式}
+\begin{theorem}
+    设$n, q$是问题\eqref{eq:DDa}-\eqref{eq:DDb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式\eqref{eq:DDaReformLDGa}-\eqref{eq:DDaReformLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 1$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    $$
+        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
+    $$
+    其中常数$C$依赖于最终时间$T,k, \|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}, \left\|n_{x}\right\|_{0, \infty}, \left\|n_{d}\right\|_{0, \infty}$。
+\end{theorem}
+\paragraph{HF模型LDG格式}
+为了方便起见，我们在以下分析中定义$a:=\sqrt{\tau \theta+\tau \mu^{2} E^{2}}$和$b:=3 C_{2} E n_{d}+\mu E-C_{3}$。
+\begin{theorem}
+    设$n, q$是问题~\eqref{eq:HFRewrittenca}-\eqref{eq:HFRewrittencb}的精确解，具有足够光滑且有界导数。设$n^{h}, q^{h}$是半离散LDG格式~\eqref{eq:HFRewrittenLDGa}-\eqref{eq:HFRewrittenLDGb}的数值解，并将相应的数值误差记为$e_{u}=u-u_{h}(u=n, q)$。如果有限元空间$V_{h}^{k}$是$k \geq 2$次分段多项式，则对于足够小的$h$，有以下误差估计成立：
+    $$
+        \left\|n-n^{h}\right\|_{L^{\infty}\left(0, T ; L^{2}\right)}+\left\|q-q^{h}\right\|_{L^{2}\left(0, T ; L^{2}\right)} \leq C h^{k+\frac{1}{2}}
+    $$
+    其中常数$C$依赖于最终时间$T$、$k$、$\|n\|_{L^{\infty}\left(0, T ; H^{k+1}\right)}$、$\left\|n_{x}\right\|_{0, \infty}$、$\left\|n_{d}\right\|_{0, \infty}$以及导数$\left|a^{\prime}\right|$和$\left|b^{\prime}\right|$的界。
+\end{theorem}
+\paragraph{一阶IMEX LDG格式}
+在下面关于全离散格式的分析中定义$||u||_{L^{\infty}(0,T;L^2)}  = \max \limits_{0 \leq t \leq T}||u^m||_{l^2(I)}$和$||u||_{L^2(0,T;L^2)} = (\int_{0}^{T}||u^m||_{L^2(I)}^2\Delta t)^{\frac{1}{2}}$。
+\begin{theorem}
+    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是一阶IMEX LDG格式~\eqref{weakForm:IMEX1 LDG 1} - ~\eqref{equation:IMEX1 LDG:EPE 2}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + \Delta k)
+    \end{equation}
+    其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
+
+\paragraph{二阶IMEX LDG格式}
+\begin{theorem}
+    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是二阶IMEX LDG格式~\eqref{weakForm:IMEX2 LDG 1} - ~\eqref{equation:IMEX2 LDG:EPE 2}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^2)
+    \end{equation}
+    其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}
+
+\paragraph{三阶IMEX LDG格式}
+\begin{theorem}
+    令$n^m,q^m$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}在时间层级m的精确解，它们足够光滑且有有界导数。令$n_h^m,q_h^m$是三阶IMEX LDG格式~\eqref{weakForm:IMEX3 LDG 1} - ~\eqref{equation:IMEX3 LDG:EPE 2}的数值解。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，存在与h无关的正常数C，使得下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C(h^{k+1} + (\Delta t)^3)
+    \end{equation}
+\end{theorem}
+其中C依赖于最终时间$T,k,C_{\mu}$，反常数$C_2, ||n||_{L^{\infty}(0,T;H^{k+1})}, ||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+
+\paragraph{Dirichlet边界条件}
+\begin{lemma}\label{theo:6.1}
+    令$n,q$是问题~\eqref{weakForm:1}-\eqref{weakForm:4}的精确解，它们足够光滑且导数有界。令$n_h,q_h$是半离散LDG格式~\eqref{LDG:1} - ~\eqref{LDG:4}的数值解，并且选择按照~\eqref{numbericalFlux:Dirichlet 1}或~\eqref{numbericalFlux:Dirichlet 2}选择通量$\hat{n}_h,\hat{q}_h$。定义对应的数值误差$e_h = u-u_h(u = n,q)$。如果有限元空间$V_h^k$是k$(k\geq  0)$阶间断多项式，那么对于足够小的h，下列误差估计成立
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq Ch^{k+\frac{1}{2}}
+    \end{equation}
+    其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{lemma}
+如果我们选择边界处的数值通量
+\begin{equation}
+    (\hat{q}_h)_{\frac{1}{2}} = (q_h^+)_{\frac{1}{2}} + c_0[n_h]_{\frac{1}{2}}. \label{numbericalFlux:optimal}
+\end{equation}
+我们可以得到下列最优误差估计。
+\begin{theorem}
+    用~\eqref{numbericalFlux:optimal}替换~\cref{theo:6.1}中~\eqref{numbericalFlux:Dirichlet 1}中的通量$(\hat{q}_h)_{\frac{1}{2}}$，我们有以下最优误差估计
+    \begin{equation}
+        ||n-n_h||_{L^{\infty}(0,T;L^2)} + ||q - q_h||_{L^2(0,T;L^2)} \leq C h^{k+1}
+    \end{equation}
+    其中C依赖于最终时间T，k，反常数$C_2$， $||n||_{L^{\infty}(0,T;H^{k+1})}$，$||n_x||_{L^{\infty}}$和$||E||_{L^{\infty}}$。
+\end{theorem}

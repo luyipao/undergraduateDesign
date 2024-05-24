@@ -1,0 +1,12 @@
+\beamer@sectionintoc {1}{研究背景与意义}{3}{0}{1}
+\beamer@sectionintoc {2}{预备知识}{4}{0}{2}
+\beamer@sectionintoc {3}{DD模型}{5}{0}{3}
+\beamer@subsectionintoc {3}{1}{LDG离散DD模型}{5}{0}{3}
+\beamer@subsectionintoc {3}{2}{误差估计}{9}{0}{3}
+\beamer@sectionintoc {4}{HF模型}{13}{0}{4}
+\beamer@subsectionintoc {4}{1}{误差估计}{14}{0}{4}
+\beamer@sectionintoc {5}{数值算例}{15}{0}{5}
+\beamer@subsectionintoc {5}{1}{参数选取}{15}{0}{5}
+\beamer@subsectionintoc {5}{2}{TVD LDG格式}{16}{0}{5}
+\beamer@subsectionintoc {5}{3}{IMEX LDG格式}{19}{0}{5}
+\beamer@sectionintoc {6}{总结与展望}{25}{0}{6}

@@ -1,28 +1,6 @@
 % %% IMEX 1
 % % get aux coeffs
-timeOrder = 3;
-[~, I] = size(exactCOEFFS);
-A = exactMesh.meshSize * kron(eye(exactMesh.CellsNum),exactMesh.massMatrix);
-A = diag(1./diag(A));
-A = sparse(A);
-for ii = 1:I
-    exactQCOEFFS(:,ii) = A*exactMesh.BPos*exactCOEFFS(:,ii);
-end
-for k = 1:length(n)
-    E = zeros(length(N), length(t));
-    for i = 1:length(N)
-        for j = 1:length(t)
-            tempMesh = IMEX{timeOrder}{k,i,j};
-            [~, I] = size(COEFFS{timeOrder}{k,i,j});
-            A = tempMesh.meshSize * kron(eye(tempMesh.CellsNum),tempMesh.massMatrix);
-            A = diag(1./diag(A));
-            A = sparse(A);
-            for ii = 1:I
-                QCOEFFS{timeOrder}{k,i,j}(:,ii) = A*tempMesh.BPos*COEFFS{timeOrder}{k,i,j}(:,ii);
-            end
-        end
-    end
-end
+timeOrder = 1;
 % consider LInf in [0, T] rather than T point
 for k = 1:length(n)
     E = zeros(length(N), length(t));
@@ -30,38 +8,44 @@ for k = 1:length(n)
         for j = 1:length(t)
             res = 99999999999999999999;
             SUM = 0;
+            res2 = 99999999999999999999;
+            sum2 = 0;
             for iii = 1:250
                 f = IMEX{timeOrder}{k,i,j}.getBasisPolys(COEFFS{timeOrder}{k,i,j}(:,iii));
                 exactf = exactMesh.getBasisPolys(exactCOEFFS(:,iii));
-                g =  IMEX{timeOrder}{k,i,j}.getBasisPolys(numq{timeOrder}{k,i,j}(:,iii));
-                exactg = exactMesh.getBasisPolys(q(:,iii));
+                g =  IMEX{timeOrder}{k,i,j}.getBasisPolys(QCOEFFS{timeOrder}{k,i,j}(:,iii));
+                exactg = exactMesh.getBasisPolys(exactQCOEFFS(:,iii));
                 x = linspace(a,b,10000);
                 temp = (f.solve(x)-exactf.solve(x)).^2;
-
+                
                 temp = sqrt(sum(temp));
-                SUM = SUM + (sum((g.solve(x)- exactg.solve(x)).^2));
-                % draw
-%                 x = linspace(a, b, 1000);
-%                 figure(1)
-%                 plot(x, exactg.solve(x), x, g.solve(x) , '--');
-%                 figure(2)
-%                 plot(x, exactf.solve(x), x, f.solve(x), '--');
                 if temp < res
                     res = temp;
                 end
+                temp = (exactf.solve(x)).^2;
+                temp = sqrt(sum(temp));
+                if temp < res
+                    res2 = temp;
+                end
+                SUM = SUM + (sum((g.solve(x)- exactg.solve(x)).^2));
+                sum2 = sum2 +sum((exactg.solve(x)).^2);
+                
             end
+            
             SUM = sqrt(SUM * t);
-            E(i,j) = res + SUM;
+            sum2 = sqrt(sum2*t);
+            
+            E(i,j) = (res + SUM) / (res2+sum2);
         end
     end
-%         C = (2^k * E(end) - E(end-1)) / (2^k-1);
-%     order = (E(1:end-1) - C) ./ (E(2:end) - C);
+    %         C = (2^k * E(end) - E(end-1)) / (2^k-1);
+    %     order = (E(1:end-1) - C) ./ (E(2:end) - C);
     order = E(1:end-1) ./ E(2:end);
     order = log(order) / log(2);
     order = num2str(order,'%.4f');
     order = ['------'; order];
     T = table(N', num2str(E, '%.2e'),order );
-    filename = sprintf('..\\docs\\tables\\LInfDDIMEXRK%dDegree%d.tex', timeOrder,n(k));
+    filename = sprintf('..\\docs\\tables\\tempLInfDDIMEXRK%dDegree%d.tex', timeOrder,n(k));
     table2latex(T,filename)
 end
 
@@ -90,7 +74,7 @@ end
 %             E(i,j) = res / constTemp;
 %         end
 %     end
-%     
+%
 %     %      C = mean((2^k * E(2:end) - E(1:end-1)) ./ (2^k - 1));
 %     %     C = (2^k * E(end) - E(end-1)) / (2^k-1);
 %     %     order = (E(1:end-1) - C) ./ (E(2:end) - C);

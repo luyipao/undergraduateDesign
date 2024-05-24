@@ -1,0 +1,145 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{liu2010error}{article}{}
+      \name{author}{2}{}{%
+        {{hash=60111b9d463daf37a46f09da847a0afd}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={YunXian},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=0316cefd59f32815e356c1128b2ef3c0}{%
+           family={Shu},
+           familyi={S\bibinitperiod},
+           given={Chi-Wang},
+           giveni={C\bibinithyphendelim W\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=60111b9d463daf37a46f09da847a0afd}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={YunXian},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=0316cefd59f32815e356c1128b2ef3c0}{%
+           family={Shu},
+           familyi={S\bibinitperiod},
+           given={Chi-Wang},
+           giveni={C\bibinithyphendelim W\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{fullhash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{bibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{authorbibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{authornamehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{authorfullhash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{nameabibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{nameanamehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{nameafullhash}{ce234194197d940c08756aabbb6b9f05}
+      \field{extraname}{1}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Science China Mathematics}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Error analysis of the semi-discrete local discontinuous Galerkin method for semiconductor device simulation models}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{53}
+      \field{year}{2010}
+      \field{dateera}{ce}
+      \field{pages}{3255\bibrangedash 3278}
+      \range{pages}{24}
+      \keyw{liu2010error}
+    \endentry
+    \entry{liu2016analysis}{article}{}
+      \name{author}{2}{}{%
+        {{hash=60111b9d463daf37a46f09da847a0afd}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={YunXian},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=0316cefd59f32815e356c1128b2ef3c0}{%
+           family={Shu},
+           familyi={S\bibinitperiod},
+           given={Chi-Wang},
+           giveni={C\bibinithyphendelim W\bibinitperiod}}}%
+      }
+      \name{namea}{2}{}{%
+        {{hash=60111b9d463daf37a46f09da847a0afd}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={YunXian},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=0316cefd59f32815e356c1128b2ef3c0}{%
+           family={Shu},
+           familyi={S\bibinitperiod},
+           given={Chi-Wang},
+           giveni={C\bibinithyphendelim W\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {english}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{fullhash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{bibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{authorbibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{authornamehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{authorfullhash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{nameabibnamehash}{ce234194197d940c08756aabbb6b9f05}
+      \strng{nameanamehash}{1261ed8a5a390103b9039e3dc82b0199}
+      \strng{nameafullhash}{ce234194197d940c08756aabbb6b9f05}
+      \field{extraname}{2}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Science China Mathematics}
+      \field{langid}{english}
+      \field{languageid}{english}
+      \field{lansortorder}{4}
+      \field{title}{Analysis of the local discontinuous Galerkin method for the drift-diffusion model of semiconductor devices}
+      \field{usera}{J}
+      \field{userd}{english}
+      \field{userf}{english}
+      \field{volume}{59}
+      \field{year}{2016}
+      \field{dateera}{ce}
+      \field{pages}{115\bibrangedash 140}
+      \range{pages}{26}
+      \keyw{liu2016analysis}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

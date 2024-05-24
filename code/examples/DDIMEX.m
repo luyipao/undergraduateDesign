@@ -13,11 +13,11 @@ t = 1.2e-3;
 % M = cell(length(N),length(t));
 
 %% get exact solution
-exactMesh = Mesh2(a,b,3200,@(x) dopingFunction(x),2);
-exactMesh.t = t;
-exactMesh.epsilon = 0.001;
-[exactMesh, exactnSteps, exactCOEFFS, exactQCOEFFS] = exactMesh.IMEXGK(3);
-exactSolution = exactMesh.getBasisPolys(exactMesh.coeffs);
+% exactMesh = Mesh2(a,b,3200,@(x) dopingFunction(x),2);
+% exactMesh.t = t;
+% exactMesh.epsilon = 0.001;
+% [exactMesh, exactnSteps, exactCOEFFS, exactQCOEFFS] = exactMesh.IMEXGK(3);
+% exactSolution = exactMesh.getBasisPolys(exactMesh.coeffs);
 %%
 for k = 1:length(n)
     for i = 1:length(N)
